@@ -27,7 +27,7 @@ export function BackupPage() {
       const mode = await saveBackupFile(await createBackupJson(), backupFilename());
       setMessage(mode === 'native' ? t('backup.saved') : t('backup.downloaded'));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Backup export failed.');
+      setError(caught instanceof Error ? caught.message : t('backup.exportFailed'));
     }
   }
 
@@ -41,7 +41,7 @@ export function BackupPage() {
       setCandidate(imported);
       setConfirmation('');
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Backup import failed.');
+      setError(caught instanceof Error ? caught.message : t('backup.importFailed'));
     }
   }
 
@@ -59,7 +59,7 @@ export function BackupPage() {
       setConfirmation('');
       setMessage(t('backup.restored'));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Backup restore failed.');
+      setError(caught instanceof Error ? caught.message : t('backup.restoreFailed'));
     }
   }
 

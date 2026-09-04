@@ -30,9 +30,10 @@ export function MoneyField({
     if (!focused.current) setDraft(formatEditableMoney(value, locale, currency));
   }, [currency, locale, value]);
   const message = localError ?? error;
+  const translatedMessage = message ? translateError(message) : undefined;
   useEffect(() => {
-    inputRef.current?.setCustomValidity(message ?? '');
-  }, [message]);
+    inputRef.current?.setCustomValidity(translatedMessage ?? '');
+  }, [translatedMessage]);
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
@@ -81,7 +82,7 @@ export function MoneyField({
       </div>
       {message ? (
         <p className="field__error" id={`${id}-error`}>
-          {translateError(message)}
+          {translatedMessage}
         </p>
       ) : null}
     </div>

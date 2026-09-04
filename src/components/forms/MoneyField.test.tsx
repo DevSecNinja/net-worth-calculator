@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { LocaleProvider } from '@/features/locale/LocaleProvider';
+import { LocaleProvider, localeStorageKey } from '@/features/locale/LocaleProvider';
 
 import { MoneyField } from './MoneyField';
 
@@ -53,5 +53,26 @@ describe('MoneyField', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(submit).not.toHaveBeenCalled();
     expect(input).toBeInvalid();
+  });
+
+  it('uses the localized error for native constraint validation', async () => {
+    localStorage.setItem(localeStorageKey, 'nl-NL');
+    const user = userEvent.setup();
+    render(
+      <LocaleProvider>
+        <MoneyField label="Saldo" currency="EUR" value="1" onChange={() => undefined} />
+      </LocaleProvider>,
+    );
+    const input = screen.getByLabelText('Saldo');
+    await user.clear(input);
+    await user.type(input, '12.34,56');
+
+    expect(input).toBeInvalid();
+    expect(
+      screen.getByText('Voer een geldig bedrag voor de geselecteerde valuta in.'),
+    ).toBeVisible();
+    expect((input as HTMLInputElement).validationMessage).toBe(
+      'Voer een geldig bedrag voor de geselecteerde valuta in.',
+    );
   });
 });

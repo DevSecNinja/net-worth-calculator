@@ -235,6 +235,9 @@ const enUS = {
   'backup.saved': 'Encrypted backup saved.',
   'backup.downloaded': 'Encrypted backup downloaded.',
   'backup.restored': 'Encrypted backup restored.',
+  'backup.exportFailed': 'The encrypted backup could not be exported.',
+  'backup.importFailed': 'The encrypted backup could not be imported.',
+  'backup.restoreFailed': 'The encrypted backup could not be restored.',
   'settings.eyebrow': 'Preferences and security',
   'settings.title': 'Settings',
   'settings.help':
@@ -583,6 +586,9 @@ const nlNL: MessageCatalog = {
   'backup.saved': 'Versleutelde back-up opgeslagen.',
   'backup.downloaded': 'Versleutelde back-up gedownload.',
   'backup.restored': 'Versleutelde back-up hersteld.',
+  'backup.exportFailed': 'De versleutelde back-up kon niet worden geëxporteerd.',
+  'backup.importFailed': 'De versleutelde back-up kon niet worden geïmporteerd.',
+  'backup.restoreFailed': 'De versleutelde back-up kon niet worden hersteld.',
   'settings.eyebrow': 'Voorkeuren en beveiliging',
   'settings.title': 'Instellingen',
   'settings.help':

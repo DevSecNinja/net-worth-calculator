@@ -58,7 +58,9 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
     await page.getByLabel(/^amount$/i).fill('9999');
     await page.getByRole('button', { name: /save asset/i }).click();
     await expect(page.getByRole('heading', { name: 'Persisted update marker' })).toBeVisible();
-    await page.evaluate(async () => navigator.serviceWorker.ready);
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+    });
     await page.reload();
     await page.getByLabel(/^passphrase$/i).fill(PASSPHRASE);
     await page.getByRole('button', { name: /unlock vault/i }).click();
@@ -67,7 +69,9 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
     await page.getByLabel(/asset name/i).fill('Unsaved update draft');
     const cleanPage = await context.newPage();
     await cleanPage.goto(`${base}#/about`);
-    await cleanPage.evaluate(async () => navigator.serviceWorker.ready);
+    await cleanPage.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+    });
 
     const cacheBefore = await page.evaluate(async () => {
       const urls: string[] = [];

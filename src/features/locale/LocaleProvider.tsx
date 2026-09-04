@@ -84,7 +84,13 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   );
   const translateError = useCallback(
     (message: string) => {
-      if (message === t('form.errorSaveAsset') || message === t('form.errorSaveLiability')) {
+      if (
+        message === t('form.errorSaveAsset') ||
+        message === t('form.errorSaveLiability') ||
+        message === t('backup.exportFailed') ||
+        message === t('backup.importFailed') ||
+        message === t('backup.restoreFailed')
+      ) {
         return message;
       }
       if (/name is required/i.test(message)) return t('error.nameRequired');
