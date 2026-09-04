@@ -16,7 +16,7 @@ const packageMetadata = JSON.parse(
 const base = process.env.VITE_BASE_PATH ?? '/net-worth-calculator/';
 
 function commitSha(): string {
-  const configuredSha = process.env.GITHUB_SHA ?? process.env.VITE_COMMIT_SHA;
+  const configuredSha = process.env.VITE_COMMIT_SHA ?? process.env.GITHUB_SHA;
   if (configuredSha) {
     if (!/^[0-9a-f]{40}$/i.test(configuredSha)) {
       throw new Error('Build commit identity must be an exact 40-character Git SHA.');
