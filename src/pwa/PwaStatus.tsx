@@ -18,6 +18,7 @@ export function PwaStatus() {
   const [online, setOnline] = useState(navigator.onLine);
   const [confirmUpdate, setConfirmUpdate] = useState(false);
   const [updateBlockers, setUpdateBlockers] = useState<string[]>([]);
+  const [activationError, setActivationError] = useState(false);
 
   useEffect(() => {
     const onOnline = () => {
@@ -36,13 +37,23 @@ export function PwaStatus() {
     };
   }, [announce, t]);
 
+  async function activateUpdate() {
+    setActivationError(false);
+    try {
+      await update.activateUpdate();
+    } catch {
+      setActivationError(true);
+      announce(t('pwa.updateFailed'));
+    }
+  }
+
   async function requestUpdate() {
     const blockers = await collectDirtyNames();
     if (blockers.length > 0) {
       setUpdateBlockers(blockers);
       setConfirmUpdate(true);
     } else {
-      await update.activateUpdate();
+      await activateUpdate();
     }
   }
 
@@ -83,6 +94,11 @@ export function PwaStatus() {
             {t('pwa.registrationError')}
           </p>
         ) : null}
+        {activationError ? (
+          <p className="status-error" role="status">
+            {t('pwa.updateFailed')}
+          </p>
+        ) : null}
       </div>
       <Dialog
         open={confirmUpdate}
@@ -103,7 +119,7 @@ export function PwaStatus() {
               variant="danger"
               onClick={() => {
                 setConfirmUpdate(false);
-                void update.activateUpdate();
+                void activateUpdate();
               }}
             >
               {t('pwa.discardUpdate')}

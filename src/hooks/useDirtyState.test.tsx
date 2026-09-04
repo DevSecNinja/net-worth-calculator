@@ -6,6 +6,7 @@ import { DirtyStateProvider, useDirtyState } from './useDirtyState';
 
 class MockBroadcastChannel {
   static readonly instances = new Map<string, Set<MockBroadcastChannel>>();
+  static dropRequests = false;
   readonly name: string;
   onmessage: ((event: MessageEvent<unknown>) => void) | null = null;
 
@@ -17,6 +18,15 @@ class MockBroadcastChannel {
   }
 
   postMessage(message: unknown) {
+    if (
+      MockBroadcastChannel.dropRequests &&
+      typeof message === 'object' &&
+      message !== null &&
+      'type' in message &&
+      message.type === 'request'
+    ) {
+      return;
+    }
     for (const peer of MockBroadcastChannel.instances.get(this.name) ?? []) {
       if (peer === this) continue;
       queueMicrotask(() => peer.onmessage?.({ data: message } as MessageEvent<unknown>));
@@ -48,6 +58,10 @@ function Probe({ name }: { name: string }) {
 }
 
 describe('DirtyStateProvider', () => {
+  beforeEach(() => {
+    MockBroadcastChannel.dropRequests = false;
+  });
+
   it('discovers unsaved edits in another tab before update approval', async () => {
     vi.stubGlobal('BroadcastChannel', MockBroadcastChannel);
     const user = userEvent.setup();
@@ -62,6 +76,28 @@ describe('DirtyStateProvider', () => {
       </>,
     );
     await user.click(screen.getByRole('button', { name: /mark first tab dirty/i }));
+    await user.click(screen.getByRole('button', { name: /check second tab/i }));
+    expect(
+      await screen.findByText('Unsaved edits in another tab', { selector: 'output' }),
+    ).toBeVisible();
+  });
+
+  it('fails closed when a known peer does not answer the update check', async () => {
+    vi.stubGlobal('BroadcastChannel', MockBroadcastChannel);
+    const user = userEvent.setup();
+    render(
+      <>
+        <DirtyStateProvider>
+          <Probe name="first tab" />
+        </DirtyStateProvider>
+        <DirtyStateProvider>
+          <Probe name="second tab" />
+        </DirtyStateProvider>
+      </>,
+    );
+    await screen.findAllByRole('button');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    MockBroadcastChannel.dropRequests = true;
     await user.click(screen.getByRole('button', { name: /check second tab/i }));
     expect(
       await screen.findByText('Unsaved edits in another tab', { selector: 'output' }),

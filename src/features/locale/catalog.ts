@@ -302,6 +302,7 @@ const enUS = {
   'pwa.discardUpdate': 'Discard drafts and update',
   'pwa.keepEditing': 'Keep editing',
   'pwa.registrationError': 'Offline setup failed. Online use still works.',
+  'pwa.updateFailed': 'The update could not be activated. Keep using this version and try again.',
   'form.check': 'Check the form',
   'form.addObservation': 'Add observation',
   'form.removeObservation': 'Remove {date} value',
@@ -653,6 +654,8 @@ const nlNL: MessageCatalog = {
   'pwa.discardUpdate': 'Concepten verwijderen en bijwerken',
   'pwa.keepEditing': 'Doorgaan met bewerken',
   'pwa.registrationError': 'Offline instellen is mislukt. Online gebruik werkt nog wel.',
+  'pwa.updateFailed':
+    'De update kon niet worden geactiveerd. Blijf deze versie gebruiken en probeer het opnieuw.',
   'form.check': 'Controleer het formulier',
   'form.addObservation': 'Observatie toevoegen',
   'form.removeObservation': 'Waarde van {date} verwijderen',

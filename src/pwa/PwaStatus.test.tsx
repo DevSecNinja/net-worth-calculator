@@ -47,6 +47,11 @@ function renderStatus() {
 }
 
 describe('PwaStatus', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.update.activateUpdate.mockResolvedValue(undefined);
+  });
+
   it('shows install, offline-ready, and explicit update actions', async () => {
     const user = userEvent.setup();
     renderStatus();
@@ -79,5 +84,15 @@ describe('PwaStatus', () => {
       window.dispatchEvent(new Event('online'));
     });
     expect(screen.queryByText(/offline - encrypted local data/i)).not.toBeInTheDocument();
+  });
+
+  it('surfaces update activation failures without an unhandled rejection', async () => {
+    mocks.update.activateUpdate.mockRejectedValueOnce(new Error('activation failed'));
+    const user = userEvent.setup();
+    renderStatus();
+    await user.click(screen.getByRole('button', { name: /update now/i }));
+    expect(
+      await screen.findByText(/update could not be activated/i, { selector: '.status-error' }),
+    ).toBeVisible();
   });
 });
