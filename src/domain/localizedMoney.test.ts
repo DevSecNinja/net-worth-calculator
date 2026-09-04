@@ -29,4 +29,12 @@ describe('localized money', () => {
     expect(formatEditableMoney('1234.56', 'en-GB', 'GBP')).toBe('1,234.56');
     expect(formatEditableMoney('1234.56', 'nl-NL', 'EUR')).toBe('1.234,56');
   });
+
+  it.each([
+    ['en-US', '999,999,999,999.91'],
+    ['en-GB', '999,999,999,999.91'],
+    ['nl-NL', '999.999.999.999,91'],
+  ] as const)('preserves large-value cents when formatting %s', (locale, expected) => {
+    expect(formatEditableMoney('999999999999.91', locale, 'EUR')).toBe(expected);
+  });
 });

@@ -41,14 +41,15 @@ function Header() {
   );
 }
 
-function VaultErrorBanner() {
+export function VaultErrorBanner() {
   const { clearError, error, status } = useVault();
+  const { t, translateError } = useLocale();
   if (!error || status !== 'unlocked') return null;
   return (
     <div className="status-banner" role="alert">
-      <span>{error}</span>
+      <span>{translateError(error)}</span>
       <Button type="button" variant="ghost" onClick={clearError}>
-        Dismiss
+        {t('common.dismiss')}
       </Button>
     </div>
   );

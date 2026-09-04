@@ -64,9 +64,15 @@ export function formatEditableMoney(
   currency: string,
 ): string {
   const digits = currencyFractionDigits(currency);
-  return new Intl.NumberFormat(locale, {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
+  const [integer = '0', fraction = ''] = new Decimal(canonical).toFixed(digits).split('.');
+  const formatter = new Intl.NumberFormat(locale, {
+    maximumFractionDigits: 0,
     useGrouping: true,
-  }).format(new Decimal(canonical).toNumber());
+  });
+  const groupedInteger = formatter.format(BigInt(integer));
+  if (digits === 0) return groupedInteger;
+  const decimalSeparator =
+    new Intl.NumberFormat(locale).formatToParts(1.1).find(({ type }) => type === 'decimal')
+      ?.value ?? '.';
+  return `${groupedInteger}${decimalSeparator}${fraction}`;
 }
