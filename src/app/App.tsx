@@ -41,7 +41,16 @@ function Header() {
 export function App() {
   return (
     <div className="app-shell">
-      <a className="skip-link" href="#main-content">
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault();
+          const main = document.getElementById('main-content');
+          main?.setAttribute('tabindex', '-1');
+          main?.focus();
+        }}
+      >
         Skip to main content
       </a>
       <Header />

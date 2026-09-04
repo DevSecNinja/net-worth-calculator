@@ -17,6 +17,7 @@ test('creates a vault, manages financial items, and unlocks after reload', async
 
   await page.getByRole('link', { name: /^dashboard$/i }).click();
   await expect(page.getByRole('heading', { name: /net worth dashboard/i })).toBeVisible();
+  await page.getByText(/view net worth trend data table/i).click();
   await expect(page.getByRole('table', { name: /net worth trend/i })).toContainText('2025');
 
   await page.getByRole('button', { name: /lock vault/i }).click();
@@ -31,7 +32,7 @@ test('creates a vault, manages financial items, and unlocks after reload', async
 test('changes currency only after no-conversion confirmation', async ({ page }) => {
   await createVault(page);
   await page.getByRole('link', { name: /settings/i }).click();
-  await page.getByLabel(/^currency$/i).selectOption('EUR');
+  await page.getByRole('combobox', { name: 'Currency', exact: true }).selectOption('EUR');
   await expect(page.getByRole('button', { name: /apply currency/i })).toBeDisabled();
   await page.getByLabel(/existing numbers will be reinterpreted/i).check();
   await page.getByRole('button', { name: /apply currency/i }).click();
@@ -63,4 +64,20 @@ test('exports and imports through portable fallback file controls', async ({ pag
   await page.getByLabel(/type replace/i).fill('REPLACE');
   await page.getByRole('button', { name: /replace vault/i }).click();
   await expect(page.getByText(/encrypted backup restored/i)).toBeVisible();
+});
+
+test('deletes the encrypted vault only after typed confirmation', async ({ page }) => {
+  await createVault(page);
+  await page.getByRole('link', { name: /settings/i }).click();
+  await page.getByRole('button', { name: /delete vault/i }).click();
+  const dialog = page.getByRole('dialog', { name: /delete encrypted vault/i });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel(/type DELETE/i).fill('wrong');
+  await dialog.getByRole('button', { name: /delete vault forever/i }).click();
+  await expect(dialog.getByRole('alert')).toContainText(/type DELETE exactly/i);
+  await dialog.getByLabel(/type DELETE/i).fill('DELETE');
+  await dialog.getByRole('button', { name: /delete vault forever/i }).click();
+  await expect(page.getByRole('heading', { name: /create your encrypted vault/i })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: /create your encrypted vault/i })).toBeVisible();
 });

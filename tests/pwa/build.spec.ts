@@ -1,11 +1,16 @@
+import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 import { expect, test } from '@playwright/test';
 
-test('built output has a base-aware manifest and generated revisioned service worker', async ({
-  browserName,
-}) => {
-  test.skip(browserName !== 'chromium', 'Static artifact assertions run once.');
+test('built output passes the release artifact contract and exposes exact build identity', async ({
+  page,
+}, workerInfo) => {
+  test.skip(workerInfo.project.name !== 'chromium', 'Static artifact assertions run once.');
+  const commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  execFileSync(process.execPath, ['scripts/verify-build.mjs'], {
+    env: { ...process.env, EXPECTED_COMMIT_SHA: commit, VITE_RELEASE_BUILD: 'true' },
+  });
   const manifest = JSON.parse(await readFile('dist/manifest.webmanifest', 'utf8')) as {
     id: string;
     start_url: string;
@@ -26,4 +31,13 @@ test('built output has a base-aware manifest and generated revisioned service wo
   const worker = await readFile('dist/sw.js', 'utf8');
   expect(worker).toContain('precacheAndRoute');
   expect(worker).not.toMatch(/indexedDB|net-worth-backup/);
+
+  await page.goto('./');
+  const sourceLink = page.getByRole('link', {
+    name: new RegExp(`v0\\.1\\.0 \\(${commit.slice(0, 7)}\\)`),
+  });
+  await expect(sourceLink).toHaveAttribute(
+    'href',
+    `https://github.com/DevSecNinja/net-worth-calculator/commit/${commit}`,
+  );
 });

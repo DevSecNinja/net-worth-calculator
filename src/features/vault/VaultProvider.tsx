@@ -73,6 +73,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    const releaseForPageHide = () => lease.current?.release();
+    const reacquireAfterPageRestore = (event: PageTransitionEvent) => {
+      if (event.persisted && lease.current && !lease.current.acquire()) lock();
+    };
+    window.addEventListener('pagehide', releaseForPageHide);
+    window.addEventListener('pageshow', reacquireAfterPageRestore);
     void hasVault()
       .then((exists) => {
         if (active) setStatus(exists ? 'locked' : 'absent');
@@ -87,8 +93,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       active = false;
       generation.current += 1;
       lease.current?.release();
+      window.removeEventListener('pagehide', releaseForPageHide);
+      window.removeEventListener('pageshow', reacquireAfterPageRestore);
     };
-  }, []);
+  }, [lock]);
 
   const acquireLease = useCallback((): VaultSessionLease => {
     const candidate = new VaultSessionLease();

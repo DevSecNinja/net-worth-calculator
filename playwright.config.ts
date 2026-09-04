@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = 'http://127.0.0.1:4173/net-worth-calculator/';
+const previewPort = Number(process.env.PLAYWRIGHT_PORT ?? 43173);
+const baseURL = `http://127.0.0.1:${previewPort}/net-worth-calculator/`;
 
 export default defineConfig({
   testDir: './tests',
@@ -17,7 +18,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run preview',
+    command: `npm run preview -- --port ${previewPort}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

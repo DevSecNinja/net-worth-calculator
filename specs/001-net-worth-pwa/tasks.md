@@ -227,7 +227,7 @@ and complete security and About flows.
 
 - [x] T049 [P] [US5] Write theme persistence, live system change, locked-load, and bootstrap tests
       in `src/features/settings/theme.test.tsx` (FR-020)
-- [ ] T050 [P] [US5] Write settings currency confirmation, About privacy, and build identity tests
+- [x] T050 [P] [US5] Write settings currency confirmation, About privacy, and build identity tests
       in `src/features/settings/SettingsPage.test.tsx` and `src/features/about/AboutPage.test.tsx`
       (FR-019-FR-020, FR-030)
 
@@ -254,14 +254,14 @@ and mobile engines, including deep links/query strings and dirty state.
 
 ### Tests for User Story 6
 
-- [ ] T054 [P] [US6] Write manifest, icon dimensions/safe-zone, CSP, generated SW, precache, and
+- [x] T054 [P] [US6] Write manifest, icon dimensions/safe-zone, CSP, generated SW, precache, and
       bundle assertions in `scripts/verify-build.mjs` and `tests/pwa/build.spec.ts` (FR-025-FR-030,
       FR-037)
 - [x] T055 [P] [US6] Write offline/install/update status component tests in
       `src/pwa/PwaStatus.test.tsx` (FR-027-FR-029)
-- [ ] T056 [P] [US6] Write real outage/deep-link/query/base-path and Cache Storage E2E in
+- [x] T056 [P] [US6] Write real outage/deep-link/query/base-path and Cache Storage E2E in
       `tests/pwa/offline.spec.ts` (FR-025-FR-026)
-- [ ] T057 [P] [US6] Write N-to-N+1 explicit update/dirty-state/build-ID/old-precache E2E in
+- [x] T057 [P] [US6] Write N-to-N+1 explicit update/dirty-state/build-ID/old-precache E2E in
       `tests/pwa/update.spec.ts` (FR-027-FR-030)
 
 ### Implementation for User Story 6
@@ -287,11 +287,11 @@ at 200% zoom, reduced motion, and missing browser capabilities.
 
 ### Tests for User Story 7
 
-- [ ] T061 [P] [US7] Write Playwright core workflow and browser-capability fallback suites in
+- [x] T061 [P] [US7] Write Playwright core workflow and browser-capability fallback suites in
       `tests/e2e/core-workflows.spec.ts` and `tests/e2e/fallbacks.spec.ts` (FR-032-FR-034)
-- [ ] T062 [P] [US7] Write runtime axe, keyboard/focus, 200% zoom/reflow, reduced-motion, safe-area,
+- [x] T062 [P] [US7] Write runtime axe, keyboard/focus, 200% zoom/reflow, reduced-motion, safe-area,
       and live-region tests in `tests/e2e/accessibility.spec.ts` (FR-032-FR-033)
-- [ ] T063 [P] [US7] Write mandatory marker-based network/storage/cache/log/service-worker privacy
+- [x] T063 [P] [US7] Write mandatory marker-based network/storage/cache/log/service-worker privacy
       audit in `tests/privacy/privacy.spec.ts` (FR-003, FR-026, FR-031)
 
 ### Implementation for User Story 7
@@ -299,7 +299,7 @@ at 200% zoom, reduced motion, and missing browser capabilities.
 - [x] T064 [US7] Implement accessible dialog, button, field, skip-link, visually-hidden, and
       live-region primitives in `src/components/ui/Dialog.tsx`, `src/components/ui/Button.tsx`,
       `src/components/forms/Field.tsx`, and `src/components/ui/VisuallyHidden.tsx` (FR-032-FR-033)
-- [ ] T065 [US7] Apply responsive reflow, focus, touch, contrast, safe-area, chart, and
+- [x] T065 [US7] Apply responsive reflow, focus, touch, contrast, safe-area, chart, and
       reduced-motion fixes across `src/styles/global.css` and feature components (FR-032-FR-034)
 
 **Checkpoint**: All critical workflows satisfy the documented accessibility and compatibility

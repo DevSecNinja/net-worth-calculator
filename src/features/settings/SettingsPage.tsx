@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { useAppStatus } from '@/components/ui/AppStatus';
 import type { ThemePreference } from '@/domain/model';
 import { ChangePassphraseDialog, DeleteVaultDialog } from '@/features/vault/VaultSecurityDialogs';
 import { useVault } from '@/features/vault/useVault';
+import { useDirtyState } from '@/hooks/useDirtyState';
 
 import { useTheme } from './ThemeProvider';
 
@@ -14,10 +15,17 @@ export function SettingsPage() {
   const { vault, mutate, status } = useVault();
   const { preference, effectiveTheme, setPreference } = useTheme();
   const { announce } = useAppStatus();
+  const { setDirty } = useDirtyState();
   const [currency, setCurrency] = useState(vault?.settings.baseCurrency ?? 'USD');
   const [confirmed, setConfirmed] = useState(false);
   const [changeOpen, setChangeOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  useEffect(() => {
+    const changed = Boolean(vault && currency !== vault.settings.baseCurrency);
+    setDirty('Currency settings', changed);
+    return () => setDirty('Currency settings', false);
+  }, [currency, setDirty, vault]);
 
   function changeTheme(theme: ThemePreference) {
     setPreference(theme);

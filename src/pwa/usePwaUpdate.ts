@@ -3,6 +3,21 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 
+async function updateRegistration(
+  current: ServiceWorkerRegistration,
+  lastCheck: React.MutableRefObject<number>,
+  setNeedRefresh: (value: boolean) => void,
+  force: boolean,
+) {
+  const now = Date.now();
+  if (!navigator.onLine || (!force && now - lastCheck.current < UPDATE_INTERVAL_MS)) return;
+
+  const controlledBeforeCheck = Boolean(navigator.serviceWorker?.controller);
+  lastCheck.current = now;
+  await current.update();
+  if (current.waiting && controlledBeforeCheck) setNeedRefresh(true);
+}
+
 export function usePwaUpdate() {
   const registration = useRef<ServiceWorkerRegistration | undefined>(undefined);
   const lastCheck = useRef(0);
@@ -16,15 +31,11 @@ export function usePwaUpdate() {
     onRegisteredSW(_url, serviceWorkerRegistration) {
       if (!serviceWorkerRegistration) return;
       registration.current = serviceWorkerRegistration;
-      void serviceWorkerRegistration
-        .update()
-        .then(() => {
-          lastCheck.current = Date.now();
-          if (serviceWorkerRegistration.waiting) setNeedRefresh(true);
-        })
-        .catch(() => {
+      void updateRegistration(serviceWorkerRegistration, lastCheck, setNeedRefresh, true).catch(
+        () => {
           setRegistrationError('Service worker update check failed.');
-        });
+        },
+      );
     },
     onRegisterError(error) {
       setRegistrationError(
@@ -36,17 +47,12 @@ export function usePwaUpdate() {
   const checkForUpdate = useCallback(
     async (force = false) => {
       const current = registration.current;
-      const now = Date.now();
-      if (
-        !current ||
-        !navigator.onLine ||
-        (!force && now - lastCheck.current < UPDATE_INTERVAL_MS)
-      ) {
-        return;
+      if (!current) return;
+      try {
+        await updateRegistration(current, lastCheck, setNeedRefresh, force);
+      } catch {
+        setRegistrationError('Service worker update check failed.');
       }
-      lastCheck.current = now;
-      await current.update();
-      if (current.waiting) setNeedRefresh(true);
     },
     [setNeedRefresh],
   );
@@ -74,6 +80,7 @@ export function usePwaUpdate() {
     offlineReady,
     registrationError,
     dismissRefresh: () => {
+      lastCheck.current = Math.max(lastCheck.current, Date.now());
       setNeedRefresh(false);
     },
     dismissOfflineReady: () => setOfflineReady(false),

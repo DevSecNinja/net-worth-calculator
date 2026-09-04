@@ -16,12 +16,20 @@ const packageMetadata = JSON.parse(
 const base = process.env.VITE_BASE_PATH ?? '/net-worth-calculator/';
 
 function commitSha(): string {
-  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
-  if (process.env.VITE_COMMIT_SHA) return process.env.VITE_COMMIT_SHA;
+  const configuredSha = process.env.GITHUB_SHA ?? process.env.VITE_COMMIT_SHA;
+  if (configuredSha) {
+    if (!/^[0-9a-f]{40}$/i.test(configuredSha)) {
+      throw new Error('Build commit identity must be an exact 40-character Git SHA.');
+    }
+    return configuredSha.toLowerCase();
+  }
 
   try {
     return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   } catch {
+    if (process.env.CI === 'true' || process.env.VITE_RELEASE_BUILD === 'true') {
+      throw new Error('Release builds require an exact commit identity.');
+    }
     return 'dev';
   }
 }

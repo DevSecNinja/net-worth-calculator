@@ -1,19 +1,26 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 import { ErrorSummary } from '@/components/forms/ErrorSummary';
 import { PassphraseFields } from '@/components/forms/PassphraseFields';
 import { Button } from '@/components/ui/Button';
 import { useVault } from '@/features/vault/useVault';
 import { validatePassphrasePair } from '@/features/vault/passphrase';
+import { useDirtyState } from '@/hooks/useDirtyState';
 
 const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK'];
 
 export function OnboardingPage() {
   const { create, busy, error } = useVault();
+  const { setDirty } = useDirtyState();
   const [passphrase, setPassphrase] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [validationError, setValidationError] = useState<string>();
+
+  useEffect(() => {
+    setDirty('Vault setup', Boolean(passphrase || confirmation || currency !== 'USD'));
+    return () => setDirty('Vault setup', false);
+  }, [confirmation, currency, passphrase, setDirty]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

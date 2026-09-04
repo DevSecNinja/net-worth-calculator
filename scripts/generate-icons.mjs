@@ -1,19 +1,21 @@
 import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import sharp from 'sharp';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const output = `${root}\\public\\icons`;
+const output = join(root, 'public', 'icons');
 await mkdir(output, { recursive: true });
 
 function artwork(size, maskable = false) {
   const padding = maskable ? Math.round(size * 0.2) : Math.round(size * 0.08);
-  const chartLeft = padding + Math.round(size * 0.14);
-  const chartBottom = size - padding - Math.round(size * 0.14);
-  const barWidth = Math.round(size * 0.12);
-  const gap = Math.round(size * 0.08);
-  const heights = [0.28, 0.44, 0.62].map((value) => Math.round(size * value));
+  const contentSize = size - padding * 2;
+  const chartLeft = padding + Math.round(contentSize * 0.12);
+  const chartBottom = size - padding - Math.round(contentSize * 0.12);
+  const barWidth = Math.round(contentSize * 0.16);
+  const gap = Math.round(contentSize * 0.08);
+  const heights = [0.28, 0.44, 0.62].map((value) => Math.round(contentSize * value));
 
   return `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
@@ -39,5 +41,5 @@ const icons = [
 for (const [filename, size, maskable] of icons) {
   await sharp(Buffer.from(artwork(size, maskable)))
     .png()
-    .toFile(`${output}\\${filename}`);
+    .toFile(join(output, filename));
 }

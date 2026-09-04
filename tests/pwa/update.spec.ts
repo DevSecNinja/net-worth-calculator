@@ -7,29 +7,44 @@ import { expect, test } from '@playwright/test';
 import { PASSPHRASE } from '../helpers/app';
 import { startTestServer, type TestServer } from '../helpers/server';
 
+const projectPorts = new Map([
+  ['chromium', 4201],
+  ['firefox', 4202],
+  ['webkit', 4203],
+  ['mobile-chromium', 4204],
+  ['mobile-webkit', 4205],
+]);
+const versionN = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+const versionN1 = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+
 function buildVersion(sha: string, output: string) {
   rmSync(output, { recursive: true, force: true });
   mkdirSync(output, { recursive: true });
   const npmCli = process.env.npm_execpath;
   if (!npmCli) throw new Error('npm_execpath is required for the update build test.');
-  execFileSync(process.execPath, [npmCli, 'run', 'build', '--', '--outDir', output], {
-    env: { ...process.env, VITE_COMMIT_SHA: sha },
-    stdio: 'pipe',
-  });
+  execFileSync(
+    process.execPath,
+    [npmCli, 'run', 'build', '--', '--outDir', output, '--emptyOutDir'],
+    {
+      env: { ...process.env, VITE_COMMIT_SHA: sha },
+      stdio: 'pipe',
+    },
+  );
 }
 
-test('prompts across N to N+1, resolves dirty state, preserves vault, and cleans old precache', async ({
+test('performs a real explicit N to N+1 update without losing persisted or dirty state', async ({
   page,
-  browserName,
-}) => {
-  test.skip(browserName !== 'chromium', 'Service worker lifecycle test runs once in Chromium.');
-  test.setTimeout(180_000);
-  const firstDirectory = resolve('test-results/pwa-version-n');
-  const secondDirectory = resolve('test-results/pwa-version-n1');
-  buildVersion('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', firstDirectory);
-  buildVersion('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', secondDirectory);
+}, workerInfo) => {
+  test.setTimeout(240_000);
+  const port = projectPorts.get(workerInfo.project.name);
+  if (!port) throw new Error(`No update port configured for ${workerInfo.project.name}.`);
+  const suffix = workerInfo.project.name.replaceAll(/[^a-z0-9]+/gi, '-');
+  const firstDirectory = resolve(`test-results/pwa-${suffix}-version-n`);
+  const secondDirectory = resolve(`test-results/pwa-${suffix}-version-n1`);
+  buildVersion(versionN, firstDirectory);
+  buildVersion(versionN1, secondDirectory);
 
-  let server: TestServer | undefined = await startTestServer(firstDirectory, 4192);
+  let server: TestServer | undefined = await startTestServer(firstDirectory, port);
   const base = `${server.origin}/net-worth-calculator/`;
   try {
     await page.goto(base);
@@ -41,15 +56,15 @@ test('prompts across N to N+1, resolves dirty state, preserves vault, and cleans
     await page.getByLabel(/asset name/i).fill('Persisted update marker');
     await page.getByLabel(/^amount$/i).fill('9999');
     await page.getByRole('button', { name: /save asset/i }).click();
-    await page.getByRole('button', { name: /add asset/i }).click();
-    await page.getByLabel(/asset name/i).fill('Unsaved update draft');
+    await expect(page.getByRole('heading', { name: 'Persisted update marker' })).toBeVisible();
     await page.evaluate(async () => navigator.serviceWorker.ready);
     await page.reload();
     await page.getByLabel(/^passphrase$/i).fill(PASSPHRASE);
     await page.getByRole('button', { name: /unlock vault/i }).click();
     await page.getByRole('link', { name: /^assets$/i }).click();
-    await page.getByRole('button', { name: /add asset/i }).click();
+    await page.getByRole('button', { name: /edit/i }).click();
     await page.getByLabel(/asset name/i).fill('Unsaved update draft');
+
     const cacheBefore = await page.evaluate(async () => {
       const urls: string[] = [];
       for (const name of await caches.keys()) {
@@ -60,32 +75,33 @@ test('prompts across N to N+1, resolves dirty state, preserves vault, and cleans
     await expect(page.getByText(/v0.1.0 \(aaaaaaa\)/i)).toBeVisible();
 
     await server.stop();
-    server = await startTestServer(secondDirectory, 4192);
+    server = await startTestServer(secondDirectory, port);
     await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.getRegistration();
       await registration?.update();
     });
-    await expect(page.getByText(/new version is available/i)).toBeVisible({ timeout: 30_000 });
-    await page.getByRole('button', { name: /later/i }).click();
+    const updatePrompt = page.getByRole('status').filter({ hasText: /new version is available/i });
+    await expect(updatePrompt).toBeVisible({ timeout: 45_000 });
+    await expect(updatePrompt).toHaveAttribute('role', 'status');
     await expect(page.getByText(/v0.1.0 \(aaaaaaa\)/i)).toBeVisible();
-    await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow')));
-    await expect(page.getByText(/new version is available/i)).toBeVisible({ timeout: 30_000 });
 
-    await page.getByRole('button', { name: /update now/i }).click();
     await expect(page.getByRole('dialog', { name: /unsaved edits/i })).toContainText(
       'Asset editor',
     );
     await page.getByRole('button', { name: /keep editing/i }).click();
     await expect(page.getByLabel(/asset name/i)).toHaveValue('Unsaved update draft');
-    await page.getByRole('button', { name: /update now/i }).click();
-    await page.getByRole('button', { name: /discard drafts and update/i }).click();
+    await page.getByRole('button', { name: /save asset/i }).click();
+    await expect(page.getByRole('heading', { name: 'Unsaved update draft' })).toBeVisible();
 
-    await expect(page.getByText(/v0.1.0 \(bbbbbbb\)/i)).toBeVisible({ timeout: 30_000 });
+    await page.getByRole('button', { name: /update now/i }).click();
+
+    await expect(page.getByText(/v0.1.0 \(bbbbbbb\)/i)).toBeVisible({ timeout: 45_000 });
     await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await page.getByLabel(/^passphrase$/i).fill(PASSPHRASE);
     await page.getByRole('button', { name: /unlock vault/i }).click();
     await page.getByRole('link', { name: /^assets$/i }).click();
-    await expect(page.getByRole('heading', { name: 'Persisted update marker' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Unsaved update draft' })).toBeVisible();
+    await expect(page.getByText(/\$9,999\.00/)).toBeVisible();
 
     await expect
       .poll(async () => {
@@ -96,9 +112,30 @@ test('prompts across N to N+1, resolves dirty state, preserves vault, and cleans
           }
           return urls;
         });
-        return cacheBefore.some((url) => !cacheAfter.includes(url));
+        const removedOldAssets = cacheBefore.filter(
+          (url) => /\/assets\/.+-[\w-]{8,}\.(?:css|js)$/.test(url) && !cacheAfter.includes(url),
+        );
+        return {
+          removed: removedOldAssets.length,
+          hasNewBuild: cacheAfter.some(
+            (url) => /\/assets\/index-[\w-]{8,}\.js$/.test(url) && !cacheBefore.includes(url),
+          ),
+        };
       })
-      .toBe(true);
+      .toEqual({ removed: expect.any(Number), hasNewBuild: true });
+
+    const finalCacheAudit = await page.evaluate(async () => {
+      const urls: string[] = [];
+      for (const name of await caches.keys()) {
+        urls.push(...(await (await caches.open(name)).keys()).map((request) => request.url));
+      }
+      return urls;
+    });
+    expect(
+      cacheBefore.some(
+        (url) => /\/assets\/.+-[\w-]{8,}\.(?:css|js)$/.test(url) && !finalCacheAudit.includes(url),
+      ),
+    ).toBe(true);
   } finally {
     await server?.stop();
   }

@@ -37,6 +37,10 @@ export function PwaStatus() {
     if (update.offlineReady) announce('The app shell is ready for offline use.');
   }, [announce, update.offlineReady]);
 
+  useEffect(() => {
+    if (update.needRefresh && dirtyNames.length > 0) setConfirmUpdate(true);
+  }, [dirtyNames.length, update.needRefresh]);
+
   function requestUpdate() {
     if (dirtyNames.length > 0) setConfirmUpdate(true);
     else void update.activateUpdate();
@@ -49,7 +53,7 @@ export function PwaStatus() {
           Offline - encrypted local data remains available
         </div>
       ) : null}
-      <div className="pwa-actions" aria-label="Application status">
+      <div className="pwa-actions" role="region" aria-label="Application status">
         {install.canInstall ? (
           <Button type="button" variant="ghost" onClick={() => void install.install()}>
             Install app

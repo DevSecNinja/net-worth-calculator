@@ -18,7 +18,7 @@ export function ChartFrame({
         <h2 id={`${tableId}-heading`}>{title}</h2>
         <p>{summary}</p>
       </div>
-      <div className="chart-card__visual" aria-hidden="true">
+      <div className="chart-card__visual" aria-hidden="true" inert>
         {children}
       </div>
       <details className="chart-card__table">
