@@ -96,6 +96,21 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       ) {
         return t('error.duplicateDate');
       }
+      if (/chronological order/i.test(message)) return t('error.chronologicalDates');
+      if (
+        /date year must be|year must be \d|invalid ISO date|valid ISO calendar date/i.test(message)
+      ) {
+        return t('error.invalidDate');
+      }
+      if (/custom type/i.test(message)) return t('error.customType');
+      if (/three-letter currency|supported currency/i.test(message)) {
+        return t('error.invalidCurrency');
+      }
+      if (/vault can contain at most/i.test(message)) return t('error.itemLimit');
+      if (/item identifier must be unique|unique, dense ordering/i.test(message)) {
+        return t('error.invalidStructure');
+      }
+      if (/too big|too long|at most \d+ characters/i.test(message)) return t('error.tooLong');
       if (/monthly payment must be greater/i.test(message)) return t('error.paymentRequired');
       if (/type DELETE exactly/i.test(message)) return t('error.typeDelete');
       if (/type REPLACE exactly/i.test(message)) return t('error.typeReplace');
@@ -116,7 +131,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       if (/10 MiB|supported local backup size/i.test(message)) return t('error.backupSize');
       if (/cancelled/i.test(message)) return t('error.cancelled');
       if (/backup|unsupported version/i.test(message)) return t('error.backup');
-      return message;
+      return t('error.generic');
     },
     [t],
   );

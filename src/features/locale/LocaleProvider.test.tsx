@@ -21,6 +21,17 @@ function Harness() {
   );
 }
 
+function ErrorHarness({ messages }: { messages: readonly string[] }) {
+  const { translateError } = useLocale();
+  return (
+    <>
+      {messages.map((message) => (
+        <output key={message}>{translateError(message)}</output>
+      ))}
+    </>
+  );
+}
+
 describe('LocaleProvider', () => {
   it.each([
     [['nl-BE', 'en-US'], 'nl-NL'],
@@ -81,5 +92,37 @@ describe('LocaleProvider', () => {
     expect(document.documentElement.lang).toBe('nl-NL');
     expect(getItem).toHaveBeenCalledWith(localeStorageKey);
     expect(setItem).toHaveBeenCalledWith(localeStorageKey, 'nl-NL');
+  });
+
+  it('localizes every dated-schema validation category without leaking raw English', () => {
+    localStorage.setItem(localeStorageKey, 'nl-NL');
+    const messages = [
+      'Date year must be between 1900 and 2200.',
+      'Asset observations must be in chronological order.',
+      'Custom type is required.',
+      'Choose a supported currency.',
+      'A vault can contain at most 500 items.',
+      'assets must have unique, dense ordering.',
+      'Too big: expected string to have <=100 characters.',
+      'Unexpected validation failure.',
+    ];
+    render(
+      <LocaleProvider>
+        <ErrorHarness messages={messages} />
+      </LocaleProvider>,
+    );
+
+    const translated = screen.getAllByRole('status').map(({ textContent }) => textContent);
+    expect(translated).toEqual([
+      'Voer een geldige datum van 1900 tot en met 2200 in.',
+      'Zet observaties in chronologische volgorde.',
+      'Voer alleen een aangepast type in wanneer Aangepast is geselecteerd.',
+      'Kies een ondersteunde valuta met drie letters.',
+      'Een kluis kan maximaal 500 items bevatten.',
+      'De structuur van de kluis is ongeldig.',
+      'Kort deze invoer in tot de toegestane lengte.',
+      'De bewerking kon niet veilig worden voltooid.',
+    ]);
+    expect(translated).not.toEqual(expect.arrayContaining(messages));
   });
 });
