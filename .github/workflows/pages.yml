@@ -15,8 +15,12 @@ jobs:
     uses: DevSecNinja/.github/.github/workflows/pages.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
     permissions:
       contents: read
+      # The pinned reusable requires these at compile time even when Cloudflare jobs are disabled.
+      deployments: write
       id-token: write # Attest the GitHub Pages deployment with OIDC.
+      issues: write
       pages: write # Upload and deploy the Pages artifact.
+      pull-requests: write
     with:
       # renovate: datasource=node-version depName=node
       node-version: "24"
