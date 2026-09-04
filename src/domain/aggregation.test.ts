@@ -89,10 +89,23 @@ describe('buildDashboardData', () => {
     });
     const data = buildDashboardData(vault({ assets: [holding], liabilities: [debt] }), 2026, 2026);
     expect(data.snapshots).toHaveLength(1);
-    expect(data.projections.get(debt.id)?.at(-1)).toMatchObject({
+    expect(data.projections.get(debt.id)?.map(({ year }) => year)).toEqual([2026]);
+    expect(data.fullProjections.get(debt.id)?.at(-1)).toMatchObject({
       year: 2027,
       amount: '0',
       status: 'paid-off',
     });
+  });
+
+  it('filters payoff chart series to the same selected dashboard years', () => {
+    const debt = liability({
+      principal: '3600',
+      monthlyPayment: '100',
+      startDate: '2025-01-01',
+      termMonths: 36,
+    });
+    const data = buildDashboardData(vault({ liabilities: [debt] }), 2026, 2026);
+    expect(data.projections.get(debt.id)?.map(({ year }) => year)).toEqual([2026]);
+    expect(data.fullProjections.get(debt.id)?.map(({ year }) => year)).toEqual([2026, 2027]);
   });
 });

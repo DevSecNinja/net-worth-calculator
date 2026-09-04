@@ -10,8 +10,8 @@ import {
   type VaultKeyMaterial,
 } from './crypto';
 import {
+  compareAndDeleteEnvelope,
   compareAndSwapEnvelope,
-  deleteEnvelope,
   EnvelopeConflictError,
   readEnvelope,
 } from './database';
@@ -131,6 +131,23 @@ export async function replaceVaultEnvelope(
   }
 }
 
-export async function removeVault(): Promise<void> {
-  await deleteEnvelope();
+export async function removeVault(vaultInput: Vault, material: VaultKeyMaterial): Promise<void> {
+  const vault = vaultSchema.parse(vaultInput);
+  const currentEnvelope = await readEnvelope();
+  if (!currentEnvelope) throw new Error('The stored vault no longer exists.');
+  let current: Vault;
+  try {
+    current = await decryptVault(currentEnvelope, material);
+  } catch {
+    throw new VaultConflictError();
+  }
+  if (current.id !== vault.id || current.revision !== vault.revision) {
+    throw new VaultConflictError();
+  }
+  try {
+    await compareAndDeleteEnvelope(currentEnvelope);
+  } catch (error) {
+    if (error instanceof EnvelopeConflictError) throw new VaultConflictError();
+    throw error;
+  }
 }

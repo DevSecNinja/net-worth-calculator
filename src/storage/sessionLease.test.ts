@@ -46,4 +46,15 @@ describe('VaultSessionLease', () => {
     replacement.release();
     vi.useRealTimers();
   });
+
+  it('releases synchronously on pagehide so reload can immediately reacquire', () => {
+    const current = new VaultSessionLease();
+    expect(current.acquire()).toBe(true);
+    window.dispatchEvent(new PageTransitionEvent('pagehide'));
+    expect(current.ownsLease()).toBe(false);
+
+    const reloaded = new VaultSessionLease();
+    expect(reloaded.acquire()).toBe(true);
+    reloaded.release();
+  });
 });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { App } from '@/app/App';
@@ -79,5 +79,37 @@ describe('vault lifecycle', () => {
     expect(await screen.findByRole('heading', { name: /net worth dashboard/i })).toBeVisible();
     await user.click(screen.getByRole('link', { name: /assets/i }));
     expect(await screen.findByRole('heading', { name: /sample emergency fund/i })).toBeVisible();
+  });
+
+  it('closes destructive confirmation when the writable lease is lost', async () => {
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <App />
+      </AppProviders>,
+    );
+    await screen.findByRole('heading', { name: /create your encrypted vault/i });
+    await user.type(screen.getByLabelText(/^passphrase$/i), 'correct horse battery staple');
+    await user.type(screen.getByLabelText(/confirm passphrase/i), 'correct horse battery staple');
+    await user.click(screen.getByRole('button', { name: /create empty vault/i }));
+    await screen.findByRole('heading', { name: /build your first net worth snapshot/i });
+    await user.click(screen.getByRole('link', { name: /settings/i }));
+    await user.click(screen.getByRole('button', { name: /delete vault/i }));
+    expect(screen.getByRole('dialog', { name: /delete encrypted vault/i })).toBeVisible();
+
+    await act(() => {
+      localStorage.setItem(
+        'nwc-vault-lease',
+        JSON.stringify({ owner: 'different-tab', expiresAt: Date.now() + 20_000 }),
+      );
+      window.dispatchEvent(new StorageEvent('storage', { key: 'nwc-vault-lease' }));
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: /delete encrypted vault/i }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole('heading', { name: /vault settings are locked/i })).toBeVisible();
   });
 });

@@ -14,6 +14,7 @@ export type DashboardData = {
   snapshots: DashboardSnapshot[];
   allocation: AllocationSlice[];
   projections: Map<string, LiabilityProjection[]>;
+  fullProjections: Map<string, LiabilityProjection[]>;
 };
 
 export function availableYears(vault: Vault): number[] {
@@ -55,13 +56,19 @@ export function buildDashboardData(
     throw new Error('Dashboard range is invalid.');
   }
 
-  const projections = new Map(
+  const fullProjections = new Map(
     vault.liabilities.map((liability) => [
       liability.id,
       projectLiability(liability, {
         startYear: firstYear,
         endYear: Math.max(lastYear, projectionHorizon(liability)),
       }),
+    ]),
+  );
+  const projections = new Map(
+    [...fullProjections].map(([id, values]) => [
+      id,
+      values.filter(({ year }) => year >= firstYear && year <= lastYear),
     ]),
   );
   const snapshots: DashboardSnapshot[] = [];
@@ -136,5 +143,6 @@ export function buildDashboardData(
       .map(([name, value]) => ({ name, value: canonicalMoney(value) }))
       .sort((left, right) => toDecimal(right.value).cmp(left.value)),
     projections,
+    fullProjections,
   };
 }

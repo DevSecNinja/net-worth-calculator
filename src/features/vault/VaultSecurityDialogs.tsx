@@ -12,7 +12,7 @@ import { validatePassphrasePair } from './passphrase';
 import { useVault } from './useVault';
 
 export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { changePassphrase, busy } = useVault();
+  const { changePassphrase, busy, status } = useVault();
   const { setDirty } = useDirtyState();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -23,6 +23,10 @@ export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClo
     setDirty('Change passphrase', open && Boolean(current || next || confirmation));
     return () => setDirty('Change passphrase', false);
   }, [confirmation, current, next, open, setDirty]);
+
+  useEffect(() => {
+    if (open && status !== 'unlocked') onClose();
+  }, [onClose, open, status]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -67,7 +71,7 @@ export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClo
           error={error}
         />
         <div className="button-row">
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" disabled={busy || status !== 'unlocked'}>
             Change passphrase
           </Button>
           <Button type="button" variant="secondary" onClick={onClose}>
@@ -80,10 +84,14 @@ export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClo
 }
 
 export function DeleteVaultDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { deleteVault, busy } = useVault();
+  const { deleteVault, busy, status } = useVault();
   const navigate = useNavigate();
   const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    if (open && status !== 'unlocked') onClose();
+  }, [onClose, open, status]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -116,7 +124,7 @@ export function DeleteVaultDialog({ open, onClose }: { open: boolean; onClose: (
           required
         />
         <div className="button-row">
-          <Button type="submit" variant="danger" disabled={busy}>
+          <Button type="submit" variant="danger" disabled={busy || status !== 'unlocked'}>
             Delete vault forever
           </Button>
           <Button type="button" variant="secondary" onClick={onClose}>

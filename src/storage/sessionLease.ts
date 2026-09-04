@@ -48,6 +48,7 @@ export class VaultSessionLease {
         this.channel.onmessage = () => this.checkOwnership();
       }
       window.addEventListener('storage', this.handleStorage);
+      window.addEventListener('pagehide', this.handlePageHide);
     }
     return acquired;
   }
@@ -58,6 +59,7 @@ export class VaultSessionLease {
     this.channel?.close();
     this.channel = undefined;
     window.removeEventListener('storage', this.handleStorage);
+    window.removeEventListener('pagehide', this.handlePageHide);
     if (parseLease(localStorage.getItem(LEASE_KEY))?.owner === this.owner) {
       localStorage.removeItem(LEASE_KEY);
       this.notifyPeers();
@@ -75,6 +77,10 @@ export class VaultSessionLease {
 
   private readonly handleStorage = (event: StorageEvent) => {
     if (event.key === LEASE_KEY) this.checkOwnership();
+  };
+
+  private readonly handlePageHide = () => {
+    this.release();
   };
 
   private writeLease(): void {

@@ -32,7 +32,7 @@ describe('vault repository', () => {
     );
     expect(saved.revision).toBe(2);
     expect((await unlockVault(passphrase)).vault.settings.baseCurrency).toBe('EUR');
-    await removeVault();
+    await removeVault(saved, created.material);
     expect(await hasVault()).toBe(false);
   });
 
@@ -105,5 +105,34 @@ describe('vault repository', () => {
     await expect(replaceVaultEnvelope(staleEnvelope!, staleEnvelope)).rejects.toThrow(
       VaultConflictError,
     );
+  });
+
+  it('atomically rejects stale deletion while preserving the current vault', async () => {
+    const created = await createVault(createEmptyVault('USD'), passphrase);
+    const stale = await unlockVault(passphrase);
+    const saved = await saveVault(
+      { ...created.vault, settings: { ...created.vault.settings, baseCurrency: 'EUR' } },
+      created.material,
+    );
+
+    await expect(removeVault(stale.vault, stale.material)).rejects.toThrow(VaultConflictError);
+    await expect(unlockVault(passphrase)).resolves.toMatchObject({
+      vault: { revision: 2, settings: { baseCurrency: 'EUR' } },
+    });
+    await removeVault(saved, created.material);
+    expect(await hasVault()).toBe(false);
+  });
+
+  it('rejects deletion with unrelated key material', async () => {
+    const created = await createVault(createEmptyVault('USD'), passphrase);
+    const unrelatedMaterial = await deriveVaultKey('another horse battery staple');
+    await expect(removeVault(created.vault, unrelatedMaterial)).rejects.toThrow(VaultConflictError);
+    expect(await hasVault()).toBe(true);
+  });
+
+  it('rejects deletion if the persisted envelope disappeared', async () => {
+    const created = await createVault(createEmptyVault('USD'), passphrase);
+    await deleteEnvelope();
+    await expect(removeVault(created.vault, created.material)).rejects.toThrow('no longer exists');
   });
 });

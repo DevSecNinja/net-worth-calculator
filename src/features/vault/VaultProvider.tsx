@@ -210,12 +210,16 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteVault = useCallback(async () => {
+    if (!vault || !material) throw new Error('Unlock the vault before deleting it.');
+    const operationLease = lease.current;
+    if (!operationLease?.ownsLease()) throw new Error('The writable vault session was lost.');
     const token = ++generation.current;
     setBusy(true);
     setError(undefined);
     try {
-      await removeVault();
-      lease.current?.release();
+      await removeVault(vault, material);
+      if (!isCurrentOperation(token, operationLease)) return;
+      operationLease.release();
       lease.current = undefined;
       setVault(undefined);
       setMaterial(undefined);
@@ -226,7 +230,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     } finally {
       if (generation.current === token) setBusy(false);
     }
-  }, []);
+  }, [isCurrentOperation, material, vault]);
 
   const replaceImportedVault = useCallback(
     async (imported: ImportedVault) => {
