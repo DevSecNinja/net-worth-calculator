@@ -84,6 +84,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   );
   const translateError = useCallback(
     (message: string) => {
+      if (message === t('form.errorSaveAsset') || message === t('form.errorSaveLiability')) {
+        return message;
+      }
       if (/name is required/i.test(message)) return t('error.nameRequired');
       if (/at least 12|between 12/i.test(message)) return t('error.passphraseLength');
       if (/passphrases do not match/i.test(message)) return t('error.passphraseMismatch');
