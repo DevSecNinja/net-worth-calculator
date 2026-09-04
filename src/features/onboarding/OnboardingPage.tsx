@@ -1,9 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 
 import { ErrorSummary } from '@/components/forms/ErrorSummary';
 import { PassphraseFields } from '@/components/forms/PassphraseFields';
 import { Button } from '@/components/ui/Button';
 import { useVault } from '@/features/vault/useVault';
+import { useLocale } from '@/features/locale/LocaleProvider';
 import { validatePassphrasePair } from '@/features/vault/passphrase';
 import { useDirtyState } from '@/hooks/useDirtyState';
 
@@ -12,15 +14,17 @@ const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK
 export function OnboardingPage() {
   const { create, busy, error } = useVault();
   const { setDirty } = useDirtyState();
+  const { t } = useLocale();
+  const dirtyLabel = t('dirty.vaultSetup');
   const [passphrase, setPassphrase] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [validationError, setValidationError] = useState<string>();
 
   useEffect(() => {
-    setDirty('Vault setup', Boolean(passphrase || confirmation || currency !== 'USD'));
-    return () => setDirty('Vault setup', false);
-  }, [confirmation, currency, passphrase, setDirty]);
+    setDirty(dirtyLabel, Boolean(passphrase || confirmation || currency !== 'USD'));
+    return () => setDirty(dirtyLabel, false);
+  }, [confirmation, currency, dirtyLabel, passphrase, setDirty]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,41 +43,38 @@ export function OnboardingPage() {
   return (
     <main id="main-content" className="page page--onboarding">
       <section className="hero">
-        <p className="eyebrow">Private by design</p>
-        <h1>See your whole financial picture without sending it anywhere.</h1>
-        <p className="hero__lede">
-          Your vault is encrypted in this browser. There are no accounts, trackers, servers, or
-          password resets.
-        </p>
+        <p className="eyebrow">{t('onboarding.eyebrow')}</p>
+        <h1>{t('onboarding.title')}</h1>
+        <p className="hero__lede">{t('onboarding.lede')}</p>
       </section>
 
       <div className="onboarding-grid">
         <section className="panel">
-          <h2>Before you start</h2>
+          <h2>{t('onboarding.before')}</h2>
           <ul className="feature-list">
             <li>
-              <strong>Local only.</strong> Financial data never leaves this browser.
+              <strong>{t('onboarding.localTitle')}</strong> {t('onboarding.localText')}
             </li>
             <li>
-              <strong>Encrypted at rest.</strong> Your passphrase unlocks the vault in memory.
+              <strong>{t('onboarding.encryptedTitle')}</strong> {t('onboarding.encryptedText')}
             </li>
             <li>
-              <strong>You own recovery.</strong> Keep the passphrase and an encrypted backup safe.
+              <strong>{t('onboarding.recoveryTitle')}</strong> {t('onboarding.recoveryText')}
             </li>
             <li>
-              <strong>Offline ready.</strong> After the first load, the app shell works offline.
+              <strong>{t('onboarding.offlineTitle')}</strong> {t('onboarding.offlineText')}
             </li>
           </ul>
         </section>
 
         <form className="panel form-stack" onSubmit={(event) => void submit(event)} noValidate>
           <div>
-            <p className="eyebrow">Step 1 of 1</p>
-            <h2>Create your encrypted vault</h2>
+            <p className="eyebrow">{t('onboarding.step')}</p>
+            <h2>{t('onboarding.createTitle')}</h2>
           </div>
           <ErrorSummary errors={errors} />
           <label className="field">
-            <span>Base currency</span>
+            <span>{t('onboarding.baseCurrency')}</span>
             <select value={currency} onChange={(event) => setCurrency(event.currentTarget.value)}>
               {currencies.map((code) => (
                 <option key={code} value={code}>
@@ -81,9 +82,7 @@ export function OnboardingPage() {
                 </option>
               ))}
             </select>
-            <span className="field__description">
-              All amounts use this currency. The app never fetches exchange rates.
-            </span>
+            <span className="field__description">{t('onboarding.currencyHelp')}</span>
           </label>
           <PassphraseFields
             passphrase={passphrase}
@@ -94,14 +93,15 @@ export function OnboardingPage() {
           />
           <div className="button-row">
             <Button type="submit" value="empty" disabled={busy}>
-              {busy ? 'Encrypting...' : 'Create empty vault'}
+              {busy ? t('onboarding.encrypting') : t('onboarding.createEmpty')}
             </Button>
             <Button type="submit" value="sample" variant="secondary" disabled={busy}>
-              Create with sample data
+              {t('onboarding.createSample')}
             </Button>
           </div>
+          <p className="fine-print">{t('onboarding.sampleHelp')}</p>
           <p className="fine-print">
-            Sample data is created only when you choose the sample button and can be deleted.
+            {t('onboarding.restorePrompt')} <Link to="/backup">{t('onboarding.restoreLink')}</Link>.
           </p>
         </form>
       </div>

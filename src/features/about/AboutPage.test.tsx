@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 
 import packageMetadata from '../../../package.json';
 import { AppFooter } from '@/components/ui/AppFooter';
+import { LocaleProvider } from '@/features/locale/LocaleProvider';
 
 import { AboutPage } from './AboutPage';
 
@@ -10,10 +11,10 @@ const testCommit = '0123456789abcdef0123456789abcdef01234567';
 describe('AboutPage', () => {
   it('states the local-only privacy boundaries and exact package/build identity', () => {
     render(
-      <>
+      <LocaleProvider>
         <AboutPage />
         <AppFooter />
-      </>,
+      </LocaleProvider>,
     );
 
     expect(screen.getByText(/no account system, database server/i)).toHaveTextContent(
@@ -22,7 +23,7 @@ describe('AboutPage', () => {
     expect(screen.getByText(/complete vault is authenticated and encrypted/i)).toHaveTextContent(
       /Cache Storage contains the app shell, never vault data/i,
     );
-    expect(screen.getByText(`v${packageMetadata.version}`, { selector: 'strong' })).toBeVisible();
+    expect(screen.getByText(new RegExp(`Version v${packageMetadata.version}`))).toBeVisible();
 
     const buildLinks = screen.getAllByRole('link', {
       name: new RegExp(`${packageMetadata.version}|${testCommit.slice(0, 7)}`),

@@ -11,8 +11,10 @@ import {
 
 import { formatMoney } from '@/domain/currency';
 import type { DashboardSnapshot } from '@/domain/model';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 import { ChartFrame } from './ChartFrame';
+import { exactTooltipValue } from './tooltip';
 
 export function AnnualChangeChart({
   snapshots,
@@ -23,21 +25,26 @@ export function AnnualChangeChart({
   currency: string;
   locale: string;
 }) {
+  const { t } = useLocale();
   const data = snapshots
     .filter((snapshot) => snapshot.yearlyChange !== undefined)
-    .map((snapshot) => ({ year: snapshot.year, change: Number(snapshot.yearlyChange) }));
+    .map((snapshot) => ({
+      year: snapshot.year,
+      change: Number(snapshot.yearlyChange),
+      changeExact: snapshot.yearlyChange,
+    }));
   return (
     <ChartFrame
-      title="Annual net worth change"
-      summary="Change is shown only when adjacent years have complete asset values."
-      table={
+      title={t('chart.changeTitle')}
+      summary={t('chart.changeSummary')}
+      table={() => (
         <table>
-          <caption>Annual net worth change by calendar year</caption>
+          <caption>{t('chart.changeCaption')}</caption>
           <thead>
             <tr>
-              <th>Year</th>
-              <th>Change</th>
-              <th>Percent</th>
+              <th>{t('chart.year')}</th>
+              <th>{t('chart.change')}</th>
+              <th>{t('chart.percent')}</th>
             </tr>
           </thead>
           <tbody>
@@ -47,25 +54,29 @@ export function AnnualChangeChart({
                 <td>
                   {snapshot.yearlyChange !== undefined
                     ? formatMoney(snapshot.yearlyChange, currency, locale)
-                    : 'Not defined'}
+                    : t('dashboard.notDefined')}
                 </td>
                 <td>
                   {snapshot.yearlyChangePercent !== undefined
                     ? `${snapshot.yearlyChangePercent}%`
-                    : 'Not defined'}
+                    : t('dashboard.notDefined')}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      }
+      )}
     >
       <ResponsiveContainer width="100%" height={240}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="4 4" />
           <XAxis dataKey="year" />
           <YAxis width={72} />
-          <Tooltip formatter={(value) => formatMoney(String(value), currency, locale)} />
+          <Tooltip
+            formatter={(value, _name, item) =>
+              formatMoney(exactTooltipValue(item, 'changeExact', value), currency, locale)
+            }
+          />
           <Bar dataKey="change" isAnimationActive={false}>
             {data.map((point) => (
               <Cell

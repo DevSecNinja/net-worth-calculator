@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes, ReactNode } from 'react';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
@@ -8,6 +9,7 @@ type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export function Field({ label, description, error, prefix, id, ...props }: FieldProps) {
+  const { translateError } = useLocale();
   const fieldId = id ?? `field-${props.name ?? label.toLowerCase().replaceAll(/\W+/g, '-')}`;
   const descriptionId = description ? `${fieldId}-description` : undefined;
   const errorId = error ? `${fieldId}-error` : undefined;
@@ -32,7 +34,7 @@ export function Field({ label, description, error, prefix, id, ...props }: Field
       </div>
       {error ? (
         <p className="field__error" id={errorId}>
-          {error}
+          {translateError(error)}
         </p>
       ) : null}
     </div>

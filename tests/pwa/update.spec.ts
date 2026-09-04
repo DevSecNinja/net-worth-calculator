@@ -33,6 +33,7 @@ function buildVersion(sha: string, output: string) {
 }
 
 test('performs a real explicit N to N+1 update without losing persisted or dirty state', async ({
+  context,
   page,
 }, workerInfo) => {
   test.setTimeout(240_000);
@@ -64,6 +65,9 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
     await page.getByRole('link', { name: /^assets$/i }).click();
     await page.getByRole('button', { name: /edit/i }).click();
     await page.getByLabel(/asset name/i).fill('Unsaved update draft');
+    const cleanPage = await context.newPage();
+    await cleanPage.goto(`${base}#/about`);
+    await cleanPage.evaluate(async () => navigator.serviceWorker.ready);
 
     const cacheBefore = await page.evaluate(async () => {
       const urls: string[] = [];
@@ -82,13 +86,21 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
     });
     const updatePrompt = page.getByRole('status').filter({ hasText: /new version is available/i });
     await expect(updatePrompt).toBeVisible({ timeout: 45_000 });
+    const cleanUpdatePrompt = cleanPage
+      .getByRole('status')
+      .filter({ hasText: /new version is available/i });
+    await expect(cleanUpdatePrompt).toBeVisible({ timeout: 45_000 });
     await expect(updatePrompt).toHaveAttribute('role', 'status');
     await expect(page.getByText(/v0.1.0 \(aaaaaaa\)/i)).toBeVisible();
 
-    await expect(page.getByRole('dialog', { name: /unsaved edits/i })).toContainText(
-      'Asset editor',
+    await cleanPage.getByRole('button', { name: /update now/i }).click();
+    await expect(cleanPage.getByRole('dialog', { name: /unsaved edits/i })).toContainText(
+      'Unsaved edits in another tab',
     );
-    await page.getByRole('button', { name: /keep editing/i }).click();
+    await cleanPage.getByRole('button', { name: /keep editing/i }).click();
+    await expect(page.getByText(/v0.1.0 \(aaaaaaa\)/i)).toBeVisible();
+    await cleanPage.close();
+
     await expect(page.getByLabel(/asset name/i)).toHaveValue('Unsaved update draft');
     await page.getByRole('button', { name: /save asset/i }).click();
     await expect(page.getByRole('heading', { name: 'Unsaved update draft' })).toBeVisible();

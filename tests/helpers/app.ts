@@ -33,7 +33,7 @@ export async function addAsset(
   const add = page.getByRole('button', { name: /^add (your first )?asset$/i }).first();
   await add.click();
   await page.getByLabel(/asset name/i).fill(name);
-  await page.getByLabel(/^year$/i).fill(String(year));
+  await page.getByLabel(/^date$/i).fill(`${year}-12-31`);
   await page.getByLabel(/^amount$/i).fill(amount);
   await page.getByRole('button', { name: /save asset/i }).click();
   await expect(page.getByRole('heading', { name })).toBeVisible();

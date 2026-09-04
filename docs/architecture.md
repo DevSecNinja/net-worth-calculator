@@ -27,16 +27,17 @@ harness used by CI.
 
 ## Module boundaries
 
-| Area             | Responsibility                                                                     |
-| ---------------- | ---------------------------------------------------------------------------------- |
-| `src/app`        | Providers, route composition, shell, and top-level lifecycle                       |
-| `src/components` | Reusable accessible UI, forms, dialogs, and chart/table presentation               |
-| `src/domain`     | Pure types, validation, decimal money, amortization, aggregation, and migrations   |
-| `src/features`   | Vault, inventory, dashboard, backup, settings, onboarding, and About workflows     |
-| `src/storage`    | Cryptography, IndexedDB, encrypted repository, file capability, and tab lease      |
-| `src/pwa`        | Install capability, offline status, update checks, and opt-in activation           |
-| `tests`          | Built-output E2E, privacy-network, browser fallback, and PWA lifecycle validation  |
-| `scripts`        | Deterministic icon generation, local preview, and production artifact verification |
+| Area                  | Responsibility                                                                                              |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `src/app`             | Providers, route composition, shell, and top-level lifecycle                                                |
+| `src/components`      | Reusable accessible UI, forms, dialogs, and chart/table presentation                                        |
+| `src/domain`          | Pure types, validation, localized/canonical money, observations, amortization, and exact/annual aggregation |
+| `src/features/locale` | Typed en-US/en-GB/nl-NL catalogs, browser negotiation, override, and document language                      |
+| `src/features`        | Vault, inventory, dashboard, backup, settings, onboarding, and About workflows                              |
+| `src/storage`         | Cryptography, IndexedDB, encrypted repository, file capability, and tab lease                               |
+| `src/pwa`             | Install capability, offline status, update checks, and opt-in activation                                    |
+| `tests`               | Built-output E2E, privacy-network, browser fallback, and PWA lifecycle validation                           |
+| `scripts`             | Deterministic icon generation, local preview, and production artifact verification                          |
 
 Feature code must not bypass the storage layer to persist vault data. Domain calculations remain
 browser-independent and deterministic. Derived dashboard snapshots and chart series are recomputed
@@ -74,7 +75,7 @@ The persisted version 1 envelope contains:
 
 Canonical format/version/KDF/cipher fields are additional authenticated data. The public envelope has
 no timestamps, display name, item count, currency, financial value, verifier, hint, or source
-filename. Schema migrations are sequential pure transforms applied only after successful
+filename. Schema version checks are strict and applied only after successful
 authentication and before current-schema validation.
 
 ## Persistence boundaries
@@ -95,7 +96,7 @@ content and does not cache backups, data responses, or user-entered values.
 Export copies the latest authenticated envelope into a versioned `.nwvault` JSON wrapper. Native file
 save/open APIs are used where supported; Blob download and file-input fallbacks provide compatibility.
 Import enforces the 10 MiB limit, exact outer structure, supported versions, authentication,
-migration, and current vault schema before asking for overwrite confirmation. The only IndexedDB
+current vault schema before asking for overwrite confirmation. The only IndexedDB
 write occurs after all validation and confirmation succeeds.
 
 There is no escrow, passphrase reset, recovery key, synchronization service, or remote copy. Recovery

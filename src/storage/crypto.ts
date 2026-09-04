@@ -1,5 +1,9 @@
 import type { CipherEnvelopeV1, Vault } from '@/domain/model';
-import { ENVELOPE_FORMAT_VERSION, VAULT_SCHEMA_VERSION } from '@/domain/model';
+import {
+  ENVELOPE_FORMAT_VERSION,
+  MAX_VAULT_PLAINTEXT_BYTES,
+  VAULT_SCHEMA_VERSION,
+} from '@/domain/model';
 import { migrateVault } from '@/domain/migrations';
 import { cipherEnvelopeSchema } from '@/domain/validation';
 
@@ -17,6 +21,13 @@ export class VaultAuthenticationError extends Error {
   constructor() {
     super('The passphrase is incorrect or the vault cannot be authenticated.');
     this.name = 'VaultAuthenticationError';
+  }
+}
+
+export class VaultSizeError extends Error {
+  constructor() {
+    super('The encrypted vault exceeds the supported local backup size.');
+    this.name = 'VaultSizeError';
   }
 }
 
@@ -81,6 +92,8 @@ export async function encryptVault(
   vault: Vault,
   material: VaultKeyMaterial,
 ): Promise<CipherEnvelopeV1> {
+  const plaintext = encoder.encode(JSON.stringify(vault));
+  if (plaintext.byteLength > MAX_VAULT_PLAINTEXT_BYTES) throw new VaultSizeError();
   const iv = randomBytes(12);
   const metadata: Omit<CipherEnvelopeV1, 'ciphertext'> = {
     format: 'net-worth-vault',
@@ -106,9 +119,12 @@ export async function encryptVault(
       tagLength: 128,
     },
     material.key,
-    encoder.encode(JSON.stringify(vault)),
+    plaintext,
   );
-  return { ...metadata, ciphertext: bytesToBase64Url(new Uint8Array(ciphertext)) };
+  return cipherEnvelopeSchema.parse({
+    ...metadata,
+    ciphertext: bytesToBase64Url(new Uint8Array(ciphertext)),
+  });
 }
 
 export async function decryptVault(

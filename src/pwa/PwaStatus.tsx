@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { useAppStatus } from '@/components/ui/AppStatus';
 import { useDirtyState } from '@/hooks/useDirtyState';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 import { useInstallPrompt } from './useInstallPrompt';
 import { usePwaUpdate } from './usePwaUpdate';
@@ -11,19 +12,21 @@ import { usePwaUpdate } from './usePwaUpdate';
 export function PwaStatus() {
   const update = usePwaUpdate();
   const install = useInstallPrompt();
-  const { dirtyNames } = useDirtyState();
+  const { collectDirtyNames } = useDirtyState();
   const { announce } = useAppStatus();
+  const { t } = useLocale();
   const [online, setOnline] = useState(navigator.onLine);
   const [confirmUpdate, setConfirmUpdate] = useState(false);
+  const [updateBlockers, setUpdateBlockers] = useState<string[]>([]);
 
   useEffect(() => {
     const onOnline = () => {
       setOnline(true);
-      announce('Back online.');
+      announce(t('pwa.backOnline'));
     };
     const onOffline = () => {
       setOnline(false);
-      announce('You are offline. Saved vault features remain available.');
+      announce(t('pwa.offlineAnnouncement'));
     };
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
@@ -31,68 +34,69 @@ export function PwaStatus() {
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
     };
-  }, [announce]);
+  }, [announce, t]);
 
-  useEffect(() => {
-    if (update.offlineReady) announce('The app shell is ready for offline use.');
-  }, [announce, update.offlineReady]);
-
-  useEffect(() => {
-    if (update.needRefresh && dirtyNames.length > 0) setConfirmUpdate(true);
-  }, [dirtyNames.length, update.needRefresh]);
-
-  function requestUpdate() {
-    if (dirtyNames.length > 0) setConfirmUpdate(true);
-    else void update.activateUpdate();
+  async function requestUpdate() {
+    const blockers = await collectDirtyNames();
+    if (blockers.length > 0) {
+      setUpdateBlockers(blockers);
+      setConfirmUpdate(true);
+    } else {
+      await update.activateUpdate();
+    }
   }
 
   return (
     <>
       {!online ? (
         <div className="connection-status" role="status">
-          Offline - encrypted local data remains available
+          {t('pwa.offline')}
         </div>
       ) : null}
-      <div className="pwa-actions" role="region" aria-label="Application status">
+      <div className="pwa-actions" role="region" aria-label={t('pwa.statusRegion')}>
         {install.canInstall ? (
           <Button type="button" variant="ghost" onClick={() => void install.install()}>
-            Install app
+            {t('pwa.install')}
           </Button>
         ) : null}
         {update.offlineReady ? (
           <div className="toast" role="status">
-            <span>Ready for offline use.</span>
+            <span>{t('pwa.offlineReady')}</span>
             <Button type="button" variant="ghost" onClick={update.dismissOfflineReady}>
-              Dismiss
+              {t('common.dismiss')}
             </Button>
           </div>
         ) : null}
         {update.needRefresh ? (
           <div className="toast" role="status">
-            <span>A new version is available.</span>
-            <Button type="button" onClick={requestUpdate}>
-              Update now
+            <span>{t('pwa.updateAvailable')}</span>
+            <Button type="button" onClick={() => void requestUpdate()}>
+              {t('pwa.updateNow')}
             </Button>
             <Button type="button" variant="ghost" onClick={update.dismissRefresh}>
-              Later
+              {t('pwa.later')}
             </Button>
           </div>
         ) : null}
         {update.registrationError ? (
           <p className="status-error" role="status">
-            Offline setup failed. Online use still works.
+            {t('pwa.registrationError')}
           </p>
         ) : null}
       </div>
-      <Dialog open={confirmUpdate} title="Unsaved edits" onClose={() => setConfirmUpdate(false)}>
+      <Dialog
+        open={confirmUpdate}
+        title={t('pwa.unsavedTitle')}
+        onClose={() => setConfirmUpdate(false)}
+      >
         <div className="form-stack">
-          <p>The following drafts have not been saved:</p>
+          <p>{t('pwa.unsavedHelp')}</p>
           <ul>
-            {dirtyNames.map((name) => (
+            {updateBlockers.map((name) => (
               <li key={name}>{name}</li>
             ))}
           </ul>
-          <p>Save them first, or explicitly discard them and update.</p>
+          <p>{t('pwa.unsavedResolution')}</p>
           <div className="button-row">
             <Button
               type="button"
@@ -102,10 +106,10 @@ export function PwaStatus() {
                 void update.activateUpdate();
               }}
             >
-              Discard drafts and update
+              {t('pwa.discardUpdate')}
             </Button>
             <Button type="button" variant="secondary" onClick={() => setConfirmUpdate(false)}>
-              Keep editing
+              {t('pwa.keepEditing')}
             </Button>
           </div>
         </div>

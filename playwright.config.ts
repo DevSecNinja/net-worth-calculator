@@ -5,6 +5,7 @@ const baseURL = `http://127.0.0.1:${previewPort}/net-worth-calculator/`;
 
 export default defineConfig({
   testDir: './tests',
+  testIgnore: '**/performance/**',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,

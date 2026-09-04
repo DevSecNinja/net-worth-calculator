@@ -60,6 +60,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string>();
   const lease = useRef<VaultSessionLease | undefined>(undefined);
   const generation = useRef(0);
+  const mutationInFlight = useRef(false);
 
   const lock = useCallback(() => {
     generation.current += 1;
@@ -73,12 +74,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    const releaseForPageHide = () => lease.current?.release();
-    const reacquireAfterPageRestore = (event: PageTransitionEvent) => {
-      if (event.persisted && lease.current && !lease.current.acquire()) lock();
+    const lockForPageHide = () => {
+      if (lease.current) lock();
     };
-    window.addEventListener('pagehide', releaseForPageHide);
-    window.addEventListener('pageshow', reacquireAfterPageRestore);
+    window.addEventListener('pagehide', lockForPageHide);
     void hasVault()
       .then((exists) => {
         if (active) setStatus(exists ? 'locked' : 'absent');
@@ -93,8 +92,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       active = false;
       generation.current += 1;
       lease.current?.release();
-      window.removeEventListener('pagehide', releaseForPageHide);
-      window.removeEventListener('pageshow', reacquireAfterPageRestore);
+      window.removeEventListener('pagehide', lockForPageHide);
     };
   }, [lock]);
 
@@ -171,8 +169,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const mutate = useCallback(
     async (updater: (current: Vault) => Vault) => {
       if (!vault || !material) throw new Error('Unlock the vault before changing it.');
+      if (mutationInFlight.current) {
+        const conflict = new Error('Another vault change is still being saved.');
+        setError(conflict.message);
+        throw conflict;
+      }
       const operationLease = lease.current;
       if (!operationLease?.ownsLease()) throw new Error('The writable vault session was lost.');
+      mutationInFlight.current = true;
       const token = ++generation.current;
       setBusy(true);
       setError(undefined);
@@ -184,6 +188,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         if (generation.current === token) setError(messageFrom(caught));
         throw caught;
       } finally {
+        mutationInFlight.current = false;
         if (generation.current === token) setBusy(false);
       }
     },
@@ -242,25 +247,33 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const replaceImportedVault = useCallback(
     async (imported: ImportedVault) => {
-      const operationLease = lease.current;
-      if (!operationLease?.ownsLease()) throw new Error('The writable vault session was lost.');
       const token = ++generation.current;
       setBusy(true);
       setError(undefined);
+      let operationLease = lease.current;
+      let acquiredForRestore = false;
       try {
+        if (!operationLease?.ownsLease()) {
+          operationLease = acquireLease();
+          acquiredForRestore = true;
+        }
         await replaceVaultEnvelope(imported.envelope);
         if (!isCurrentOperation(token, operationLease)) return;
         setVault(imported.vault);
         setMaterial(imported.material);
         setStatus('unlocked');
       } catch (caught) {
+        if (acquiredForRestore) {
+          operationLease?.release();
+          if (lease.current === operationLease) lease.current = undefined;
+        }
         if (generation.current === token) setError(messageFrom(caught));
         throw caught;
       } finally {
         if (generation.current === token) setBusy(false);
       }
     },
-    [isCurrentOperation],
+    [acquireLease, isCurrentOperation],
   );
 
   const clearError = useCallback(() => setError(undefined), []);

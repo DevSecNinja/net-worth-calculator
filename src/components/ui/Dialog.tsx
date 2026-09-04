@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 
 import { Button } from './Button';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 type DialogProps = {
   open: boolean;
@@ -10,6 +11,7 @@ type DialogProps = {
 };
 
 export function Dialog({ open, title, onClose, children }: DialogProps) {
+  const { t } = useLocale();
   const reference = useRef<HTMLDialogElement>(null);
   const titleId = `dialog-${title.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`;
 
@@ -35,8 +37,13 @@ export function Dialog({ open, title, onClose, children }: DialogProps) {
     >
       <div className="dialog__header">
         <h2 id={titleId}>{title}</h2>
-        <Button type="button" variant="ghost" onClick={onClose} aria-label={`Close ${title}`}>
-          Close
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onClose}
+          aria-label={`${t('common.close')} ${title}`}
+        >
+          {t('common.close')}
         </Button>
       </div>
       {children}

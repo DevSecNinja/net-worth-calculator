@@ -11,7 +11,6 @@ export function createEmptyVault(baseCurrency = 'USD'): Vault {
     updatedAt: timestamp,
     settings: {
       baseCurrency,
-      locale: 'system',
       createdWithSampleData: false,
     },
     assets: [],
@@ -32,8 +31,8 @@ export function addSampleData(vault: Vault, currentYear = new Date().getFullYear
     name: 'Sample emergency fund',
     notes: 'Demo data - replace or remove it.',
     values: [
-      { year: currentYear - 1, amount: '18000', updatedAt: timestamp },
-      { year: currentYear, amount: '22500', updatedAt: timestamp },
+      { date: `${currentYear - 1}-12-31`, amount: '18000', updatedAt: timestamp },
+      { date: `${currentYear}-12-31`, amount: '22500', updatedAt: timestamp },
     ],
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -49,7 +48,7 @@ export function addSampleData(vault: Vault, currentYear = new Date().getFullYear
     startDate: `${currentYear - 1}-01-01`,
     termMonths: 60,
     notes: 'Demo data - replace or remove it.',
-    manualBalances: [{ year: currentYear - 1, amount: '9500', updatedAt: timestamp }],
+    manualBalances: [{ date: `${currentYear - 1}-12-31`, amount: '9500', updatedAt: timestamp }],
     createdAt: timestamp,
     updatedAt: timestamp,
   };

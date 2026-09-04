@@ -1,5 +1,7 @@
+import { MAX_BACKUP_BYTES } from '@/domain/model';
+
 const BACKUP_MIME = 'application/vnd.devsecninja.net-worth-backup+json';
-export const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
+export { MAX_BACKUP_BYTES };
 
 type WritableFileHandle = {
   createWritable(): Promise<{

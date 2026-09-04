@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import type { DashboardSnapshot } from '@/domain/model';
 
@@ -42,12 +43,14 @@ const snapshots: DashboardSnapshot[] = [
 ];
 
 describe('AnnualChangeChart', () => {
-  it('renders and charts defined zero change values', () => {
+  it('renders and charts defined zero change values', async () => {
+    const user = userEvent.setup();
     render(<AnnualChangeChart snapshots={snapshots} currency="USD" locale="en-US" />);
 
     expect(JSON.parse(screen.getByTestId('annual-change-chart').dataset.series ?? '')).toEqual([
       { year: 2025, change: 0 },
     ]);
+    await user.click(screen.getByText(/view annual net worth change data table/i));
     const rows = within(
       screen.getByRole('table', { name: /annual net worth change by calendar year/i }),
     ).getAllByRole('row');

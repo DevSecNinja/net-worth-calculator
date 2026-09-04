@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 export function ConfirmDialog({
   open,
@@ -18,6 +19,7 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <Dialog open={open} title={title} onClose={onClose}>
       <div className="form-stack">
@@ -27,7 +29,7 @@ export function ConfirmDialog({
             {confirmLabel}
           </Button>
           <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         </div>
       </div>

@@ -56,9 +56,9 @@ used by every story.
       `src/domain/currency.test.ts` (FR-013, FR-019)
 - [x] T011 Implement deterministic decimal money helpers and locale-aware formatting in
       `src/domain/currency.ts` (FR-013, FR-019)
-- [x] T012 [P] Write failing schema migration and import-boundary tests in
+- [x] T012 [P] Write failing schema/version-compatibility and import-boundary tests in
       `src/domain/migrations.test.ts` (FR-022)
-- [x] T013 Implement sequential pure vault and backup migrations in `src/domain/migrations.ts`
+- [x] T013 Implement strict current-format vault/backup parsing and unsupported-format rejection in `src/domain/migrations.ts`
       (FR-022)
 - [x] T014 [P] Write failing AES-GCM/PBKDF2 round-trip, wrong-passphrase, IV, AAD, and tamper tests
       in `src/storage/crypto.test.ts` (FR-003-FR-005)
@@ -198,7 +198,7 @@ prove every failed/cancelled import preserves the current ciphertext.
 
 ### Tests for User Story 4
 
-- [x] T044 [P] [US4] Write backup schema, size, tamper, wrong-passphrase, migration, and
+- [x] T044 [P] [US4] Write backup schema, size, tamper, wrong-passphrase, version-compatibility, and
       atomic-overwrite tests in `src/features/backup/backup.test.ts` (FR-021-FR-024)
 - [x] T045 [P] [US4] Write native file API and download/input fallback component tests in
       `src/features/backup/BackupPage.test.tsx` (FR-023)
@@ -405,3 +405,75 @@ Task T033: Implement year editor/error summary.
   and concrete file-path format.
 - Tests precede their corresponding implementation wherever behavior can be isolated.
 - No task may weaken or skip a failing gate to obtain a green build.
+
+---
+
+## Phase 11: Locale and Observation Foundation Amendment
+
+**Purpose**: Establish shared typed localization, localized numeric input, and the initial public
+dated-observation vault/backup schemas before the amended user stories.
+
+- [x] T079 [P] Add typed `en-US`, `en-GB`, and `nl-NL` catalogs with key-completeness tests in `src/features/locale/catalog.ts` and `src/features/locale/catalog.test.ts` (FR-038)
+- [x] T080 [P] Implement ordered browser locale negotiation, explicit localStorage override, document-language synchronization, and tests in `src/features/locale/LocaleProvider.tsx` and `src/features/locale/LocaleProvider.test.tsx` (FR-039-FR-040)
+- [x] T081 [P] Implement strict localized decimal/group parsing and blur formatting with en-US/en-GB/nl-NL/JPY tests in `src/domain/localizedMoney.ts` and `src/domain/localizedMoney.test.ts` (FR-041-FR-043)
+- [x] T082 Replace year values with exact-date observations and bump vault/backup schemas in `src/domain/model.ts` and `src/domain/validation.ts` (FR-044, FR-049)
+- [x] T083 Write current dated vault/backup round-trip and unsupported-format rejection tests in `src/domain/migrations.test.ts` and `src/features/backup/backup.test.ts` (FR-049)
+- [x] T084 Implement initial dated schema and backup-format validation in `src/domain/migrations.ts`, `src/storage/crypto.ts`, `src/features/backup/backup.ts`, and `specs/001-net-worth-pwa/contracts/backup-envelope.schema.json` (FR-049)
+
+**Checkpoint**: Locale and schema foundations are independently unit-tested and current encrypted
+vaults/backups round-trip without data loss.
+
+---
+
+## Phase 12: User Story 8 - Use the Complete Product in My Language (Priority: P1)
+
+**Goal**: Deliver complete accessible localization and locale-safe currency input.
+
+**Independent Test**: Launch with each browser language, switch all three languages while locked and
+unlocked, enter equivalent localized amounts including JPY, and verify canonical values do not change.
+
+- [x] T085 [P] [US8] Add a reusable currency-aware localized amount field with visible/screen-reader context in `src/components/forms/MoneyField.tsx` and `src/components/forms/MoneyField.test.tsx` (FR-041, FR-042, FR-043)
+- [x] T086 [US8] Replace financial amount inputs with `MoneyField` in `src/features/inventory/AssetDialog.tsx`, `src/features/inventory/LiabilityDialog.tsx`, and `src/components/forms/YearValuesEditor.tsx` (FR-041-FR-043)
+- [x] T087 [US8] Wire locale selection into settings and application providers in `src/features/settings/SettingsPage.tsx` and `src/app/AppProviders.tsx` (FR-038-FR-040)
+- [x] T088 [US8] Translate navigation, vault, onboarding, inventory, dashboard, backup, settings, About, PWA, dialogs, errors, charts, and tables across `src/app/`, `src/components/`, `src/features/`, and `src/pwa/` (FR-038)
+- [x] T089 [P] [US8] Add Dutch workflow, locale persistence, `<html lang>`, visible asset currency, and value-invariance Playwright coverage in `tests/e2e/localization.spec.ts` (SC-013, SC-014, SC-015)
+
+**Checkpoint**: Every core workflow is complete in three languages and financial input remains
+canonical and currency-invariant.
+
+---
+
+## Phase 13: User Story 9 - Track and Forecast Exact Observation Dates (Priority: P1)
+
+**Goal**: Deliver exact-date observations, As of snapshots, timeline, staleness, and dated liability
+forecasts while retaining December 31 annual reporting.
+
+**Independent Test**: Record same-year July/December observations, change As of across them, verify
+no future leakage, compare asset carry-forward and liability amortization, and match chart/table data.
+
+- [x] T090 [P] [US9] Implement sorted unique dated-observation helpers, source/staleness semantics, and tests in `src/domain/observations.ts` and `src/domain/observations.test.ts` (FR-044-FR-046)
+- [x] T091 [P] [US9] Refactor liability amortization to exact target dates and latest eligible manual seeds with month-end/leap-day tests in `src/domain/amortization.ts` and `src/domain/amortization.test.ts` (FR-047)
+- [x] T092 [US9] Refactor exact As of snapshots, December 31 annual snapshots, and timeline derivation with no-future-leakage/July-forecast tests in `src/domain/aggregation.ts` and `src/domain/aggregation.test.ts` (FR-045-FR-048)
+- [x] T093 [US9] Replace year editors with exact-date observation editors in `src/components/forms/YearValuesEditor.tsx`, `src/features/inventory/AssetDialog.tsx`, and `src/features/inventory/LiabilityDialog.tsx` (FR-044)
+- [x] T094 [US9] Add As of selection, source date, staleness, carry-forward/projected labels, exact timeline, and annual-mode controls in `src/features/dashboard/DashboardPage.tsx`, `src/features/dashboard/DashboardSummary.tsx`, and `src/features/dashboard/RangeFilter.tsx` (FR-045-FR-048)
+- [x] T095 [P] [US9] Update chart/table contracts for exact dates and source equivalence in `src/components/charts/ChartFrame.tsx`, `src/components/charts/TrendChart.tsx`, `src/components/charts/BalanceChart.tsx`, `src/components/charts/AllocationChart.tsx`, `src/components/charts/PayoffChart.tsx`, and `src/components/charts/AnnualChangeChart.tsx` (FR-046-FR-048)
+- [x] T096 [P] [US9] Add exact-date inventory/dashboard/round-trip browser coverage in `tests/e2e/dated-observations.spec.ts` and `tests/privacy/privacy.spec.ts` (SC-016, SC-017, SC-018)
+
+**Checkpoint**: Exact-date and annual views derive from one deterministic engine and expose equal
+chart/table values with source semantics.
+
+---
+
+## Phase 14: Amendment Polish and Release Revalidation
+
+- [x] T097 Update locale, dated-value, version-compatibility, backup, and threat-model documentation in `README.md`, `PRIVACY.md`, `docs/architecture.md`, and `docs/privacy-security.md`
+- [x] T098 Re-run and fix format, lint, strict typecheck, coverage, production build, build verification, privacy/PWA suites, and all five Playwright projects
+- [x] T099 Re-run Spec Kit analysis and convergence for FR-038-FR-049 and SC-013-SC-018 in `specs/001-net-worth-pwa/analysis.md` and `specs/001-net-worth-pwa/tasks.md`
+- [ ] T100 Commit and push the amended release candidate, then complete PR/merge/security configuration for `DevSecNinja/net-worth-calculator`
+- [ ] T101 Create and verify v0.1.0 release and the deployed GitHub Pages locale/date behavior at `https://devsecninja.github.io/net-worth-calculator/`
+
+---
+
+## Phase 15: Convergence
+
+- [x] T102 Add a deterministic production-browser performance gate for a representative encrypted vault with 100 items across 50 years, measuring unlock through initial dashboard readiness within two seconds on a CI desktop profile in `tests/performance/dashboard.spec.ts` per SC-005 (missing)

@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://devsecninja.github.io/net-worth-calculator/contracts/backup-envelope-v1.schema.json",
+  "$id": "https://devsecninja.github.io/net-worth-calculator/contracts/backup-envelope-v2.schema.json",
   "title": "Net Worth Calculator encrypted backup envelope",
   "type": "object",
   "additionalProperties": false,
   "required": ["format", "formatVersion", "exportedAt", "payload"],
   "properties": {
     "format": { "const": "net-worth-backup" },
-    "formatVersion": { "const": 1 },
+    "formatVersion": { "const": 2 },
     "exportedAt": { "type": "string", "format": "date-time" },
     "payload": {
       "type": "object",
@@ -16,7 +16,7 @@
       "properties": {
         "format": { "const": "net-worth-vault" },
         "formatVersion": { "const": 1 },
-        "vaultSchemaVersion": { "const": 1 },
+        "vaultSchemaVersion": { "const": 2 },
         "kdf": {
           "type": "object",
           "additionalProperties": false,

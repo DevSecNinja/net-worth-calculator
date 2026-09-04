@@ -1,8 +1,6 @@
 import { createEmptyVault } from '@/domain/fixtures';
 import { createEncryptedVault } from '@/storage/crypto';
 import { deleteEnvelope, writeEnvelope } from '@/storage/database';
-import { unlockVault } from '@/storage/vaultRepository';
-import { legacyVaultEnvelope } from '../../../tests/fixtures/legacy';
 
 import { backupFilename, createBackupJson, prepareBackupImport } from './backup';
 
@@ -20,7 +18,7 @@ describe('encrypted backups', () => {
     const contents = await createBackupJson();
     expect(contents).not.toContain(original.id);
     expect(contents).not.toContain('EUR');
-    expect(JSON.parse(contents)).toMatchObject({ format: 'net-worth-backup', formatVersion: 1 });
+    expect(JSON.parse(contents)).toMatchObject({ format: 'net-worth-backup', formatVersion: 2 });
     expect(backupFilename(new Date('2026-09-03T12:00:00Z'))).toBe(
       'net-worth-backup-2026-09-03.nwvault',
     );
@@ -31,7 +29,7 @@ describe('encrypted backups', () => {
     const encrypted = await createEncryptedVault(original, passphrase);
     const contents = JSON.stringify({
       format: 'net-worth-backup',
-      formatVersion: 1,
+      formatVersion: 2,
       exportedAt: '2026-09-03T12:00:00.000Z',
       payload: encrypted.envelope,
     });
@@ -40,25 +38,42 @@ describe('encrypted backups', () => {
     await expect(prepareBackupImport('{', passphrase)).rejects.toThrow('not valid JSON');
   });
 
-  it('re-encrypts a migrated legacy vault before it can replace storage', async () => {
-    const legacyEnvelope = await legacyVaultEnvelope(passphrase);
+  it('round-trips current dated observations without changing canonical values', async () => {
+    const original = createEmptyVault('EUR');
+    original.assets = [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        classification: 'current',
+        type: 'savings',
+        name: 'Dated savings',
+        notes: '',
+        values: [
+          {
+            date: '2026-07-15',
+            amount: '100000',
+            updatedAt: '2026-07-15T00:00:00.000Z',
+          },
+        ],
+        createdAt: '2026-07-15T00:00:00.000Z',
+        updatedAt: '2026-07-15T00:00:00.000Z',
+      },
+    ];
+    const encrypted = await createEncryptedVault(original, passphrase);
     const imported = await prepareBackupImport(
       JSON.stringify({
         format: 'net-worth-backup',
-        formatVersion: 1,
+        formatVersion: 2,
         exportedAt: '2026-09-03T12:00:00.000Z',
-        payload: legacyEnvelope,
+        payload: encrypted.envelope,
       }),
       passphrase,
     );
-    expect(imported.vault.schemaVersion).toBe(1);
-    expect(imported.envelope.vaultSchemaVersion).toBe(1);
-    expect(imported.envelope.cipher.iv).not.toBe(legacyEnvelope.cipher.iv);
-    await writeEnvelope(imported.envelope);
-    expect((await unlockVault(passphrase)).vault).toMatchObject({
-      schemaVersion: 1,
-      settings: { baseCurrency: 'EUR' },
+    expect(imported.vault.assets[0]?.values[0]).toMatchObject({
+      date: '2026-07-15',
+      amount: '100000',
     });
+    expect(imported.envelope.vaultSchemaVersion).toBe(2);
   });
 
   it('enforces the size bound inside the import pipeline', async () => {

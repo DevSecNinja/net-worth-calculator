@@ -7,22 +7,25 @@ import { Dialog } from '@/components/ui/Dialog';
 import { openBackupFile, saveBackupFile } from '@/storage/files';
 import { useVault } from '@/features/vault/useVault';
 import type { ImportedVault } from '@/features/vault/VaultProvider';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 import { backupFilename, createBackupJson, prepareBackupImport } from './backup';
 
 export function BackupPage() {
-  const { replaceImportedVault, busy } = useVault();
+  const { replaceImportedVault, busy, status: vaultStatus } = useVault();
   const [passphrase, setPassphrase] = useState('');
   const [candidate, setCandidate] = useState<ImportedVault>();
   const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState<string>();
-  const [status, setStatus] = useState<string>();
+  const [message, setMessage] = useState<string>();
+  const replacesExistingVault = vaultStatus !== 'absent';
+  const { t } = useLocale();
 
   async function exportBackup() {
     setError(undefined);
     try {
       const mode = await saveBackupFile(await createBackupJson(), backupFilename());
-      setStatus(mode === 'native' ? 'Encrypted backup saved.' : 'Encrypted backup downloaded.');
+      setMessage(mode === 'native' ? t('backup.saved') : t('backup.downloaded'));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Backup export failed.');
     }
@@ -30,7 +33,7 @@ export function BackupPage() {
 
   async function chooseBackup() {
     setError(undefined);
-    setStatus(undefined);
+    setMessage(undefined);
     try {
       const contents = await openBackupFile();
       if (contents === null) return;
@@ -45,7 +48,7 @@ export function BackupPage() {
   async function confirmOverwrite(event: FormEvent) {
     event.preventDefault();
     if (!candidate) return;
-    if (confirmation !== 'REPLACE') {
+    if (replacesExistingVault && confirmation !== 'REPLACE') {
       setError('Type REPLACE exactly to confirm.');
       return;
     }
@@ -54,7 +57,7 @@ export function BackupPage() {
       setCandidate(undefined);
       setPassphrase('');
       setConfirmation('');
-      setStatus('Encrypted backup restored.');
+      setMessage(t('backup.restored'));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Backup restore failed.');
     }
@@ -64,35 +67,37 @@ export function BackupPage() {
     <main id="main-content" className="page">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Portable and private</p>
-          <h1>Encrypted backup</h1>
-          <p>
-            The generic backup file contains authenticated ciphertext, not account names or values.
-          </p>
+          <p className="eyebrow">{t('backup.eyebrow')}</p>
+          <h1>{t('backup.title')}</h1>
+          <p>{t('backup.description')}</p>
         </div>
       </div>
-      {status ? (
+      {message ? (
         <p className="status-banner" role="status">
-          {status}
+          {message}
         </p>
       ) : null}
       <ErrorSummary errors={error ? [error] : []} />
       <div className="settings-grid">
+        {vaultStatus === 'unlocked' ? (
+          <section className="panel form-stack">
+            <h2>{t('backup.saveTitle')}</h2>
+            <p>{t('backup.saveHelp')}</p>
+            <Button type="button" onClick={() => void exportBackup()} disabled={busy}>
+              {t('backup.save')}
+            </Button>
+          </section>
+        ) : (
+          <section className="panel form-stack">
+            <h2>{t('backup.restoreLocked')}</h2>
+            <p>{t('backup.restoreLockedHelp')}</p>
+          </section>
+        )}
         <section className="panel form-stack">
-          <h2>Save a backup</h2>
-          <p>
-            The backup uses your current vault passphrase. Keep both somewhere safe; neither can be
-            recovered by this project.
-          </p>
-          <Button type="button" onClick={() => void exportBackup()} disabled={busy}>
-            Save encrypted backup
-          </Button>
-        </section>
-        <section className="panel form-stack">
-          <h2>Restore a backup</h2>
-          <p>Validation and decryption happen before your current vault can be replaced.</p>
+          <h2>{t('backup.restoreTitle')}</h2>
+          <p>{t('backup.restoreHelp')}</p>
           <Field
-            label="Backup passphrase"
+            label={t('backup.passphrase')}
             type="password"
             autoComplete="current-password"
             value={passphrase}
@@ -106,33 +111,55 @@ export function BackupPage() {
             onClick={() => void chooseBackup()}
             disabled={busy || passphrase.length < 12}
           >
-            Choose encrypted backup
+            {t('backup.choose')}
           </Button>
         </section>
       </div>
       <Dialog
         open={Boolean(candidate)}
-        title="Replace current vault"
-        onClose={() => setCandidate(undefined)}
+        title={replacesExistingVault ? t('backup.replaceTitle') : t('backup.restoreDialogTitle')}
+        onClose={() => {
+          setCandidate(undefined);
+          setConfirmation('');
+          setPassphrase('');
+        }}
       >
         <form className="form-stack" onSubmit={(event) => void confirmOverwrite(event)}>
-          <div className="danger-zone">
-            <strong>This replaces the vault in this browser.</strong>
-            <p>Export the current vault first if you may need it later.</p>
-          </div>
-          <Field
-            label="Type REPLACE to confirm"
-            value={confirmation}
-            onChange={(event) => setConfirmation(event.currentTarget.value)}
-            autoComplete="off"
-            required
-          />
+          {replacesExistingVault ? (
+            <>
+              <div className="danger-zone">
+                <strong>{t('backup.replaceWarning')}</strong>
+                <p>{t('backup.replaceHelp')}</p>
+              </div>
+              <Field
+                label={t('backup.replacePrompt')}
+                value={confirmation}
+                onChange={(event) => setConfirmation(event.currentTarget.value)}
+                autoComplete="off"
+                required
+              />
+            </>
+          ) : (
+            <p>{t('backup.restoreCommit')}</p>
+          )}
           <div className="button-row">
-            <Button type="submit" variant="danger" disabled={busy}>
-              Replace vault
+            <Button
+              type="submit"
+              variant={replacesExistingVault ? 'danger' : 'primary'}
+              disabled={busy}
+            >
+              {replacesExistingVault ? t('backup.replace') : t('backup.restore')}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setCandidate(undefined)}>
-              Cancel
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setCandidate(undefined);
+                setConfirmation('');
+                setPassphrase('');
+              }}
+            >
+              {t('common.cancel')}
             </Button>
           </div>
         </form>

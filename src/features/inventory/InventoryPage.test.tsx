@@ -38,6 +38,7 @@ describe('inventory integration', () => {
     await user.type(screen.getByLabelText(/asset name/i), 'Private savings marker');
     await user.clear(screen.getByLabelText(/^amount$/i));
     await user.type(screen.getByLabelText(/^amount$/i), '2500.50');
+    await user.tab();
     await user.click(screen.getByRole('button', { name: /save asset/i }));
     expect(await screen.findByRole('heading', { name: 'Private savings marker' })).toBeVisible();
 

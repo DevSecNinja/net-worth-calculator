@@ -11,7 +11,7 @@ export function asset(overrides: Partial<Asset> = {}): Asset {
     type: 'savings',
     name: 'Savings',
     notes: '',
-    values: [{ year: 2026, amount: '1000', updatedAt: timestamp }],
+    values: [{ date: '2026-12-31', amount: '1000', updatedAt: timestamp }],
     createdAt: timestamp,
     updatedAt: timestamp,
     ...overrides,

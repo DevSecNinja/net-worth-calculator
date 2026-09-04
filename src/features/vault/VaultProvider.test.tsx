@@ -1,14 +1,19 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import { createEmptyVault } from '@/domain/fixtures';
+import { createEncryptedVault } from '@/storage/crypto';
 import { deleteEnvelope } from '@/storage/database';
+import { unlockVault } from '@/storage/vaultRepository';
 
-import { VaultProvider, useVault } from './VaultProvider';
+import { type ImportedVault, VaultProvider, useVault } from './VaultProvider';
 
 const passphrase = 'correct horse battery staple';
 
-function Harness() {
+function Harness({ imported }: { imported?: ImportedVault }) {
   const vault = useVault();
+  const [operationError, setOperationError] = useState('');
   return (
     <>
       <output>
@@ -20,10 +25,14 @@ function Harness() {
       <button
         type="button"
         onClick={() =>
-          void vault.mutate((current) => ({
-            ...current,
-            settings: { ...current.settings, baseCurrency: 'EUR' },
-          }))
+          void vault
+            .mutate((current) => ({
+              ...current,
+              settings: { ...current.settings, baseCurrency: 'EUR' },
+            }))
+            .catch((error: unknown) => {
+              setOperationError(error instanceof Error ? error.message : 'Mutation failed');
+            })
         }
       >
         Mutate
@@ -31,6 +40,19 @@ function Harness() {
       <button type="button" onClick={vault.lock}>
         Lock
       </button>
+      {imported ? (
+        <button
+          type="button"
+          onClick={() =>
+            void vault.replaceImportedVault(imported).catch((error: unknown) => {
+              setOperationError(error instanceof Error ? error.message : 'Restore failed');
+            })
+          }
+        >
+          Restore
+        </button>
+      ) : null}
+      <output aria-label="Operation error">{operationError}</output>
     </>
   );
 }
@@ -73,5 +95,78 @@ describe('VaultProvider operation generation', () => {
     await waitFor(() => expect(screen.getByText('locked:sealed')).toBeVisible());
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(screen.getByText('locked:sealed')).toBeVisible();
+  });
+
+  it('locks and clears in-memory material synchronously when the page is hidden', async () => {
+    const user = userEvent.setup();
+    render(
+      <VaultProvider>
+        <Harness />
+      </VaultProvider>,
+    );
+    await screen.findByText('absent:sealed');
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    await screen.findByText('unlocked:USD');
+
+    await act(() => {
+      window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }));
+    });
+    expect(screen.getByText('locked:sealed')).toBeVisible();
+  });
+
+  it('rejects an overlapping mutation without suppressing the committed state', async () => {
+    const user = userEvent.setup();
+    render(
+      <VaultProvider>
+        <Harness />
+      </VaultProvider>,
+    );
+    await screen.findByText('absent:sealed');
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    await screen.findByText('unlocked:USD');
+
+    let release!: () => void;
+    let signalStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      signalStarted = resolve;
+    });
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const originalEncrypt = crypto.subtle.encrypt.bind(crypto.subtle);
+    vi.spyOn(crypto.subtle, 'encrypt').mockImplementation(async (algorithm, key, data) => {
+      signalStarted();
+      await gate;
+      return originalEncrypt(algorithm, key, data);
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Mutate' }));
+    await started;
+    await user.click(screen.getByRole('button', { name: 'Mutate' }));
+    expect(screen.getByRole('status', { name: 'Operation error' })).toHaveTextContent(
+      'Another vault change is still being saved.',
+    );
+    release();
+    await screen.findByText('unlocked:EUR');
+  });
+
+  it('restores an encrypted backup when no vault exists', async () => {
+    const restoredVault = createEmptyVault('EUR');
+    const encrypted = await createEncryptedVault(restoredVault, passphrase);
+    const imported = {
+      envelope: encrypted.envelope,
+      vault: restoredVault,
+      material: encrypted.material,
+    };
+    const user = userEvent.setup();
+    render(
+      <VaultProvider>
+        <Harness imported={imported} />
+      </VaultProvider>,
+    );
+    await screen.findByText('absent:sealed');
+    await user.click(screen.getByRole('button', { name: 'Restore' }));
+    await screen.findByText('unlocked:EUR');
+    expect((await unlockVault(passphrase)).vault.settings.baseCurrency).toBe('EUR');
   });
 });

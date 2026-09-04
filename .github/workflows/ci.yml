@@ -71,3 +71,5 @@ jobs:
         run: npm run test:pwa
       - name: Run all browser compatibility tests
         run: npm run test:e2e
+      - name: Run dashboard performance budget
+        run: npm run test:performance

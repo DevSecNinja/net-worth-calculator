@@ -10,8 +10,10 @@ import {
 
 import { formatMoney } from '@/domain/currency';
 import type { DashboardSnapshot } from '@/domain/model';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 import { ChartFrame } from './ChartFrame';
+import { exactTooltipValue } from './tooltip';
 
 export function TrendChart({
   snapshots,
@@ -22,23 +24,25 @@ export function TrendChart({
   currency: string;
   locale: string;
 }) {
+  const { t } = useLocale();
   const data = snapshots.map((snapshot) => ({
     year: snapshot.year,
     netWorth: Number(snapshot.netWorth),
+    netWorthExact: snapshot.netWorth,
     completeness: snapshot.completeness,
   }));
   return (
     <ChartFrame
-      title="Net worth trend"
-      summary="Net worth is assets minus liabilities. Incomplete years exclude missing asset values."
-      table={
+      title={t('chart.trendTitle')}
+      summary={t('chart.trendSummary')}
+      table={() => (
         <table>
-          <caption>Net worth trend by calendar year</caption>
+          <caption>{t('chart.trendCaption')}</caption>
           <thead>
             <tr>
-              <th>Year</th>
-              <th>Net worth</th>
-              <th>Completeness</th>
+              <th>{t('chart.year')}</th>
+              <th>{t('dashboard.netWorth')}</th>
+              <th>{t('chart.completeness')}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,12 +50,16 @@ export function TrendChart({
               <tr key={snapshot.year}>
                 <th>{snapshot.year}</th>
                 <td>{formatMoney(snapshot.netWorth, currency, locale)}</td>
-                <td>{snapshot.completeness}</td>
+                <td>
+                  {snapshot.completeness === 'complete'
+                    ? t('dashboard.complete', { date: snapshot.asOfDate })
+                    : t('common.incomplete')}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-      }
+      )}
     >
       <ResponsiveContainer width="100%" height={260}>
         <AreaChart data={data}>
@@ -64,7 +72,11 @@ export function TrendChart({
           <CartesianGrid strokeDasharray="4 4" />
           <XAxis dataKey="year" />
           <YAxis width={72} />
-          <Tooltip formatter={(value) => formatMoney(String(value), currency, locale)} />
+          <Tooltip
+            formatter={(value, _name, item) =>
+              formatMoney(exactTooltipValue(item, 'netWorthExact', value), currency, locale)
+            }
+          />
           <Area
             type="monotone"
             dataKey="netWorth"

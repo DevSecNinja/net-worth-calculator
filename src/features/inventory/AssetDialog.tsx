@@ -8,7 +8,9 @@ import { Dialog } from '@/components/ui/Dialog';
 import type { Asset } from '@/domain/model';
 import { assetTypes, createId, nowIso } from '@/domain/model';
 import { assetSchema, moneyPrecisionError } from '@/domain/validation';
+import { todayLocalIso } from '@/domain/observations';
 import { useDirtyState } from '@/hooks/useDirtyState';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 function freshAsset(order: number): Asset {
   const timestamp = nowIso();
@@ -19,7 +21,7 @@ function freshAsset(order: number): Asset {
     type: 'checking',
     name: '',
     notes: '',
-    values: [{ year: new Date().getFullYear(), amount: '0', updatedAt: timestamp }],
+    values: [{ date: todayLocalIso(), amount: '0', updatedAt: timestamp }],
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -30,6 +32,7 @@ export function AssetDialog({
   asset,
   order,
   currency,
+  busy,
   onClose,
   onSave,
 }: {
@@ -37,6 +40,7 @@ export function AssetDialog({
   asset?: Asset | undefined;
   order: number;
   currency: string;
+  busy: boolean;
   onClose: () => void;
   onSave: (asset: Asset) => Promise<void>;
 }) {
@@ -44,6 +48,8 @@ export function AssetDialog({
   const [errors, setErrors] = useState<string[]>([]);
   const [dirty, setLocalDirty] = useState(false);
   const { setDirty } = useDirtyState();
+  const { t } = useLocale();
+  const dirtyLabel = t('dirty.asset');
 
   useEffect(() => {
     if (open) {
@@ -54,9 +60,9 @@ export function AssetDialog({
   }, [asset, open, order]);
 
   useEffect(() => {
-    setDirty('Asset editor', open && dirty);
-    return () => setDirty('Asset editor', false);
-  }, [dirty, open, setDirty]);
+    setDirty(dirtyLabel, open && dirty);
+    return () => setDirty(dirtyLabel, false);
+  }, [dirty, dirtyLabel, open, setDirty]);
 
   function patch(update: Partial<Asset>) {
     setDraft((current) => ({ ...current, ...update, updatedAt: nowIso() }));
@@ -68,7 +74,7 @@ export function AssetDialog({
     const normalized = {
       ...draft,
       customType: draft.type === 'custom' ? draft.customType : undefined,
-      values: draft.values.toSorted((left, right) => left.year - right.year),
+      values: draft.values.toSorted((left, right) => left.date.localeCompare(right.date)),
     };
     const parsed = assetSchema.safeParse(normalized);
     if (!parsed.success) {
@@ -82,17 +88,25 @@ export function AssetDialog({
       setErrors([precisionError]);
       return;
     }
-    await onSave(parsed.data);
-    setDirty('Asset editor', false);
-    onClose();
+    try {
+      await onSave(parsed.data);
+      setDirty(dirtyLabel, false);
+      onClose();
+    } catch (caught) {
+      setErrors([caught instanceof Error ? caught.message : 'The asset could not be saved.']);
+    }
   }
 
   return (
-    <Dialog open={open} title={asset ? 'Edit asset' : 'Add asset'} onClose={onClose}>
+    <Dialog
+      open={open}
+      title={asset ? t('inventory.editAsset') : t('inventory.addAsset')}
+      onClose={onClose}
+    >
       <form className="form-stack" onSubmit={(event) => void submit(event)} noValidate>
         <ErrorSummary errors={errors} />
         <Field
-          label="Asset name"
+          label={t('inventory.assetName')}
           value={draft.name}
           onChange={(event) => patch({ name: event.currentTarget.value })}
           maxLength={100}
@@ -100,26 +114,26 @@ export function AssetDialog({
         />
         <div className="form-grid">
           <label className="field">
-            <span>Classification</span>
+            <span>{t('inventory.classification')}</span>
             <select
               value={draft.classification}
               onChange={(event) =>
                 patch({ classification: event.currentTarget.value as Asset['classification'] })
               }
             >
-              <option value="current">Current</option>
-              <option value="long-term">Long-term</option>
+              <option value="current">{t('inventory.current')}</option>
+              <option value="long-term">{t('inventory.longTerm')}</option>
             </select>
           </label>
           <label className="field">
-            <span>Type</span>
+            <span>{t('common.type')}</span>
             <select
               value={draft.type}
               onChange={(event) => patch({ type: event.currentTarget.value as Asset['type'] })}
             >
               {assetTypes.map((type) => (
                 <option key={type} value={type}>
-                  {type.replaceAll('-', ' ')}
+                  {t(`assetType.${type}`)}
                 </option>
               ))}
             </select>
@@ -127,7 +141,7 @@ export function AssetDialog({
         </div>
         {draft.type === 'custom' ? (
           <Field
-            label="Custom asset type"
+            label={t('common.customType')}
             value={draft.customType ?? ''}
             onChange={(event) => patch({ customType: event.currentTarget.value })}
             maxLength={100}
@@ -135,12 +149,13 @@ export function AssetDialog({
           />
         ) : null}
         <YearValuesEditor
-          label="Year-specific values"
+          label={t('inventory.observations')}
+          currency={currency}
           values={draft.values}
           onChange={(values) => patch({ values })}
         />
         <label className="field">
-          <span>Notes</span>
+          <span>{t('common.notes')}</span>
           <textarea
             value={draft.notes}
             onChange={(event) => patch({ notes: event.currentTarget.value })}
@@ -149,9 +164,11 @@ export function AssetDialog({
           />
         </label>
         <div className="button-row">
-          <Button type="submit">Save asset</Button>
+          <Button type="submit" disabled={busy}>
+            {busy ? t('inventory.saving') : t('inventory.saveAsset')}
+          </Button>
           <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         </div>
       </form>

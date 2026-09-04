@@ -37,11 +37,16 @@ exposes ordinary web request metadata to the hosting provider. See
 
 - One encrypted vault per browser profile with create, unlock, lock, passphrase change, and permanent
   deletion flows
-- Asset and liability tracking with ordering, notes, yearly actual values, and deterministic monthly
-  liability projections
-- Net worth totals, yearly change, CAGR, allocation, comparison, annual-change, and payoff views
-- Captioned data tables for every chart and clear actual, projected, incomplete, and undefined states
-- Currency formatting without implied foreign-exchange conversion
+- Asset and liability tracking with ordering, notes, multiple exact-date observations per year, and
+  deterministic monthly liability projections
+- Exact As of snapshots, dated timeline, December 31 annual totals, yearly change, CAGR, allocation,
+  comparison, annual-change, and payoff views
+- Captioned data tables for every chart and clear actual, carried-forward, projected, stale,
+  incomplete, and undefined states
+- Complete English (US), English (UK), and Nederlands UI with browser negotiation and explicit
+  language override
+- Locale-aware amount entry and formatting with visible currency context and locale-neutral
+  canonical encrypted values (for example `"100000"`)
 - Light, dark, and live system theme preferences
 - Encrypted, authenticated, versioned `.nwvault` backup export and restore
 - Native file pickers where supported and download/file-input fallbacks elsewhere
@@ -114,9 +119,11 @@ passphrase, hint, recovery answer, plaintext verifier, or administrator key.
 Backups reuse the current encrypted vault envelope and passphrase. The file is named
 `net-worth-backup-YYYY-MM-DD.nwvault`, is limited to 10 MiB on import, and contains plaintext format
 metadata including the export time, but no item names, counts, currency, or values. A valid import is
-authenticated, decrypted, migrated, and validated before explicit overwrite confirmation. Failed,
-cancelled, malformed, oversized, future-version, tampered, or wrong-passphrase imports do not replace
-the current vault.
+authenticated, decrypted, and validated before explicit overwrite confirmation. Restore
+remains available while locked and when no local vault exists. Vault serialization is capped below
+the backup limit before encryption, so the app cannot save a vault that it cannot later unlock or
+export. Failed, cancelled, malformed, oversized, future-version, tampered, or wrong-passphrase
+imports do not replace the current vault.
 
 Treat backup files as sensitive ciphertext: keep multiple copies in locations you control, remember
 the matching passphrase, and test restores. Export does not create a recovery service. Deleting the

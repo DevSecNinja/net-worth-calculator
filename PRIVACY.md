@@ -8,14 +8,16 @@ advertising, telemetry, remote font, or runtime third-party API.
 
 ## Data handled by the application
 
-You may enter asset and liability names, notes, balances, rates, payments, dates, currency settings,
-and yearly values. The complete vault is encrypted and authenticated in your browser before it is
+You may enter asset and liability names, notes, balances, rates, payments, currency settings, and
+multiple exact-date observations. Amounts are stored as locale-neutral canonical decimal strings;
+language controls only parsing and display. The complete vault is encrypted and authenticated before it is
 written to IndexedDB. The passphrase-derived key and decrypted vault remain in the unlocked page
 session and are not intentionally transmitted.
 
-The browser may store a non-sensitive theme preference and short-lived tab-lease metadata in
-localStorage. Cache Storage contains only static application-shell resources. An exported backup is
-an encrypted `.nwvault` file that includes non-sensitive format metadata and an export timestamp.
+The browser may store non-sensitive theme and explicit language preferences plus short-lived
+tab-lease metadata in localStorage. The initial language is derived locally from browser preferences.
+Cache Storage contains only static application-shell resources. An exported backup is an encrypted
+`.nwvault` file that includes non-sensitive format metadata and an export timestamp.
 
 ## Collection and sharing
 

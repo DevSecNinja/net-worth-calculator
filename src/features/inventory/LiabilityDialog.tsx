@@ -2,12 +2,14 @@ import { useEffect, useState, type FormEvent } from 'react';
 
 import { ErrorSummary } from '@/components/forms/ErrorSummary';
 import { Field } from '@/components/forms/Field';
+import { MoneyField } from '@/components/forms/MoneyField';
 import { YearValuesEditor } from '@/components/forms/YearValuesEditor';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import type { Liability } from '@/domain/model';
 import { createId, liabilityTypes, nowIso } from '@/domain/model';
 import { liabilitySchema, moneyPrecisionError } from '@/domain/validation';
+import { useLocale } from '@/features/locale/LocaleProvider';
 import { useDirtyState } from '@/hooks/useDirtyState';
 
 function freshLiability(order: number): Liability {
@@ -32,6 +34,7 @@ export function LiabilityDialog({
   liability,
   order,
   currency,
+  busy,
   onClose,
   onSave,
 }: {
@@ -39,6 +42,7 @@ export function LiabilityDialog({
   liability?: Liability | undefined;
   order: number;
   currency: string;
+  busy: boolean;
   onClose: () => void;
   onSave: (liability: Liability) => Promise<void>;
 }) {
@@ -46,6 +50,8 @@ export function LiabilityDialog({
   const [errors, setErrors] = useState<string[]>([]);
   const [dirty, setLocalDirty] = useState(false);
   const { setDirty } = useDirtyState();
+  const { t } = useLocale();
+  const dirtyLabel = t('dirty.liability');
 
   useEffect(() => {
     if (open) {
@@ -56,9 +62,9 @@ export function LiabilityDialog({
   }, [liability, open, order]);
 
   useEffect(() => {
-    setDirty('Liability editor', open && dirty);
-    return () => setDirty('Liability editor', false);
-  }, [dirty, open, setDirty]);
+    setDirty(dirtyLabel, open && dirty);
+    return () => setDirty(dirtyLabel, false);
+  }, [dirty, dirtyLabel, open, setDirty]);
 
   function patch(update: Partial<Liability>) {
     setDraft((current) => ({ ...current, ...update, updatedAt: nowIso() }));
@@ -71,8 +77,10 @@ export function LiabilityDialog({
       ...draft,
       customType: draft.type === 'custom' ? draft.customType : undefined,
       startDate: draft.startDate || undefined,
-      termMonths: draft.termMonths || undefined,
-      manualBalances: draft.manualBalances.toSorted((left, right) => left.year - right.year),
+      termMonths: draft.termMonths,
+      manualBalances: draft.manualBalances.toSorted((left, right) =>
+        left.date.localeCompare(right.date),
+      ),
     };
     const parsed = liabilitySchema.safeParse(normalized);
     if (!parsed.success) {
@@ -91,38 +99,46 @@ export function LiabilityDialog({
       setErrors([precisionError]);
       return;
     }
-    await onSave(parsed.data);
-    setDirty('Liability editor', false);
-    onClose();
+    try {
+      await onSave(parsed.data);
+      setDirty(dirtyLabel, false);
+      onClose();
+    } catch (caught) {
+      setErrors([caught instanceof Error ? caught.message : 'The liability could not be saved.']);
+    }
   }
 
   return (
-    <Dialog open={open} title={liability ? 'Edit liability' : 'Add liability'} onClose={onClose}>
+    <Dialog
+      open={open}
+      title={liability ? t('inventory.editLiability') : t('inventory.addLiability')}
+      onClose={onClose}
+    >
       <form className="form-stack" onSubmit={(event) => void submit(event)} noValidate>
         <ErrorSummary errors={errors} />
         <Field
-          label="Liability name"
+          label={t('inventory.liabilityName')}
           value={draft.name}
           onChange={(event) => patch({ name: event.currentTarget.value })}
           maxLength={100}
           required
         />
         <label className="field">
-          <span>Type</span>
+          <span>{t('common.type')}</span>
           <select
             value={draft.type}
             onChange={(event) => patch({ type: event.currentTarget.value as Liability['type'] })}
           >
             {liabilityTypes.map((type) => (
               <option key={type} value={type}>
-                {type.replaceAll('-', ' ')}
+                {t(`liabilityType.${type}`)}
               </option>
             ))}
           </select>
         </label>
         {draft.type === 'custom' ? (
           <Field
-            label="Custom liability type"
+            label={t('common.customType')}
             value={draft.customType ?? ''}
             onChange={(event) => patch({ customType: event.currentTarget.value })}
             maxLength={100}
@@ -130,37 +146,37 @@ export function LiabilityDialog({
           />
         ) : null}
         <div className="form-grid form-grid--three">
-          <Field
-            label="Current or principal amount"
-            inputMode="decimal"
+          <MoneyField
+            label={t('inventory.principal')}
+            currency={currency}
             value={draft.principal}
-            onChange={(event) => patch({ principal: event.currentTarget.value })}
+            onChange={(principal) => patch({ principal })}
             required
           />
           <Field
-            label="Annual interest rate"
+            label={t('inventory.interest')}
             inputMode="decimal"
             value={draft.annualInterestRate}
             onChange={(event) => patch({ annualInterestRate: event.currentTarget.value })}
             required
           />
-          <Field
-            label="Monthly payment"
-            inputMode="decimal"
+          <MoneyField
+            label={t('inventory.payment')}
+            currency={currency}
             value={draft.monthlyPayment}
-            onChange={(event) => patch({ monthlyPayment: event.currentTarget.value })}
+            onChange={(monthlyPayment) => patch({ monthlyPayment })}
             required
           />
         </div>
         <div className="form-grid">
           <Field
-            label="Start date (optional)"
+            label={t('inventory.startDate')}
             type="date"
             value={draft.startDate ?? ''}
             onChange={(event) => patch({ startDate: event.currentTarget.value || undefined })}
           />
           <Field
-            label="Term in months (optional)"
+            label={t('inventory.term')}
             type="number"
             min={1}
             max={1200}
@@ -175,12 +191,13 @@ export function LiabilityDialog({
           />
         </div>
         <YearValuesEditor
-          label="Manual December 31 balances"
+          label={t('inventory.manualBalances')}
+          currency={currency}
           values={draft.manualBalances}
           onChange={(manualBalances) => patch({ manualBalances })}
         />
         <label className="field">
-          <span>Notes</span>
+          <span>{t('common.notes')}</span>
           <textarea
             value={draft.notes}
             onChange={(event) => patch({ notes: event.currentTarget.value })}
@@ -189,9 +206,11 @@ export function LiabilityDialog({
           />
         </label>
         <div className="button-row">
-          <Button type="submit">Save liability</Button>
+          <Button type="submit" disabled={busy}>
+            {busy ? t('inventory.saving') : t('inventory.saveLiability')}
+          </Button>
           <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         </div>
       </form>

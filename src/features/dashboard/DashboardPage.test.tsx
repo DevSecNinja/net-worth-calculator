@@ -25,6 +25,10 @@ describe('dashboard integration', () => {
 
     expect(await screen.findByRole('heading', { name: /net worth dashboard/i })).toBeVisible();
     expect(screen.getByRole('heading', { name: /net worth trend/i })).toBeVisible();
+    await user.click(screen.getByText(/view net worth trend data table/i));
+    await user.click(screen.getByText(/view assets and liabilities data table/i));
+    await user.click(screen.getByText(/view asset allocation data table/i));
+    await user.click(screen.getByText(/view liability payoff data table/i));
     expect(
       screen.getByRole('table', { name: /net worth trend by calendar year/i }),
     ).toBeInTheDocument();

@@ -89,9 +89,10 @@ risks irrecoverable data loss.
 **Decision**: Persist money as canonical decimal strings, parse to `Decimal` only inside pure domain
 functions, and round with half-up currency rounding at explicit display/persistence boundaries.
 Calculate monthly liability interest as annual percentage / 12, apply payment after interest, clamp
-to zero, and record each December 31 balance. A manual December 31 value overrides that year and
-seeds the following January 1. Zero-rate schedules subtract payment directly. A positive-rate
-schedule whose payment does not exceed first-month interest is marked non-amortizing.
+to zero, and derive balances for exact target dates. A manual exact-date balance overrides that date
+and seeds subsequent monthly projection. December 31 annual balances use the same engine. Zero-rate
+schedules subtract payment directly. A positive-rate schedule whose payment does not exceed
+first-month interest is marked non-amortizing.
 
 **Rationale**: Decimal arithmetic avoids binary floating-point drift and is easy to serialize.
 Monthly simulation handles overpayment, payoff, start dates, and overrides more transparently than a
@@ -104,7 +105,7 @@ minor units alone still require fractional-interest rounding rules and currency-
 
 **Decision**: Export the latest persisted encrypted envelope in a versioned JSON container using the
 current vault passphrase. The filename is `net-worth-backup-YYYY-MM-DD.nwvault`. Import caps files
-at 10 MiB, parses and validates before decryption, validates/migrates the decrypted document, and
+at 10 MiB, parses and validates before decryption, validates the current decrypted document, and
 asks for typed overwrite confirmation before the sole commit. Use `showSaveFilePicker` and
 `showOpenFilePicker` when present; otherwise use Blob download and a hidden file input.
 
@@ -203,6 +204,40 @@ base/deploy configuration.
 
 **Alternatives considered**: Runtime GitHub APIs or Pages-only route scripts would couple the app to
 the initial host.
+
+## R14. Typed Localization and Localized Money
+
+**Decision**: Use a compile-time typed in-repository catalog with one canonical `en-US` key shape and
+complete `en-GB`/`nl-NL` implementations. Negotiate once from `navigator.languages`, persist only an
+explicit override in localStorage, update `<html lang>`, and keep locale outside the encrypted vault.
+Parse localized amounts with deterministic separator/group validation into canonical decimal strings;
+format only on blur/display and always expose the vault currency beside the field.
+
+**Rationale**: The app has no runtime network dependency and must not silently reinterpret magnitude.
+A typed catalog prevents partial translation. Separating language from currency prevents a language
+switch from changing financial meaning.
+
+**Alternatives considered**: A remote translation service, runtime catalog download, browser-only
+formatting without strict parsing, and using locale as a currency proxy were rejected for privacy,
+offline, completeness, and financial-correctness reasons.
+
+## R15. Exact-Date Observations and Migration
+
+**Decision**: The initial public vault schema stores value observations as
+`{date, amount, updatedAt}` with unique ISO dates per item. There is no production database to
+migrate; unsupported prototype schemas fail safely. The initial backup format authenticates the
+schema-aware envelope. Exact snapshots use the latest observation on or before the target date.
+Assets carry that amount forward with staleness; liabilities amortize month-by-month from their
+latest eligible manual seed. December 31 snapshots are derived from the same exact-date engine, and
+the timeline is the sorted union of observation dates plus selected/current/year-end dates.
+
+**Rationale**: One date-based engine prevents annual/exact views from drifting and makes July
+observations useful without fabricating market returns. Starting with the dated format avoids
+shipping and maintaining conversion logic for data that has never existed in production.
+
+**Alternatives considered**: Keeping parallel year/date record types, implicit first/last-day dates,
+daily interpolation, and automatic asset growth models were rejected because they create ambiguous
+identity or fabricate values.
 
 ## Primary Sources
 

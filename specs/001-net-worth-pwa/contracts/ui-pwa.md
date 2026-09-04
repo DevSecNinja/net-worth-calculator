@@ -54,6 +54,27 @@ CSP hash applies the stored `light`, `dark`, or current system theme before styl
 System is active, a `matchMedia` change listener updates the effective theme and `color-scheme`.
 Changing theme announces the effective mode. Only the preference string is stored outside the vault.
 
+## Locale and Amount Contract
+
+- The supported locale identifiers and labels are `en-US` (English (US)), `en-GB` (English (UK)),
+  and `nl-NL` (Nederlands).
+- Every user-visible, validation, chart/table, status, dialog, privacy, and accessibility string is a
+  required typed catalog key.
+- Initial negotiation follows ordered `navigator.languages`; an explicit override persists
+  separately and updates `<html lang>`.
+- Amount fields show the vault currency code/symbol in visible and accessible context. Input remains
+  stable while typing, parses locale syntax on blur/submit, and stores one canonical decimal string.
+
+## Exact-Date Insight Contract
+
+- Inventory editors use exact ISO dates and allow multiple observations per year while rejecting
+  duplicate dates.
+- As of defaults to the local current date. No observation after that date contributes.
+- Asset status is `actual` at the observation date and `carry-forward` afterward, with source date
+  and staleness visible. Liability status is `actual` on a manual date and `projected` afterward.
+- The exact timeline and December 31 annual view are derived from the same snapshot engine. Every
+  chart has an equivalent dated table.
+
 ## Install, Offline, and Update Contract
 
 - Install UI appears only after a captured `beforeinstallprompt` event and disappears after install,
