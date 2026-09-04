@@ -93,7 +93,7 @@ export function AssetDialog({
       setDirty(dirtyLabel, false);
       onClose();
     } catch (caught) {
-      setErrors([caught instanceof Error ? caught.message : 'The asset could not be saved.']);
+      setErrors([caught instanceof Error ? caught.message : t('form.errorSaveAsset')]);
     }
   }
 

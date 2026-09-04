@@ -4,11 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { LocaleProvider, localeStorageKey, negotiateLocale, useLocale } from './LocaleProvider';
 
 function Harness() {
-  const { locale, setLocale, t } = useLocale();
+  const { locale, setLocale, t, translateError } = useLocale();
   return (
     <>
       <output>{locale}</output>
       <p>{t('nav.assets')}</p>
+      <p>{translateError('Each asset observation date must be unique.')}</p>
+      <p>{translateError('Each manual balance date must be unique.')}</p>
       <button type="button" onClick={() => setLocale('nl-NL')}>
         Nederlands
       </button>
@@ -36,6 +38,7 @@ describe('LocaleProvider', () => {
     await user.click(screen.getByRole('button', { name: 'Nederlands' }));
     expect(screen.getByText('nl-NL')).toBeVisible();
     expect(screen.getByText('Bezittingen')).toBeVisible();
+    expect(screen.getAllByText('Elke observatiedatum moet uniek zijn.')).toHaveLength(2);
     expect(localStorage.getItem(localeStorageKey)).toBe('nl-NL');
     expect(document.documentElement.lang).toBe('nl-NL');
   });

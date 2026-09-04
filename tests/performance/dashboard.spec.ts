@@ -11,7 +11,9 @@ import {
 import { createEncryptedVault } from '../../src/storage/crypto';
 import { PASSPHRASE } from '../helpers/app';
 
-const timestamp = '2026-01-01T00:00:00.000Z';
+const performanceYear = 2049;
+const performanceNow = `${performanceYear}-12-31T12:00:00.000Z`;
+const timestamp = performanceNow;
 
 function observations(years: readonly number[], offset: number): ValueObservation[] {
   return years.map((year, index) => ({
@@ -21,8 +23,8 @@ function observations(years: readonly number[], offset: number): ValueObservatio
   }));
 }
 
-function representativeVault(currentYear: number): Vault {
-  const years = Array.from({ length: 50 }, (_, index) => currentYear - 49 + index);
+function representativeVault(): Vault {
+  const years = Array.from({ length: 50 }, (_, index) => performanceYear - 49 + index);
   const assets: Asset[] = Array.from({ length: 50 }, (_, index) => ({
     id: crypto.randomUUID(),
     order: index,
@@ -63,8 +65,8 @@ function representativeVault(currentYear: number): Vault {
 test('unlocks and renders a 100-item, 50-year dashboard within two seconds', async ({ page }) => {
   test.setTimeout(60_000);
 
-  const currentYear = new Date().getFullYear();
-  const { envelope } = await createEncryptedVault(representativeVault(currentYear), PASSPHRASE);
+  await page.clock.setFixedTime(new Date(performanceNow));
+  const { envelope } = await createEncryptedVault(representativeVault(), PASSPHRASE);
   const backup: BackupEnvelopeV2 = {
     format: 'net-worth-backup',
     formatVersion: BACKUP_FORMAT_VERSION,
@@ -98,7 +100,7 @@ test('unlocks and renders a 100-item, 50-year dashboard within two seconds', asy
 
   await page.evaluate(() => performance.mark('dashboard-unlock-start'));
   await page.getByRole('button', { name: /unlock vault/i }).click();
-  await expect(page.getByRole('region', { name: `${currentYear} summary` })).toBeVisible({
+  await expect(page.getByRole('region', { name: `${performanceYear} summary` })).toBeVisible({
     timeout: 30_000,
   });
   await expect(page.getByRole('heading', { name: /net worth trend/i })).toBeVisible();

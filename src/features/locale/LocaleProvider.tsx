@@ -77,7 +77,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         return t('error.invalidAmount');
       }
       if (/annual rate/i.test(message)) return t('error.invalidRate');
-      if (/date must be unique|date must be unique/i.test(message)) return t('error.duplicateDate');
+      if (
+        /\b(?:asset observation |manual balance |observation )?date must be unique\b/i.test(message)
+      ) {
+        return t('error.duplicateDate');
+      }
       if (/monthly payment must be greater/i.test(message)) return t('error.paymentRequired');
       if (/type DELETE exactly/i.test(message)) return t('error.typeDelete');
       if (/type REPLACE exactly/i.test(message)) return t('error.typeReplace');
