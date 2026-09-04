@@ -44,10 +44,12 @@ preview command from this repository, never an unpinned external server package.
 
 1. Start with cleared site storage.
 2. Create a vault using a unique marker passphrase.
-3. Explicitly choose sample data or create one asset and one liability manually.
-4. Enter at least two non-contiguous asset years and a zero-rate liability.
-5. Verify the missing asset year is marked incomplete and the liability reaches zero without a
-   negative projected balance.
+3. Explicitly choose the localized sample portfolio or create one asset and one liability manually.
+4. For the sample path, verify five asset categories, three declining liabilities, four prior
+   year-ends, a prior mid-year observation, and today's observation with no future dates.
+5. For the manual path, enter non-contiguous exact dates and a zero-rate liability; verify a target
+   before the first observation is incomplete, a later observation carries forward, and debt never
+   projects below zero.
 6. Lock, reload, reject a wrong passphrase, unlock correctly, change the passphrase, and verify the
    old passphrase fails.
 

@@ -477,3 +477,10 @@ chart/table values with source semantics.
 ## Phase 15: Convergence
 
 - [x] T102 Add a deterministic production-browser performance gate for a representative encrypted vault with 100 items across 50 years, measuring unlock through initial dashboard readiness within two seconds on a CI desktop profile in `tests/performance/dashboard.spec.ts` per SC-005 (missing)
+
+---
+
+## Phase 16: Realistic Localized Sample Portfolio
+
+- [x] T103 Expand the explicit sample action into a bounded, schema-valid five-asset/three-liability household history with four prior year-ends, a prior mid-year date, today's date, carry-forward, and projections in `src/domain/fixtures.ts` and `src/domain/fixtures.test.ts` (FR-006, SC-019)
+- [x] T104 Localize sample names at creation, preserve them across later language changes, and prove the populated annual/timeline/allocation/payoff experience in `src/features/onboarding/OnboardingPage.tsx`, `src/features/vault/VaultProvider.tsx`, `src/features/vault/VaultFlows.test.tsx`, and `tests/e2e/localization.spec.ts` (FR-006, SC-019)

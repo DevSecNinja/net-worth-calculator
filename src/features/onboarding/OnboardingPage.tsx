@@ -14,7 +14,7 @@ const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK
 export function OnboardingPage() {
   const { create, busy, error } = useVault();
   const { setDirty } = useDirtyState();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const dirtyLabel = t('dirty.vaultSetup');
   const [passphrase, setPassphrase] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -35,7 +35,7 @@ export function OnboardingPage() {
       return;
     }
     setValidationError(undefined);
-    await create(passphrase, currency, action?.value === 'sample').catch(() => undefined);
+    await create(passphrase, currency, action?.value === 'sample', locale).catch(() => undefined);
   }
 
   const errors = [validationError, error].filter((value): value is string => Boolean(value));

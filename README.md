@@ -47,6 +47,8 @@ exposes ordinary web request metadata to the hosting provider. See
   language override
 - Locale-aware amount entry and formatting with visible currency context and locale-neutral
   canonical encrypted values (for example `"100000"`)
+- Explicit opt-in fictional household sample with localized names, five asset categories, three
+  declining debts, and multi-year exact-date history that can be edited or deleted normally
 - Light, dark, and live system theme preferences
 - Encrypted, authenticated, versioned `.nwvault` backup export and restore
 - Native file pickers where supported and download/file-input fallbacks elsewhere

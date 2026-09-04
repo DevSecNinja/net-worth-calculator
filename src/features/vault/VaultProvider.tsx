@@ -10,7 +10,7 @@ import {
 } from 'react';
 
 import type { CipherEnvelopeV1, Vault } from '@/domain/model';
-import { addSampleData, createEmptyVault } from '@/domain/fixtures';
+import { addSampleData, createEmptyVault, type SampleDataLocale } from '@/domain/fixtures';
 import type { VaultKeyMaterial } from '@/storage/crypto';
 import { VaultSessionLease } from '@/storage/sessionLease';
 import {
@@ -36,7 +36,12 @@ type VaultContextValue = {
   vault?: Vault;
   busy: boolean;
   error?: string;
-  create: (passphrase: string, currency: string, sample: boolean) => Promise<void>;
+  create: (
+    passphrase: string,
+    currency: string,
+    sample: boolean,
+    sampleLocale?: SampleDataLocale,
+  ) => Promise<void>;
   unlock: (passphrase: string) => Promise<void>;
   lock: () => void;
   mutate: (updater: (vault: Vault) => Vault) => Promise<void>;
@@ -115,7 +120,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   );
 
   const create = useCallback(
-    async (passphrase: string, currency: string, sample: boolean) => {
+    async (
+      passphrase: string,
+      currency: string,
+      sample: boolean,
+      sampleLocale: SampleDataLocale = 'en-US',
+    ) => {
       const token = ++generation.current;
       setBusy(true);
       setError(undefined);
@@ -123,7 +133,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       try {
         operationLease = acquireLease();
         let next = createEmptyVault(currency);
-        if (sample) next = addSampleData(next);
+        if (sample) next = addSampleData(next, sampleLocale);
         const created = await createPersistedVault(next, passphrase);
         if (!isCurrentOperation(token, operationLease)) return;
         setVault(created.vault);

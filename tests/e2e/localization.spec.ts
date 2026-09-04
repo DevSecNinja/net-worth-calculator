@@ -57,3 +57,39 @@ test('negotiates UK English and falls back unsupported languages to US English',
   await expect(fallbackPage.locator('html')).toHaveAttribute('lang', 'en-US');
   await fallback.close();
 });
+
+test('creates a localized multi-year sample portfolio that stays named at creation', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'languages', {
+      configurable: true,
+      value: ['nl-NL', 'en-US'],
+    });
+  });
+  await page.goto('./');
+  await page.getByLabel(/^wachtzin$/i).fill(PASSPHRASE);
+  await page.getByLabel(/bevestig wachtzin/i).fill(PASSPHRASE);
+  await page.getByRole('button', { name: /met voorbeeldgegevens maken/i }).click();
+  await expect(page.getByRole('heading', { name: /nettovermogendashboard/i })).toBeVisible();
+
+  const currentYear = await page.evaluate(() => new Date().getFullYear());
+  await page.getByText(/bekijk gegevenstabel voor trend nettovermogen/i).click();
+  const annual = page.getByRole('table', { name: /trend nettovermogen per kalenderjaar/i });
+  await expect(annual).toContainText(String(currentYear - 4));
+  await expect(annual).toContainText(String(currentYear));
+  await expect(page.getByRole('heading', { name: /verdeling bezittingen/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /aflossing schulden/i })).toBeVisible();
+
+  await page.getByRole('link', { name: /^bezittingen$/i }).click();
+  await expect(page.getByRole('heading', { name: /dagelijkse betaalrekening/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /breed indexfonds/i })).toBeVisible();
+  await page.getByRole('link', { name: /instellingen/i }).click();
+  await page.getByRole('combobox', { name: 'Taal', exact: true }).selectOption('en-US');
+  await page.getByRole('link', { name: /^assets$/i }).click();
+  await expect(page.getByRole('heading', { name: /dagelijkse betaalrekening/i })).toBeVisible();
+  await page.getByRole('link', { name: /^liabilities$/i }).click();
+  await expect(page.getByRole('heading', { name: /^hypotheek$/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /autolening/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /studieschuld/i })).toBeVisible();
+});

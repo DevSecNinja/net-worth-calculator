@@ -132,3 +132,21 @@ version, and found one missing buildable success-criterion check.
 
 **Final result**: The implementation and release artifacts are internally consistent. Only the
 explicit PR, repository configuration, release, and deployment tasks T076-T078 and T100-T101 remain.
+
+## Sample Portfolio Amendment Analysis: 2026-09-04
+
+The explicit sample-data requirement now traces through a localized, deterministic household
+portfolio rather than a minimal placeholder fixture.
+
+| ID | Category | Severity | Location(s)               | Resolution                                                                                                                                                                                  |
+| -- | -------- | -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1 | Coverage | None     | FR-006, SC-019, T103-T104 | Five asset categories, three declining liabilities, exact dated history, current-date and no-future bounds, localization-at-creation, and useful dashboard views are implemented and tested |
+
+- **Functional requirements checked**: 49
+- **Success criteria checked**: 19
+- **Tasks checked**: 104
+- **Implemented tasks complete**: 99
+- **Release tasks pending**: 5
+- **Requirement coverage**: 100%
+- **Constitution conflicts**: 0
+- **Open convergence findings**: 0

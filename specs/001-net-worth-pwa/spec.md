@@ -71,6 +71,10 @@ is locked, unlock with the correct passphrase, reject a wrong passphrase, then d
    data and derived keys are discarded.
 5. **Given** an unlocked vault, **When** the user changes the passphrase, **Then** the complete
    vault is re-encrypted and the old passphrase no longer works.
+6. **Given** no vault exists, **When** the user explicitly chooses sample data, **Then** a localized,
+   fictional household portfolio demonstrates multiple asset classes, debt schedules, prior
+   year-ends, a prior mid-year observation, today's values, carry-forward, and projections without
+   creating any future observation.
 
 ---
 
@@ -320,8 +324,11 @@ December 31 annual snapshots and the exact timeline.
 - **FR-004**: Reopening or reloading the application MUST require the vault passphrase.
 - **FR-005**: Wrong passphrases and authentication failures MUST be indistinguishable to the extent
   practical and MUST NOT mutate, expose, or erase the stored vault.
-- **FR-006**: Demo data MUST be created only after a clearly labeled explicit user action and MUST
-  be removable using normal data or vault deletion flows.
+- **FR-006**: Demo data MUST be created only after a clearly labeled explicit user action, use the
+  creation locale and selected base currency without conversion, contain at least five diversified
+  assets and three amortizing liabilities across four prior year-ends plus a prior mid-year and
+  current-date observation, contain no future dates, and remain editable/removable through normal
+  data or vault deletion flows.
 - **FR-007**: Users MUST be able to create, edit, delete, and reorder assets and liabilities.
 - **FR-008**: Assets MUST support current or long-term classification; built-in checking/bank,
   savings, cash, stocks, bonds, funds/ETF, retirement/pension, property/real estate, vehicle,
@@ -485,6 +492,10 @@ December 31 annual snapshots and the exact timeline.
   strings and exact dates across unlock, save, export, and import.
 - **SC-018**: A July actual observation produces a December 31 snapshot whose asset is visibly
   carried forward and whose liability is amortized from the manual seed, with chart/table equality.
+- **SC-019**: The explicit sample action creates a schema-valid portfolio with at least five assets,
+  three declining liabilities, four prior year-end dates, one prior mid-year date, and today's date;
+  its localized names remain unchanged after a later language switch and its dashboard exposes
+  non-empty annual, timeline, allocation, and payoff views.
 
 ## Assumptions
 
@@ -498,6 +509,8 @@ December 31 annual snapshots and the exact timeline.
   service, administrator, escrow, or support override.
 - All entered amounts already use the selected base currency; exchange rates and multi-currency
   holdings are out of scope.
+- Sample amounts are fictional canonical values interpreted directly in the selected vault currency;
+  they do not imply exchange-rate conversion, guaranteed returns, or financial advice.
 - Exact observation dates and December 31 reporting are in scope; automatic market pricing, daily
   transactions, bank integrations, exchange rates, budgeting, taxes, and investment advice remain
   out of scope.

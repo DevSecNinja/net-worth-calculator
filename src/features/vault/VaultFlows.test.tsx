@@ -78,7 +78,11 @@ describe('vault lifecycle', () => {
     await user.click(screen.getByRole('button', { name: /create with sample data/i }));
     expect(await screen.findByRole('heading', { name: /net worth dashboard/i })).toBeVisible();
     await user.click(screen.getByRole('link', { name: /assets/i }));
-    expect(await screen.findByRole('heading', { name: /sample emergency fund/i })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: /everyday checking/i })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /emergency savings/i })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /broad-market index fund/i })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /retirement account/i })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /^home$/i })).toBeVisible();
   });
 
   it('closes destructive confirmation when the writable lease is lost', async () => {
