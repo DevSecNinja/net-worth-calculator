@@ -40,10 +40,8 @@ jobs:
         run: npm run typecheck
       - name: Run coverage
         run: npm run test:coverage
-      - name: Build production artifact
-        run: npm run build
-      - name: Verify production artifact
-        run: npm run test:build
+      - name: Verify project-path and custom-domain builds
+        run: npm run test:build:bases
 
   browser:
     name: Privacy, PWA, and browser compatibility
