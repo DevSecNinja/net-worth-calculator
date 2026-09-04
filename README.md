@@ -89,7 +89,7 @@ variables, accounts, remote services, or secrets are required.
 | `npm run build`           | Build the production app into `dist`                            |
 | `npm run test:build`      | Verify CSP, Pages base, PWA assets, icons, cache, and size      |
 | `npm run check`           | Run formatting, lint, types, coverage, build, and build checks  |
-| `npm run preview`         | Serve `dist` at the GitHub Pages base path                      |
+| `npm run preview`         | Serve `dist` at the base path declared by its built manifest    |
 | `npm run test:privacy`    | Run Playwright privacy and transmission checks                  |
 | `npm run test:pwa`        | Run Playwright offline, cache, and update checks                |
 | `npm run test:e2e`        | Build and run all Playwright desktop/mobile compatibility tests |
@@ -152,6 +152,9 @@ For a later Cloudflare Pages migration, use build command `npm run build`, depen
 `npm ci`, and output directory `dist`. Cloudflare production at the project root must build with
 `VITE_BASE_PATH=/`; GitHub Pages keeps `/net-worth-calculator/`. The hosting-neutral artifact needs no
 runtime API, database, analytics, or application-code migration.
+
+`npm run preview` derives the serving path from the built manifest. Use `-- --base /custom-path/`
+or set `VITE_BASE_PATH` only when an explicit preview override is needed.
 
 ## Contributing and security
 

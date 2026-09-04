@@ -29,7 +29,9 @@ export function Dialog({ open, title, onClose, children }: DialogProps) {
         event.preventDefault();
         onClose();
       }}
-      onClose={onClose}
+      onClose={() => {
+        if (open) onClose();
+      }}
     >
       <div className="dialog__header">
         <h2 id={titleId}>{title}</h2>

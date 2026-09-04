@@ -11,7 +11,7 @@ const packageMetadata = JSON.parse(
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(packageMetadata.version),
-    __COMMIT_SHA__: JSON.stringify('test000'),
+    __COMMIT_SHA__: JSON.stringify('0123456789abcdef0123456789abcdef01234567'),
     __REPOSITORY_URL__: JSON.stringify('https://github.com/DevSecNinja/net-worth-calculator'),
   },
   plugins: [react()],
@@ -26,7 +26,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'scripts/**/*.test.mjs'],
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 30_000,
     css: true,

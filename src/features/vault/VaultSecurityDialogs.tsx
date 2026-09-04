@@ -63,7 +63,7 @@ export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClo
           required
         />
         <PassphraseFields
-          current
+          passphraseLabel="New passphrase"
           passphrase={next}
           confirmation={confirmation}
           onPassphraseChange={setNext}

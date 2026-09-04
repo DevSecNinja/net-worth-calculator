@@ -56,14 +56,14 @@ export class VaultSessionLease {
   release(): void {
     if (this.heartbeat !== undefined) window.clearInterval(this.heartbeat);
     this.heartbeat = undefined;
-    this.channel?.close();
-    this.channel = undefined;
     window.removeEventListener('storage', this.handleStorage);
     window.removeEventListener('pagehide', this.handlePageHide);
     if (parseLease(localStorage.getItem(LEASE_KEY))?.owner === this.owner) {
       localStorage.removeItem(LEASE_KEY);
       this.notifyPeers();
     }
+    this.channel?.close();
+    this.channel = undefined;
   }
 
   onLost(listener: () => void): () => void {

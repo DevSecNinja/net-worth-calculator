@@ -66,6 +66,21 @@ describe('buildDashboardData', () => {
     expect(data.snapshots[1]?.yearlyChange).toBeUndefined();
   });
 
+  it('retains zero yearly change and zero percent as defined values', () => {
+    const holding = asset({
+      values: [
+        { year: 2024, amount: '100', updatedAt },
+        { year: 2025, amount: '100', updatedAt },
+      ],
+    });
+    const data = buildDashboardData(vault({ assets: [holding] }), 2024, 2025);
+
+    expect(data.snapshots[1]).toMatchObject({
+      yearlyChange: '0',
+      yearlyChangePercent: '0.00',
+    });
+  });
+
   it('keeps CAGR undefined for non-positive endpoints', () => {
     const holding = asset({
       values: [

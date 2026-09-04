@@ -5,6 +5,8 @@ import { AppFooter } from '@/components/ui/AppFooter';
 
 import { AboutPage } from './AboutPage';
 
+const testCommit = '0123456789abcdef0123456789abcdef01234567';
+
 describe('AboutPage', () => {
   it('states the local-only privacy boundaries and exact package/build identity', () => {
     render(
@@ -23,15 +25,17 @@ describe('AboutPage', () => {
     expect(screen.getByText(`v${packageMetadata.version}`, { selector: 'strong' })).toBeVisible();
 
     const buildLinks = screen.getAllByRole('link', {
-      name: new RegExp(`${packageMetadata.version}|test000`),
+      name: new RegExp(`${packageMetadata.version}|${testCommit.slice(0, 7)}`),
     });
     expect(buildLinks).toHaveLength(2);
     for (const link of buildLinks) {
       expect(link).toHaveAttribute(
         'href',
-        'https://github.com/DevSecNinja/net-worth-calculator/commit/test000',
+        `https://github.com/DevSecNinja/net-worth-calculator/commit/${testCommit}`,
       );
     }
-    expect(screen.getByText(`v${packageMetadata.version} (test000)`)).toBeVisible();
+    expect(
+      screen.getByText(`v${packageMetadata.version} (${testCommit.slice(0, 7)})`),
+    ).toBeVisible();
   });
 });

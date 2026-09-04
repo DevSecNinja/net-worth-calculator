@@ -45,12 +45,12 @@ export function AnnualChangeChart({
               <tr key={snapshot.year}>
                 <th>{snapshot.year}</th>
                 <td>
-                  {snapshot.yearlyChange
+                  {snapshot.yearlyChange !== undefined
                     ? formatMoney(snapshot.yearlyChange, currency, locale)
                     : 'Not defined'}
                 </td>
                 <td>
-                  {snapshot.yearlyChangePercent
+                  {snapshot.yearlyChangePercent !== undefined
                     ? `${snapshot.yearlyChangePercent}%`
                     : 'Not defined'}
                 </td>

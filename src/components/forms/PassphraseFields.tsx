@@ -6,7 +6,7 @@ type PassphraseFieldsProps = {
   onPassphraseChange: (value: string) => void;
   onConfirmationChange: (value: string) => void;
   error?: string | undefined;
-  current?: boolean | undefined;
+  passphraseLabel?: string | undefined;
 };
 
 export function PassphraseFields({
@@ -15,12 +15,12 @@ export function PassphraseFields({
   onPassphraseChange,
   onConfirmationChange,
   error,
-  current = false,
+  passphraseLabel = 'Passphrase',
 }: PassphraseFieldsProps) {
   return (
     <>
       <Field
-        label={current ? 'New passphrase' : 'Passphrase'}
+        label={passphraseLabel}
         name="passphrase"
         type="password"
         autoComplete="new-password"

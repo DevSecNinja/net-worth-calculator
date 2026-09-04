@@ -24,13 +24,18 @@ export function DashboardSummary({
     },
     {
       label: 'Yearly change',
-      value: snapshot.yearlyChange
-        ? formatMoney(snapshot.yearlyChange, currency, locale)
-        : 'Not defined',
-      detail: snapshot.yearlyChangePercent
-        ? formatPercent(snapshot.yearlyChangePercent, locale)
-        : undefined,
-      tone: snapshot.yearlyChange && Number(snapshot.yearlyChange) >= 0 ? 'positive' : 'neutral',
+      value:
+        snapshot.yearlyChange !== undefined
+          ? formatMoney(snapshot.yearlyChange, currency, locale)
+          : 'Not defined',
+      detail:
+        snapshot.yearlyChangePercent !== undefined
+          ? formatPercent(snapshot.yearlyChangePercent, locale)
+          : undefined,
+      tone:
+        snapshot.yearlyChange !== undefined && Number(snapshot.yearlyChange) >= 0
+          ? 'positive'
+          : 'neutral',
     },
   ];
 

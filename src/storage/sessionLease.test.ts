@@ -57,4 +57,26 @@ describe('VaultSessionLease', () => {
     expect(reloaded.acquire()).toBe(true);
     reloaded.release();
   });
+
+  it('broadcasts an owned lease release before closing the channel', () => {
+    const events: string[] = [];
+    class TestBroadcastChannel {
+      onmessage: (() => void) | null = null;
+
+      postMessage(message: string) {
+        events.push(`post:${message}`);
+      }
+
+      close() {
+        events.push('close');
+      }
+    }
+    vi.stubGlobal('BroadcastChannel', TestBroadcastChannel);
+    const lease = new VaultSessionLease();
+
+    expect(lease.acquire()).toBe(true);
+    lease.release();
+
+    expect(events).toEqual(['post:lease-changed', 'close']);
+  });
 });

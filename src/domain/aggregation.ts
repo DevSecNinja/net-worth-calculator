@@ -97,7 +97,7 @@ export function buildDashboardData(
         : undefined;
     const previousNetWorth = previous ? toDecimal(previous.netWorth) : undefined;
     const yearlyChangePercent =
-      yearlyChange && previousNetWorth && !previousNetWorth.eq(0)
+      yearlyChange !== undefined && previousNetWorth !== undefined && !previousNetWorth.eq(0)
         ? yearlyChange.div(previousNetWorth.abs()).mul(100).toFixed(2)
         : undefined;
     const sources = new Set(liabilityValues.filter(Boolean).map((value) => value?.source));
@@ -109,8 +109,8 @@ export function buildDashboardData(
       assets: canonicalMoney(assets),
       liabilities: canonicalMoney(liabilities),
       netWorth: canonicalSignedMoney(netWorth),
-      ...(yearlyChange ? { yearlyChange: canonicalSignedMoney(yearlyChange) } : {}),
-      ...(yearlyChangePercent ? { yearlyChangePercent } : {}),
+      ...(yearlyChange !== undefined ? { yearlyChange: canonicalSignedMoney(yearlyChange) } : {}),
+      ...(yearlyChangePercent !== undefined ? { yearlyChangePercent } : {}),
       completeness: complete ? 'complete' : 'incomplete',
       liabilitySource,
     });
