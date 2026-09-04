@@ -11,7 +11,33 @@ permissions:
   contents: read
 
 jobs:
+  release-auth:
+    runs-on: ubuntu-24.04
+    permissions: {}
+    env:
+      RELEASE_PLEASE_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+      RELEASE_PLEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+    steps:
+      - name: Require Release Please GitHub App credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          missing=0
+          if [[ ! "${RELEASE_PLEASE_APP_ID:-}" =~ [^[:space:]] ]]; then
+            echo "::error::Configure repository variable RELEASE_PLEASE_APP_ID with the Release Please GitHub App ID."
+            missing=1
+          fi
+          if [[ ! "${RELEASE_PLEASE_APP_PRIVATE_KEY:-}" =~ [^[:space:]] ]]; then
+            echo "::error::Configure repository secret RELEASE_PLEASE_APP_PRIVATE_KEY with the Release Please GitHub App private key."
+            missing=1
+          fi
+          if (( missing != 0 )); then
+            exit 1
+          fi
+
   release-please:
+    needs: release-auth
     uses: DevSecNinja/.github/.github/workflows/release-please.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
     permissions:
       contents: write # Push the release branch and create the version tag.

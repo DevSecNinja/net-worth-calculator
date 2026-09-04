@@ -148,6 +148,19 @@ npm run test:build
 
 The public URL is <https://devsecninja.github.io/net-worth-calculator/>.
 
+### Release automation credentials
+
+Release Please authenticates as an installed GitHub App. Configure these repository-level Actions
+credentials under **Settings > Secrets and variables > Actions**:
+
+- Variable `RELEASE_PLEASE_APP_ID`: the GitHub App ID.
+- Secret `RELEASE_PLEASE_APP_PRIVATE_KEY`: the GitHub App private key.
+
+Install the app for this repository with **Contents: write** and **Pull requests: write** repository
+permissions. The Release Please workflow deliberately fails before invoking its pinned reusable
+workflow when either credential is unavailable or empty; it never falls back to `GITHUB_TOKEN`.
+GitHub Release publication remains the responsibility of the tag-triggered release workflow.
+
 For a later Cloudflare Pages migration, use build command `npm run build`, dependency command
 `npm ci`, and output directory `dist`. Cloudflare production at the project root must build with
 `VITE_BASE_PATH=/`; GitHub Pages keeps `/net-worth-calculator/`. The hosting-neutral artifact needs no
