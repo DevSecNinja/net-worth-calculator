@@ -1,0 +1,293 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+
+import type { CipherEnvelopeV1, Vault } from '@/domain/model';
+import { addSampleData, createEmptyVault } from '@/domain/fixtures';
+import type { VaultKeyMaterial } from '@/storage/crypto';
+import { VaultSessionLease } from '@/storage/sessionLease';
+import {
+  changeVaultPassphrase,
+  createVault as createPersistedVault,
+  hasVault,
+  removeVault,
+  replaceVaultEnvelope,
+  saveVault,
+  unlockVault,
+} from '@/storage/vaultRepository';
+
+type VaultStatus = 'loading' | 'absent' | 'locked' | 'unlocked';
+
+export type ImportedVault = {
+  envelope: CipherEnvelopeV1;
+  vault: Vault;
+  material: VaultKeyMaterial;
+};
+
+type VaultContextValue = {
+  status: VaultStatus;
+  vault?: Vault;
+  busy: boolean;
+  error?: string;
+  create: (passphrase: string, currency: string, sample: boolean) => Promise<void>;
+  unlock: (passphrase: string) => Promise<void>;
+  lock: () => void;
+  mutate: (updater: (vault: Vault) => Vault) => Promise<void>;
+  changePassphrase: (currentPassphrase: string, newPassphrase: string) => Promise<void>;
+  deleteVault: () => Promise<void>;
+  replaceImportedVault: (imported: ImportedVault) => Promise<void>;
+  clearError: () => void;
+};
+
+const VaultContext = createContext<VaultContextValue | undefined>(undefined);
+
+function messageFrom(error: unknown): string {
+  return error instanceof Error ? error.message : 'The vault operation failed.';
+}
+
+export function VaultProvider({ children }: { children: ReactNode }) {
+  const [status, setStatus] = useState<VaultStatus>('loading');
+  const [vault, setVault] = useState<Vault>();
+  const [material, setMaterial] = useState<VaultKeyMaterial>();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const lease = useRef<VaultSessionLease | undefined>(undefined);
+  const generation = useRef(0);
+
+  const lock = useCallback(() => {
+    generation.current += 1;
+    lease.current?.release();
+    lease.current = undefined;
+    setVault(undefined);
+    setMaterial(undefined);
+    setBusy(false);
+    setStatus('locked');
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void hasVault()
+      .then((exists) => {
+        if (active) setStatus(exists ? 'locked' : 'absent');
+      })
+      .catch((caught: unknown) => {
+        if (active) {
+          setError(messageFrom(caught));
+          setStatus('absent');
+        }
+      });
+    return () => {
+      active = false;
+      generation.current += 1;
+      lease.current?.release();
+    };
+  }, []);
+
+  const acquireLease = useCallback((): VaultSessionLease => {
+    const candidate = new VaultSessionLease();
+    if (!candidate.acquire()) {
+      throw new Error('This vault is already unlocked in another tab.');
+    }
+    candidate.onLost(lock);
+    lease.current = candidate;
+    return candidate;
+  }, [lock]);
+
+  const isCurrentOperation = useCallback(
+    (token: number, operationLease: VaultSessionLease) =>
+      generation.current === token &&
+      lease.current === operationLease &&
+      operationLease.ownsLease(),
+    [],
+  );
+
+  const create = useCallback(
+    async (passphrase: string, currency: string, sample: boolean) => {
+      const token = ++generation.current;
+      setBusy(true);
+      setError(undefined);
+      let operationLease: VaultSessionLease | undefined;
+      try {
+        operationLease = acquireLease();
+        let next = createEmptyVault(currency);
+        if (sample) next = addSampleData(next);
+        const created = await createPersistedVault(next, passphrase);
+        if (!isCurrentOperation(token, operationLease)) return;
+        setVault(created.vault);
+        setMaterial(created.material);
+        setStatus('unlocked');
+      } catch (caught) {
+        operationLease?.release();
+        if (lease.current === operationLease) lease.current = undefined;
+        if (generation.current === token) setError(messageFrom(caught));
+        throw caught;
+      } finally {
+        if (generation.current === token) setBusy(false);
+      }
+    },
+    [acquireLease, isCurrentOperation],
+  );
+
+  const unlock = useCallback(
+    async (passphrase: string) => {
+      const token = ++generation.current;
+      setBusy(true);
+      setError(undefined);
+      let operationLease: VaultSessionLease | undefined;
+      try {
+        operationLease = acquireLease();
+        const opened = await unlockVault(passphrase);
+        if (!isCurrentOperation(token, operationLease)) return;
+        setVault(opened.vault);
+        setMaterial(opened.material);
+        setStatus('unlocked');
+      } catch (caught) {
+        operationLease?.release();
+        if (lease.current === operationLease) lease.current = undefined;
+        if (generation.current === token) setError(messageFrom(caught));
+        throw caught;
+      } finally {
+        if (generation.current === token) setBusy(false);
+      }
+    },
+    [acquireLease, isCurrentOperation],
+  );
+
+  const mutate = useCallback(
+    async (updater: (current: Vault) => Vault) => {
+      if (!vault || !material) throw new Error('Unlock the vault before changing it.');
+      const operationLease = lease.current;
+      if (!operationLease?.ownsLease()) throw new Error('The writable vault session was lost.');
+      const token = ++generation.current;
+      setBusy(true);
+      setError(undefined);
+      try {
+        const saved = await saveVault(updater(vault), material);
+        if (!isCurrentOperation(token, operationLease)) return;
+        setVault(saved);
+      } catch (caught) {
+        if (generation.current === token) setError(messageFrom(caught));
+        throw caught;
+      } finally {
+        if (generation.current === token) setBusy(false);
+      }
+    },
+    [isCurrentOperation, material, vault],
+  );
+
+  const changePassphrase = useCallback(
+    async (currentPassphrase: string, newPassphrase: string) => {
+      if (!vault || !material) throw new Error('Unlock the vault first.');
+      const operationLease = lease.current;
+      if (!operationLease?.ownsLease()) throw new Error('The writable vault session was lost.');
+      const token = ++generation.current;
+      setBusy(true);
+      setError(undefined);
+      try {
+        const verified = await unlockVault(currentPassphrase);
+        if (verified.vault.id !== vault.id || verified.vault.revision !== vault.revision) {
+          throw new Error('The stored vault changed. Lock and unlock before trying again.');
+        }
+        const changed = await changeVaultPassphrase(vault, material, newPassphrase);
+        if (!isCurrentOperation(token, operationLease)) return;
+        setVault(changed.vault);
+        setMaterial(changed.material);
+      } catch (caught) {
+        if (generation.current === token) setError(messageFrom(caught));
+        throw caught;
+      } finally {
+        if (generation.current === token) setBusy(false);
+      }
+    },
+    [isCurrentOperation, material, vault],
+  );
+
+  const deleteVault = useCallback(async () => {
+    const token = ++generation.current;
+    setBusy(true);
+    setError(undefined);
+    try {
+      await removeVault();
+      lease.current?.release();
+      lease.current = undefined;
+      setVault(undefined);
+      setMaterial(undefined);
+      setStatus('absent');
+    } catch (caught) {
+      if (generation.current === token) setError(messageFrom(caught));
+      throw caught;
+    } finally {
+      if (generation.current === token) setBusy(false);
+    }
+  }, []);
+
+  const replaceImportedVault = useCallback(
+    async (imported: ImportedVault) => {
+      const operationLease = lease.current;
+      if (!operationLease?.ownsLease()) throw new Error('The writable vault session was lost.');
+      const token = ++generation.current;
+      setBusy(true);
+      setError(undefined);
+      try {
+        await replaceVaultEnvelope(imported.envelope);
+        if (!isCurrentOperation(token, operationLease)) return;
+        setVault(imported.vault);
+        setMaterial(imported.material);
+        setStatus('unlocked');
+      } catch (caught) {
+        if (generation.current === token) setError(messageFrom(caught));
+        throw caught;
+      } finally {
+        if (generation.current === token) setBusy(false);
+      }
+    },
+    [isCurrentOperation],
+  );
+
+  const clearError = useCallback(() => setError(undefined), []);
+  const value = useMemo(
+    () => ({
+      status,
+      ...(vault ? { vault } : {}),
+      busy,
+      ...(error ? { error } : {}),
+      create,
+      unlock,
+      lock,
+      mutate,
+      changePassphrase,
+      deleteVault,
+      replaceImportedVault,
+      clearError,
+    }),
+    [
+      busy,
+      changePassphrase,
+      clearError,
+      create,
+      deleteVault,
+      error,
+      lock,
+      mutate,
+      replaceImportedVault,
+      status,
+      unlock,
+      vault,
+    ],
+  );
+
+  return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>;
+}
+
+export function useVault(): VaultContextValue {
+  const value = useContext(VaultContext);
+  if (!value) throw new Error('useVault must be used inside VaultProvider.');
+  return value;
+}
