@@ -1,0 +1,24 @@
+---
+name: Shared lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    uses: DevSecNinja/.github/.github/workflows/lint.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
+    permissions:
+      contents: read
+      security-events: write # Upload shared linter SARIF to code scanning.
+    with:
+      # renovate: datasource=github-releases depName=jdx/mise
+      mise-version: "2026.8.0"
+      lint-fail-on-error: true
+      lint-go: false
+      lint-config-drift: false

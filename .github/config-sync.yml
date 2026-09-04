@@ -1,0 +1,18 @@
+---
+# Auditable selection mirrored by the pull-based config-sync workflow.
+source:
+  repository: DevSecNinja/.github
+  ref: main
+files:
+  - .editorconfig
+  - .github/CODEOWNERS
+  - .github/labels-base.yaml
+  - .gitleaks.toml
+  - .markdownlint.yaml
+  - .shellcheckrc
+  - .yamlfmt.yaml
+  - .yamllint.yaml
+  - dprint.json
+  - issue-labeler.yaml
+  - pr-labeler.yaml
+  - renovate.json5
