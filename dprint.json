@@ -5,6 +5,8 @@
     "**/node_modules",
     "**/CHANGELOG.md",
     "**/release-notes.md",
+    ".github/skills/**",
+    ".specify/**",
     "apm_modules/**",
     ".github/prompts/**",
     ".github/instructions/**",

@@ -4,9 +4,14 @@ const registrationStub = Object.create(null) as ServiceWorkerRegistration;
 export const registrationUpdate = vi.fn(async () => registrationStub);
 export const activateServiceWorker = vi.fn(async () => undefined);
 let registrationDelayMs = 0;
+let initialNeedRefresh = false;
 
 export function setPwaRegistrationDelay(delayMs: number) {
   registrationDelayMs = delayMs;
+}
+
+export function setPwaNeedRefresh(value: boolean) {
+  initialNeedRefresh = value;
 }
 
 type RegisterOptions = {
@@ -25,7 +30,7 @@ export function useRegisterSW(options?: RegisterOptions) {
     return () => window.clearTimeout(timeout);
   }, [options]);
   return {
-    needRefresh: useState(false),
+    needRefresh: useState(initialNeedRefresh),
     offlineReady: useState(false),
     updateServiceWorker: activateServiceWorker,
   };

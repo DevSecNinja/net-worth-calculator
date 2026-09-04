@@ -41,6 +41,7 @@ export function SettingsPage() {
       ...current,
       settings: { ...current.settings, baseCurrency: currency },
     }));
+    setDirty('Currency settings', false);
     setConfirmed(false);
     announce(`Base currency changed to ${currency}. Existing numbers were not converted.`);
   }

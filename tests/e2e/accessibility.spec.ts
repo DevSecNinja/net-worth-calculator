@@ -131,5 +131,5 @@ test('supports keyboard focus, error recovery, real zoom-scale reflow, motion, s
     /Base currency changed to EUR. Existing numbers were not converted./i,
   );
   await page.evaluate(() => window.dispatchEvent(new Event('offline')));
-  await expect(page.getByRole('status')).toContainText(/offline/i);
+  await expect(page.getByText(/^Offline - encrypted local data remains available$/i)).toBeVisible();
 });

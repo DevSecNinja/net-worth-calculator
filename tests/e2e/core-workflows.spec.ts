@@ -62,7 +62,8 @@ test('exports and imports through portable fallback file controls', async ({ pag
   await chooser.setFiles(path);
   await expect(page.getByRole('dialog', { name: /replace current vault/i })).toBeVisible();
   await page.getByLabel(/type replace/i).fill('REPLACE');
-  await page.getByRole('button', { name: /replace vault/i }).click();
+  await page.getByRole('button', { name: /replace vault/i }).focus();
+  await page.keyboard.press('Enter');
   await expect(page.getByText(/encrypted backup restored/i)).toBeVisible();
 });
 

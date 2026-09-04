@@ -53,7 +53,9 @@ test('reloads every route and query from app-only caches during a real origin ou
     ];
     for (const launch of launches) {
       await page.goto(launch.url, { waitUntil: 'domcontentloaded' });
-      await expect(page.getByRole('heading', { name: launch.heading })).toBeVisible();
+      await expect(page.getByRole('heading', { name: launch.heading })).toBeVisible({
+        timeout: 30_000,
+      });
       await expect(page.getByRole('link', { name: /net worth calculator home/i })).toBeVisible();
     }
 

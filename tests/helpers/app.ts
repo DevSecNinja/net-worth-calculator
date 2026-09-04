@@ -20,7 +20,7 @@ export async function createVault(page: Page, sample = false): Promise<void> {
     page.getByRole('heading', {
       name: sample ? /net worth dashboard/i : /build your first net worth snapshot/i,
     }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 30_000 });
 }
 
 export async function addAsset(

@@ -1,7 +1,11 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { registrationUpdate, setPwaRegistrationDelay } from '@/test/pwaRegisterMock';
+import {
+  registrationUpdate,
+  setPwaNeedRefresh,
+  setPwaRegistrationDelay,
+} from '@/test/pwaRegisterMock';
 
 import { usePwaUpdate } from './usePwaUpdate';
 
@@ -24,6 +28,7 @@ describe('usePwaUpdate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setPwaRegistrationDelay(0);
+    setPwaNeedRefresh(false);
   });
 
   it('checks registration at startup and on explicit user request', async () => {
@@ -67,5 +72,13 @@ describe('usePwaUpdate', () => {
     render(<Harness />);
     expect(await screen.findByText('Service worker update check failed.')).toBeVisible();
     expect(registrationUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not present a first installation as an update', async () => {
+    setPwaNeedRefresh(true);
+    render(<Harness />);
+    await waitFor(() => expect(registrationUpdate).toHaveBeenCalledOnce());
+    expect(screen.getByRole('button', { name: 'Check' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Refresh available' })).not.toBeInTheDocument();
   });
 });

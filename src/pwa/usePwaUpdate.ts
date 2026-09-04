@@ -20,6 +20,7 @@ async function updateRegistration(
 
 export function usePwaUpdate() {
   const registration = useRef<ServiceWorkerRegistration | undefined>(undefined);
+  const controlledAtRegistration = useRef(false);
   const lastCheck = useRef(0);
   const [registrationError, setRegistrationError] = useState<string>();
   const {
@@ -31,6 +32,7 @@ export function usePwaUpdate() {
     onRegisteredSW(_url, serviceWorkerRegistration) {
       if (!serviceWorkerRegistration) return;
       registration.current = serviceWorkerRegistration;
+      controlledAtRegistration.current = Boolean(navigator.serviceWorker?.controller);
       void updateRegistration(serviceWorkerRegistration, lastCheck, setNeedRefresh, true).catch(
         () => {
           setRegistrationError('Service worker update check failed.');
@@ -76,7 +78,7 @@ export function usePwaUpdate() {
   }, [checkForUpdate]);
 
   return {
-    needRefresh,
+    needRefresh: needRefresh && controlledAtRegistration.current,
     offlineReady,
     registrationError,
     dismissRefresh: () => {

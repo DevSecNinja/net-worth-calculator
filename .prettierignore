@@ -1,8 +1,14 @@
+.github
 .github/skills
 .specify
+**/*.md
+**/*.yaml
+**/*.yml
 coverage
 dist
+dprint.json
 node_modules
 package-lock.json
 playwright-report
+renovate.json5
 test-results

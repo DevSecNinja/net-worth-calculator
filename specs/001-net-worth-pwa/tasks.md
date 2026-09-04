@@ -330,10 +330,10 @@ contract in representative engines and viewports.
 - [x] T073 [P] Add package release metadata, release-please manifest/config, and git-cliff
       configuration in `release-please-config.json`, `.release-please-manifest.json`, and
       `cliff.toml`
-- [ ] T074 Run and fix `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] T074 Run and fix `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm run test:coverage`, `npm run build`, `npm run test:build`, and all Playwright projects
       from `quickstart.md`
-- [ ] T075 Update `specs/001-net-worth-pwa/tasks.md` to completed state and run a Spec Kit
+- [x] T075 Update `specs/001-net-worth-pwa/tasks.md` to completed state and run a Spec Kit
       convergence pass against all requirements and artifacts
 - [ ] T076 Commit with conventional history, push the branch, open a detailed PR with evidence, and
       obtain green required checks for `DevSecNinja/net-worth-calculator`
