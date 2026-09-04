@@ -311,23 +311,23 @@ contract in representative engines and viewports.
 
 **Purpose**: Document, secure, automate, validate, release, and deploy the complete product.
 
-- [ ] T066 [P] Write product setup, privacy model, features, browser support, commands, PWA updates,
+- [x] T066 [P] Write product setup, privacy model, features, browser support, commands, PWA updates,
       encrypted backup caveats, deployment URL, and Cloudflare migration in `README.md`
-- [ ] T067 [P] Write architecture and privacy/security threat model documentation in
+- [x] T067 [P] Write architecture and privacy/security threat model documentation in
       `docs/architecture.md` and `docs/privacy-security.md`
-- [ ] T068 [P] Add MIT-aligned contribution, code of conduct, security, changelog, and app privacy
+- [x] T068 [P] Add MIT-aligned contribution, code of conduct, security, changelog, and app privacy
       documents in `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `CHANGELOG.md`, and
       `PRIVACY.md`
-- [ ] T069 [P] Add adapted issue/PR templates, CODEOWNERS, app labels, and concise coding guidance
+- [x] T069 [P] Add adapted issue/PR templates, CODEOWNERS, app labels, and concise coding guidance
       in `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md`, `.github/CODEOWNERS`,
       `.github/labels-base.yaml`, and `.github/copilot-instructions.md`
-- [ ] T070 Configure PR-only local CI for format, lint, strict types, coverage, build, bundle,
+- [x] T070 Configure PR-only local CI for format, lint, strict types, coverage, build, bundle,
       privacy, PWA, and multi-browser E2E in `.github/workflows/ci.yml`
-- [ ] T071 [P] Add full-SHA-pinned DevSecNinja v2.5.0 lint, Pages, config-sync, release-please, and
+- [x] T071 [P] Add full-SHA-pinned DevSecNinja v2.5.0 lint, Pages, config-sync, release-please, and
       tag-release callers in `.github/workflows/` with least-privilege permissions
-- [ ] T072 [P] Add synchronized central baseline/config-sync selection and Renovate policy in
+- [x] T072 [P] Add synchronized central baseline/config-sync selection and Renovate policy in
       `.github/config-sync.yml`, `.github/.config-sync-ignore`, and `renovate.json5`
-- [ ] T073 [P] Add package release metadata, release-please manifest/config, and git-cliff
+- [x] T073 [P] Add package release metadata, release-please manifest/config, and git-cliff
       configuration in `release-please-config.json`, `.release-please-manifest.json`, and
       `cliff.toml`
 - [ ] T074 Run and fix `npm run format:check`, `npm run lint`, `npm run typecheck`,
