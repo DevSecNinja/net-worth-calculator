@@ -10,6 +10,8 @@ export async function createVault(page: Page, sample = false): Promise<void> {
   const updateConfirmation = page.getByRole('dialog', { name: /unsaved edits/i });
   if (await updateConfirmation.isVisible()) {
     await updateConfirmation.getByRole('button', { name: /keep editing/i }).click();
+    await page.getByLabel(/^passphrase$/i).fill(PASSPHRASE);
+    await page.getByLabel(/confirm passphrase/i).fill(PASSPHRASE);
   }
   await page
     .getByRole('button', { name: sample ? /create with sample data/i : /create empty vault/i })
