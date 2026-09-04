@@ -5,6 +5,7 @@ import {
   VAULT_SCHEMA_VERSION,
 } from '@/domain/model';
 import { migrateVault } from '@/domain/migrations';
+import { vaultSizeErrorMessage } from '@/domain/sizeLimits';
 import { cipherEnvelopeSchema } from '@/domain/validation';
 
 export const DEFAULT_KDF_ITERATIONS = 600_000;
@@ -26,7 +27,7 @@ export class VaultAuthenticationError extends Error {
 
 export class VaultSizeError extends Error {
   constructor() {
-    super('The encrypted vault exceeds the supported local backup size.');
+    super(vaultSizeErrorMessage());
     this.name = 'VaultSizeError';
   }
 }

@@ -1,6 +1,7 @@
 import type { BackupEnvelopeV2 } from '@/domain/model';
 import { BACKUP_FORMAT_VERSION, MAX_BACKUP_BYTES, nowIso } from '@/domain/model';
 import { parseBackupEnvelope } from '@/domain/migrations';
+import { backupSizeErrorMessage } from '@/domain/sizeLimits';
 import { encryptVault, unlockEncryptedVault } from '@/storage/crypto';
 import { readEnvelope } from '@/storage/database';
 import type { ImportedVault } from '@/features/vault/VaultProvider';
@@ -20,7 +21,7 @@ export async function createBackupJson(): Promise<string> {
   };
   const serialized = JSON.stringify(backup);
   if (new TextEncoder().encode(serialized).byteLength > MAX_BACKUP_BYTES) {
-    throw new Error('Backup is larger than the 10 MiB limit.');
+    throw new Error(backupSizeErrorMessage());
   }
   return serialized;
 }
@@ -30,7 +31,7 @@ export async function prepareBackupImport(
   passphrase: string,
 ): Promise<ImportedVault> {
   if (new TextEncoder().encode(contents).byteLength > MAX_BACKUP_BYTES) {
-    throw new Error('Backup is larger than the 10 MiB limit.');
+    throw new Error(backupSizeErrorMessage());
   }
   let parsed: unknown;
   try {

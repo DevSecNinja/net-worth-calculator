@@ -326,6 +326,7 @@ const enUS = {
   'error.conflict': 'The vault changed elsewhere. Lock and unlock before trying again.',
   'error.backup': 'The encrypted backup is invalid, unsupported, or could not be authenticated.',
   'error.backupSize': 'The encrypted backup exceeds the 10 MiB limit.',
+  'error.vaultSize': 'The decrypted vault document exceeds the 7 MiB local size limit.',
   'error.cancelled': 'The file operation was cancelled.',
 } as const;
 
@@ -668,6 +669,7 @@ const nlNL: MessageCatalog = {
   'error.backup':
     'De versleutelde back-up is ongeldig, niet ondersteund of kon niet worden geauthenticeerd.',
   'error.backupSize': 'De versleutelde back-up is groter dan de limiet van 10 MiB.',
+  'error.vaultSize': 'Het ontsleutelde kluisdocument is groter dan de lokale limiet van 7 MiB.',
   'error.cancelled': 'De bestandsbewerking is geannuleerd.',
 };
 

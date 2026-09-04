@@ -8,6 +8,7 @@ import {
   VaultAuthenticationError,
   VaultSizeError,
 } from './crypto';
+import { vaultSizeErrorMessage } from '@/domain/sizeLimits';
 
 describe('encrypted vault envelope', () => {
   const passphrase = 'correct horse battery staple';
@@ -73,6 +74,9 @@ describe('encrypted vault envelope', () => {
     });
     expect(vaultSchema.safeParse(largeVault).success).toBe(true);
     const { material } = await createEncryptedVault(vault(), passphrase);
-    await expect(encryptVault(largeVault, material)).rejects.toThrow(VaultSizeError);
+    await expect(encryptVault(largeVault, material)).rejects.toMatchObject({
+      name: VaultSizeError.name,
+      message: vaultSizeErrorMessage(),
+    });
   });
 });

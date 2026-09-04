@@ -1,4 +1,5 @@
 import { createEmptyVault } from '@/domain/fixtures';
+import { backupSizeErrorMessage } from '@/domain/sizeLimits';
 import { createEncryptedVault } from '@/storage/crypto';
 import { deleteEnvelope, writeEnvelope } from '@/storage/database';
 
@@ -78,7 +79,7 @@ describe('encrypted backups', () => {
 
   it('enforces the size bound inside the import pipeline', async () => {
     await expect(prepareBackupImport('x'.repeat(10 * 1024 * 1024 + 1), passphrase)).rejects.toThrow(
-      '10 MiB',
+      backupSizeErrorMessage(),
     );
   });
 });

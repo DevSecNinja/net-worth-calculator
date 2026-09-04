@@ -110,6 +110,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       if (/vault changed|encrypted vault changed|another vault change/i.test(message)) {
         return t('error.conflict');
       }
+      if (/decrypted vault document|7 MiB local size limit/i.test(message)) {
+        return t('error.vaultSize');
+      }
       if (/10 MiB|supported local backup size/i.test(message)) return t('error.backupSize');
       if (/cancelled/i.test(message)) return t('error.cancelled');
       if (/backup|unsupported version/i.test(message)) return t('error.backup');

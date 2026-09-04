@@ -11,6 +11,9 @@ function Harness() {
       <p>{t('nav.assets')}</p>
       <p>{translateError('Each asset observation date must be unique.')}</p>
       <p>{translateError('Each manual balance date must be unique.')}</p>
+      <p>
+        {translateError('The decrypted vault document is larger than the 7 MiB local size limit.')}
+      </p>
       <button type="button" onClick={() => setLocale('nl-NL')}>
         Nederlands
       </button>
@@ -39,6 +42,9 @@ describe('LocaleProvider', () => {
     expect(screen.getByText('nl-NL')).toBeVisible();
     expect(screen.getByText('Bezittingen')).toBeVisible();
     expect(screen.getAllByText('Elke observatiedatum moet uniek zijn.')).toHaveLength(2);
+    expect(
+      screen.getByText('Het ontsleutelde kluisdocument is groter dan de lokale limiet van 7 MiB.'),
+    ).toBeVisible();
     expect(localStorage.getItem(localeStorageKey)).toBe('nl-NL');
     expect(document.documentElement.lang).toBe('nl-NL');
   });

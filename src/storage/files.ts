@@ -1,4 +1,5 @@
 import { MAX_BACKUP_BYTES } from '@/domain/model';
+import { backupSizeErrorMessage } from '@/domain/sizeLimits';
 
 const BACKUP_MIME = 'application/vnd.devsecninja.net-worth-backup+json';
 export { MAX_BACKUP_BYTES };
@@ -73,7 +74,7 @@ export async function saveBackupFile(
 }
 
 async function validateFile(file: File): Promise<string> {
-  if (file.size > MAX_BACKUP_BYTES) throw new Error('Backup is larger than the 10 MiB limit.');
+  if (file.size > MAX_BACKUP_BYTES) throw new Error(backupSizeErrorMessage());
   if (file.size === 0) throw new Error('Backup is empty.');
   return file.text();
 }
