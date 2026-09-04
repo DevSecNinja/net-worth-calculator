@@ -4,7 +4,7 @@ A private, local-first progressive web app for tracking assets, liabilities, yea
 payoff projections. Financial data stays in an encrypted browser vault; the app has no account,
 server API, analytics, telemetry, advertising, remote fonts, or runtime CDN dependency.
 
-**Live app:** <https://devsecninja.github.io/net-worth-calculator/>
+**Live app:** <https://net-worth.ravensberg.org/>
 
 > [!IMPORTANT]
 > The app cannot reset or recover a forgotten passphrase. Clearing site data or losing the device
@@ -137,16 +137,19 @@ IndexedDB.
 
 ## Deployment
 
-GitHub Pages deploys `dist` from `main`. The production build uses the
-`/net-worth-calculator/` base path:
+GitHub Pages deploys `dist` from `main` to the custom domain
+<https://net-worth.ravensberg.org/>. The production workflow builds and verifies the root-hosted
+artifact:
 
 ```powershell
 npm ci
-npm run build
-npm run test:build
+$env:VITE_BASE_PATH = "/"; npm run build
+$env:EXPECTED_BASE_PATH = "/"; npm run test:build
 ```
 
-The public URL is <https://devsecninja.github.io/net-worth-calculator/>.
+The GitHub Pages project URL <https://devsecninja.github.io/net-worth-calculator/> redirects to the
+custom domain. The default `npm run build` base remains `/net-worth-calculator/` for project-site CI
+compatibility and fallback hosting; `npm run test:build:bases` verifies both deployment shapes.
 
 ### Release automation credentials
 
@@ -161,10 +164,10 @@ permissions. The Release Please workflow deliberately fails before invoking its 
 workflow when either credential is unavailable or empty; it never falls back to `GITHUB_TOKEN`.
 GitHub Release publication remains the responsibility of the tag-triggered release workflow.
 
-For a later Cloudflare Pages migration, use build command `npm run build`, dependency command
-`npm ci`, and output directory `dist`. Cloudflare production at the project root must build with
-`VITE_BASE_PATH=/`; GitHub Pages keeps `/net-worth-calculator/`. The hosting-neutral artifact needs no
-runtime API, database, analytics, or application-code migration.
+Cloudflare currently provides DNS only; GitHub Pages remains the hosting provider. A later Cloudflare
+Pages migration is tracked in Issue #3. That migration would use build command `npm run build`,
+dependency command `npm ci`, output directory `dist`, and `VITE_BASE_PATH=/`. The hosting-neutral
+artifact needs no runtime API, database, analytics, or application-code migration.
 
 `npm run preview` derives the serving path from the built manifest. Use `-- --base /custom-path/`
 or set `VITE_BASE_PATH` only when an explicit preview override is needed.

@@ -32,7 +32,7 @@ jobs:
         npm run lint
         npm run typecheck
         npm run test:coverage
-      build-command: npm run build
-      pre-deploy-command: npm run test:build
+      build-command: VITE_BASE_PATH=/ npm run build
+      pre-deploy-command: EXPECTED_BASE_PATH=/ npm run test:build
       github-pages: true
       cloudflare-preview: false

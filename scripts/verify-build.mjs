@@ -6,9 +6,11 @@ import { fileURLToPath } from 'node:url';
 
 import sharp from 'sharp';
 
+import { resolveExpectedBasePath } from './build-base.mjs';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = join(root, 'dist');
-const base = '/net-worth-calculator/';
+const base = resolveExpectedBasePath();
 const initialBudget = 300 * 1024;
 const required = [
   'index.html',
@@ -121,7 +123,9 @@ for (const [name, expectedValues] of requiredDirectives) {
 if (/unsafe-(?:inline|eval)|https?:/i.test(csp)) {
   throw new Error('CSP must not permit unsafe execution or external network origins.');
 }
-if (!html.includes(base)) throw new Error('Built HTML is missing the Pages base.');
+if (!html.includes(`href="${base}manifest.webmanifest"`)) {
+  throw new Error(`Built HTML is missing the manifest reference for base ${base}.`);
+}
 
 const manifest = JSON.parse(await readFile(join(dist, 'manifest.webmanifest'), 'utf8'));
 if (manifest.id !== base || manifest.start_url !== base || manifest.scope !== base) {
@@ -160,7 +164,10 @@ const references = [...html.matchAll(/(?:src|href)="([^"]+\.(?:css|js))"/g)].map
   ([, reference]) => reference,
 );
 for (const reference of references) {
-  initialFiles.add(reference.replace(base, '').replaceAll('\\', '/'));
+  if (!reference.startsWith(base)) {
+    throw new Error(`Initial asset reference ${reference} is outside expected base ${base}.`);
+  }
+  initialFiles.add(reference.slice(base.length).replaceAll('\\', '/'));
 }
 const pending = [...initialFiles].filter((file) => file.endsWith('.js'));
 while (pending.length > 0) {
@@ -216,6 +223,13 @@ const builtJavaScript = (
       .map((file) => readFile(join(dist, file), 'utf8')),
   )
 ).join('\n');
+const escapedBase = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+if (!new RegExp(`["'\`]${escapedBase}sw\\.js["'\`]`).test(builtJavaScript)) {
+  throw new Error(`Built application does not register the service worker from ${base}sw.js.`);
+}
+if (!new RegExp(`scope:\\s*["'\`]${escapedBase}["'\`]`).test(builtJavaScript)) {
+  throw new Error(`Built application does not register the service worker with scope ${base}.`);
+}
 if (!builtJavaScript.includes(packageMetadata.version)) {
   throw new Error(`Built application is missing package version ${packageMetadata.version}.`);
 }
@@ -227,5 +241,5 @@ if (releaseMode && /["']dev["']/.test(builtJavaScript)) {
 }
 
 console.log(
-  `Build verified: ${assetFiles.length} hashed assets, ${initialCompressedBytes} compressed initial bytes, ${packageMetadata.version}@${expectedCommit}.`,
+  `Build verified at ${base}: ${assetFiles.length} hashed assets, ${initialCompressedBytes} compressed initial bytes, ${packageMetadata.version}@${expectedCommit}.`,
 );

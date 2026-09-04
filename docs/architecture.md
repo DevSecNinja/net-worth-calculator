@@ -3,8 +3,9 @@
 ## System overview
 
 Net Worth Calculator is a single static React and TypeScript progressive web app. Vite produces a
-content-hashed `dist` artifact; GitHub Pages serves that artifact under `/net-worth-calculator/`.
-There is no application server, hosted database, account system, analytics service, or runtime API.
+content-hashed `dist` artifact; GitHub Pages serves that artifact at the custom-domain root
+<https://net-worth.ravensberg.org/>. Cloudflare provides DNS only. There is no application server,
+hosted database, account system, analytics service, or runtime API.
 
 ```text
 React features and accessible components
@@ -113,13 +114,16 @@ never deletes all origin caches and service-worker updates do not alter IndexedD
 
 ## Build and deployment
 
-`npm run build` emits `dist`; `npm run test:build` verifies required assets, CSP metadata, manifest
-base/scope, maskable icons, absence of source maps, bundle ceiling, generated precache, and vault
-exclusion from the service worker.
+`npm run build` emits `dist`; `npm run test:build` derives the expected base from
+`EXPECTED_BASE_PATH`, then `VITE_BASE_PATH`, then the `/net-worth-calculator/` default. It verifies
+required assets, CSP metadata, manifest base/scope, maskable icons, absence of source maps, bundle
+ceiling, generated precache, and vault exclusion from the service worker.
 
-GitHub Pages builds use `/net-worth-calculator/`. A future root-hosted Cloudflare Pages deployment
-uses `VITE_BASE_PATH=/`, `npm ci`, `npm run build`, and output directory `dist`. No runtime product
-service is host-specific.
+The GitHub Pages production workflow uses `VITE_BASE_PATH=/` and verifies that exact artifact with
+`EXPECTED_BASE_PATH=/` for the custom domain. The default project path remains available for normal CI
+and fallback hosting, and `npm run test:build:bases` checks both forms. The `github.io` project URL
+redirects to the custom domain. A future Cloudflare Pages migration remains tracked in Issue #3;
+Cloudflare is not the current host. No runtime product service is host-specific.
 
 ## Release integrity
 
