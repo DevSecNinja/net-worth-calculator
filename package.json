@@ -1,6 +1,6 @@
 {
   "name": "net-worth-calculator",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A private, local-first encrypted net worth calculator PWA",
   "license": "MIT",
   "private": false,
