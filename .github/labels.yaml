@@ -1,0 +1,67 @@
+---
+- name: area/accessibility
+  color: "5319e7"
+  description: Keyboard, screen reader, contrast, motion, touch, or reflow
+- name: area/backup
+  color: "1d76db"
+  description: Encrypted export, import, migration, or recovery
+- name: area/calculations
+  color: "fbca04"
+  description: Money, amortization, aggregation, or projections
+- name: area/documentation
+  color: "0075ca"
+  description: Product or contributor documentation
+- name: area/apps
+  color: "1d76db"
+  description: Application changes
+- name: area/docs
+  color: "0075ca"
+  description: Documentation changes
+- name: area/github
+  color: "5319e7"
+  description: GitHub configuration and workflows
+- name: area/renovate
+  color: "027fa0"
+  description: Renovate configuration
+- name: area/scripts
+  color: "fbca04"
+  description: Repository scripts
+- name: area/privacy
+  color: "b60205"
+  description: Local-only boundaries, transmission, storage, or data deletion
+- name: area/pwa
+  color: "0e8a16"
+  description: Installation, offline behavior, caching, or updates
+- name: area/vault
+  color: "d93f0b"
+  description: Encryption, unlock, persistence, passphrase, or session lease
+- name: dependencies
+  color: "0366d6"
+  description: Dependency updates
+- name: security
+  color: "b60205"
+  description: Security-sensitive work
+- name: feat
+  color: "a2eeef"
+  description: New capability
+- name: fix
+  color: "d73a4a"
+  description: Bug fix
+- name: perf
+  color: "fbca04"
+  description: Performance improvement
+- name: refactor
+  color: "c5def5"
+  description: Internal restructuring
+- name: docs
+  color: "0075ca"
+  description: Documentation
+- name: ci
+  color: "5319e7"
+  description: Continuous integration
+- name: chore
+  color: "ededed"
+  description: Maintenance
+- name: question
+  color: "d876e3"
+  description: More information is needed

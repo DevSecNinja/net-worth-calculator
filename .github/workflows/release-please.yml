@@ -1,0 +1,23 @@
+---
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    uses: DevSecNinja/.github/.github/workflows/release-please.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
+    permissions:
+      contents: write # Push the release branch and create the version tag.
+      pull-requests: write # Open or update the conventional release PR.
+    with:
+      target-branch: main
+      app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+    secrets:
+      app-private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
