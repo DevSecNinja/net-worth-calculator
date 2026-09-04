@@ -23,14 +23,17 @@ import { AnnualChangeChart } from './AnnualChangeChart';
 
 const snapshots: DashboardSnapshot[] = [
   {
+    asOfDate: '2024-12-31',
     year: 2024,
     assets: '100',
     liabilities: '0',
     netWorth: '100',
     completeness: 'complete',
+    assetSource: 'actual',
     liabilitySource: 'projected',
   },
   {
+    asOfDate: '2025-12-31',
     year: 2025,
     assets: '100',
     liabilities: '0',
@@ -38,6 +41,7 @@ const snapshots: DashboardSnapshot[] = [
     yearlyChange: '0',
     yearlyChangePercent: '0.00',
     completeness: 'complete',
+    assetSource: 'actual',
     liabilitySource: 'projected',
   },
 ];
@@ -48,7 +52,7 @@ describe('AnnualChangeChart', () => {
     render(<AnnualChangeChart snapshots={snapshots} currency="USD" locale="en-US" />);
 
     expect(JSON.parse(screen.getByTestId('annual-change-chart').dataset.series ?? '')).toEqual([
-      { year: 2025, change: 0 },
+      { year: 2025, change: 0, changeExact: '0' },
     ]);
     await user.click(screen.getByText(/view annual net worth change data table/i));
     const rows = within(

@@ -7,6 +7,7 @@ describe('DashboardSummary', () => {
     render(
       <DashboardSummary
         snapshot={{
+          asOfDate: '2025-12-31',
           year: 2025,
           assets: '100',
           liabilities: '0',
@@ -14,6 +15,7 @@ describe('DashboardSummary', () => {
           yearlyChange: '0',
           yearlyChangePercent: '0.00',
           completeness: 'complete',
+          assetSource: 'actual',
           liabilitySource: 'projected',
         }}
         currency="USD"
