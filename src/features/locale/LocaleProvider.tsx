@@ -11,6 +11,11 @@ import {
 import { catalogs, supportedLocales, type MessageKey, type SupportedLocale } from './catalog';
 
 const LOCALE_KEY = 'nwc-locale';
+const storageAccessErrors = new Set(['QuotaExceededError', 'SecurityError']);
+
+function isStorageAccessError(error: unknown): boolean {
+  return error instanceof DOMException && storageAccessErrors.has(error.name);
+}
 
 export function negotiateLocale(languages: readonly string[]): SupportedLocale {
   for (const language of languages) {
@@ -23,8 +28,13 @@ export function negotiateLocale(languages: readonly string[]): SupportedLocale {
 }
 
 function storedLocale(): SupportedLocale | undefined {
-  const value = localStorage.getItem(LOCALE_KEY);
-  return supportedLocales.find((locale) => locale === value);
+  try {
+    const value = localStorage.getItem(LOCALE_KEY);
+    return supportedLocales.find((locale) => locale === value);
+  } catch (error) {
+    if (isStorageAccessError(error)) return undefined;
+    throw error;
+  }
 }
 
 type LocaleContextValue = {
@@ -60,7 +70,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = locale;
   }, [locale]);
   const setLocale = useCallback((next: SupportedLocale) => {
-    localStorage.setItem(LOCALE_KEY, next);
+    try {
+      localStorage.setItem(LOCALE_KEY, next);
+    } catch (error) {
+      if (!isStorageAccessError(error)) throw error;
+    }
     updateLocale(next);
   }, []);
   const t = useCallback(

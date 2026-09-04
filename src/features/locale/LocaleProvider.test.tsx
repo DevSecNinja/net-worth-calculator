@@ -54,4 +54,26 @@ describe('LocaleProvider', () => {
     await user.click(screen.getByRole('button', { name: 'Nederlands' }));
     expect(localStorage.getItem('financial-test-value')).toBe('100000');
   });
+
+  it('falls back to negotiated and in-memory locale when preference storage is blocked', async () => {
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'QuotaExceededError');
+    });
+    const user = userEvent.setup();
+
+    render(
+      <LocaleProvider>
+        <Harness />
+      </LocaleProvider>,
+    );
+    expect(screen.getByText('en-US')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Nederlands' }));
+    expect(screen.getByText('nl-NL')).toBeVisible();
+    expect(document.documentElement.lang).toBe('nl-NL');
+    expect(getItem).toHaveBeenCalledWith(localeStorageKey);
+    expect(setItem).toHaveBeenCalledWith(localeStorageKey, 'nl-NL');
+  });
 });
