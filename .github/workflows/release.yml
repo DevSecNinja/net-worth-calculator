@@ -1,0 +1,20 @@
+---
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    uses: DevSecNinja/.github/.github/workflows/release.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
+    permissions:
+      contents: write # Publish the tag-triggered GitHub release.
+    with:
+      # renovate: datasource=github-releases depName=jdx/mise
+      mise-version: "2026.8.0"
+      tag: ${{ github.ref_name }}

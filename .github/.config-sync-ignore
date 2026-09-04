@@ -1,0 +1,3 @@
+# Spec Kit scaffolding is generated upstream and must retain its official formatting.
+dprint.json
+.yamlfmt.yaml

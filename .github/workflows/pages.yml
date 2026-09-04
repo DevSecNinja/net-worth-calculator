@@ -1,0 +1,34 @@
+---
+name: Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pages:
+    uses: DevSecNinja/.github/.github/workflows/pages.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
+    permissions:
+      contents: read
+      id-token: write # Attest the GitHub Pages deployment with OIDC.
+      pages: write # Upload and deploy the Pages artifact.
+    with:
+      # renovate: datasource=node-version depName=node
+      node-version: "24"
+      node-cache: npm
+      artifact-path: dist
+      install-command: npm ci
+      test-command: |-
+        npm run format:check
+        npm run lint
+        npm run typecheck
+        npm run test:coverage
+      build-command: npm run build
+      pre-deploy-command: npm run test:build
+      github-pages: true
+      cloudflare-preview: false
