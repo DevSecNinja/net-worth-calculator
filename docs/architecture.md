@@ -3,11 +3,11 @@
 ## System overview
 
 Net Worth Calculator is a single static React and TypeScript progressive web app. Vite produces one
-verified, content-hashed root `dist` artifact. GitHub Pages serves it at
-<https://net-worth.ravensberg.org/> and remains the custom-domain production source until the
-user-operated DNS cutover. Cloudflare Pages serves the same bytes at the staged production origin
-<https://net-worth-calculator-xn8.pages.dev/>. There is no application server, hosted database, account
-system, analytics service, runtime API, Pages Function, or Worker.
+verified, content-hashed root `dist` artifact. Cloudflare Pages serves it at
+<https://net-worth.ravensberg.org/> and the stable origin
+<https://net-worth-calculator-xn8.pages.dev/>. GitHub Pages receives the same bytes and remains a warm
+rollback target. There is no application server, hosted database, account system, analytics service,
+runtime API, Pages Function, or Worker.
 
 ```text
 React features and accessible components
@@ -133,10 +133,12 @@ Cloudflare Pages consumes `dist` through Direct Upload with `main` as the produc
 committed `_headers` file adds response CSP/security headers and immutable caching only for hashed
 assets while keeping HTML, manifest, and service-worker updates revalidated. No Cloudflare runtime
 package or service is part of the application. After a successful production deploy, the reusable
-workflow idempotently registers `net-worth.ravensberg.org` with the Pages project and reports its
-status and resolved `pages.dev` CNAME target without modifying DNS. The `github.io` project URL
-continues to redirect to the unchanged custom domain. DNS cutover, rollback, and optional later GitHub
-Pages retirement are documented in [deployment operations](deployment.md).
+workflow idempotently registers `net-worth.ravensberg.org` with the Pages project, resolves its
+collision-safe `pages.dev` target, and creates a proxied CNAME only when the exact hostname is absent.
+An exact target/proxy match is a no-op; any conflicting or duplicate record fails the deployment
+without mutation. DNS management is production-only. The `github.io` project URL continues to redirect
+to the unchanged custom domain, preserving the rollback path documented in
+[deployment operations](deployment.md).
 
 ## Release integrity
 

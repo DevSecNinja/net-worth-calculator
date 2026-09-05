@@ -6,7 +6,7 @@ server API, analytics, telemetry, advertising, remote fonts, or runtime CDN depe
 
 **Live app:** <https://net-worth.ravensberg.org/>
 
-**Staged Cloudflare production:** <https://net-worth-calculator-xn8.pages.dev/>
+**Cloudflare Pages origin:** <https://net-worth-calculator-xn8.pages.dev/>
 
 > [!IMPORTANT]
 > The app cannot reset or recover a forgotten passphrase. Clearing site data or losing the device
@@ -149,9 +149,11 @@ IndexedDB.
 ## Deployment
 
 The production workflow builds and verifies one root-hosted `dist` artifact, then deploys those exact
-bytes to GitHub Pages and Cloudflare Pages. GitHub Pages remains the source of
-<https://net-worth.ravensberg.org/> until the documented DNS cutover is performed; Cloudflare
-production is staged at <https://net-worth-calculator-xn8.pages.dev/>.
+bytes to GitHub Pages and Cloudflare Pages. After a successful Cloudflare production deployment and
+custom-domain registration, the pinned central workflow safely creates the proxied
+`net-worth.ravensberg.org` CNAME when it is absent. It performs a no-op only when the existing record
+already has the expected target and proxy state, and fails without changing a conflicting record.
+GitHub Pages remains deployed as the documented rollback target.
 
 ```powershell
 npm ci
@@ -166,8 +168,8 @@ compatibility and fallback hosting; `npm run test:build:bases` verifies both dep
 Same-repository pull requests receive Cloudflare preview deployments and their preview is deleted when
 the pull request closes. Fork pull requests receive no deployment secrets and continue through the
 required CI workflow without a preview. See [deployment and Cloudflare cutover](docs/deployment.md) for
-the deployed-site test, exact DNS/custom-domain procedure, verification, rollback, and the eventual
-GitHub Pages retirement decision.
+the deployed-site test, DNS/custom-domain verification, rollback, and the eventual GitHub Pages
+retirement decision.
 
 ### Release automation credentials
 
