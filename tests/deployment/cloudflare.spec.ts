@@ -65,10 +65,7 @@ test('serves the verified root PWA contract and security headers', async ({
   expect(await deepRoute.text()).toContain('id="root"');
 });
 
-test('keeps financial markers local and reloads a hash route offline', async ({
-  context,
-  page,
-}) => {
+test('keeps financial markers local across deployed browsers', async ({ context, page }) => {
   const markers = {
     amount: '87654321.23',
     name: `CLOUDFLARE-PRIVATE-${crypto.randomUUID()}`,
@@ -85,17 +82,26 @@ test('keeps financial markers local and reloads a hash route offline', async ({
       url: request.url(),
     });
     requests.push(serialized);
+    let blocked = false;
     if (new URL(request.url()).origin !== origin) {
       violations.push(`external:${request.url()}`);
-      await route.abort('blockedbyclient');
-      return;
+      blocked = true;
     }
-    if (!['GET', 'HEAD'].includes(request.method())) violations.push(`method:${request.method()}`);
+    if (!['GET', 'HEAD'].includes(request.method())) {
+      violations.push(`method:${request.method()}`);
+      blocked = true;
+    }
     if (Object.values(markers).some((marker) => serialized.includes(marker))) {
       violations.push(`marker:${request.url()}`);
+      blocked = true;
     }
     if (new URL(request.url()).pathname.startsWith(oldBase)) {
       violations.push(`old-base:${request.url()}`);
+      blocked = true;
+    }
+    if (blocked) {
+      await route.abort('blockedbyclient');
+      return;
     }
     await route.continue();
   });
@@ -120,10 +126,6 @@ test('keeps financial markers local and reloads a hash route offline', async ({
 
   await page.goto(new URL('/deployment-check#/about', deploymentUrl).href);
   await expect(page.getByRole('heading', { name: /about this calculator/i })).toBeVisible();
-  await context.setOffline(true);
-  await page.reload();
-  await expect(page.getByRole('heading', { name: /about this calculator/i })).toBeVisible();
-  await context.setOffline(false);
 
   const persisted = await page.evaluate(async () => {
     const cacheEntries: { body: string; method: string; url: string }[] = [];
@@ -181,4 +183,30 @@ test('keeps financial markers local and reloads a hash route offline', async ({
   }
   expect(JSON.stringify(persisted.indexedDbValues)).not.toContain(markers.name);
   expect(JSON.stringify(persisted.indexedDbValues)).not.toContain(markers.amount);
+});
+
+test('reloads a deployed deep route from the service-worker cache while offline', async ({
+  context,
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium',
+    'Chromium provides deterministic offline emulation.',
+  );
+
+  await page.goto(new URL('/offline-check#/about', deploymentUrl).href);
+  await expect(page.getByRole('heading', { name: /about this calculator/i })).toBeVisible();
+  await page.evaluate(async () => navigator.serviceWorker.ready);
+  await page.reload();
+  await expect
+    .poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller)))
+    .toBe(true);
+
+  await context.setOffline(true);
+  try {
+    await page.reload();
+    await expect(page.getByRole('heading', { name: /about this calculator/i })).toBeVisible();
+  } finally {
+    await context.setOffline(false);
+  }
 });

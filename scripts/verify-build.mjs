@@ -217,7 +217,7 @@ if (
   throw new Error('Service worker must not cache or reference vault/data runtime resources.');
 }
 
-const cloudflareHeaders = await readFile(join(dist, '_headers'), 'utf8');
+const cloudflareHeaders = (await readFile(join(dist, '_headers'), 'utf8')).replace(/\r\n?/g, '\n');
 for (const expectedHeader of [
   "Content-Security-Policy: default-src 'self'",
   "connect-src 'self'",
@@ -230,6 +230,7 @@ for (const expectedHeader of [
   'X-Frame-Options: DENY',
   '/assets/*',
   'Cache-Control: public, max-age=31536000, immutable',
+  '/\n  Cache-Control: no-cache',
   '/sw.js',
   'Cache-Control: no-cache',
 ]) {
