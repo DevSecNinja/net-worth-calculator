@@ -29,9 +29,11 @@ function requestViolations(
   return violations;
 }
 
-test('marks sensitive or mutating requests for blocking before network routing', async (_fixtures, testInfo) => {
+test('marks sensitive or mutating requests for blocking before network routing', async ({
+  browserName,
+}, testInfo) => {
   test.skip(
-    testInfo.project.name !== 'chromium',
+    browserName !== 'chromium' || testInfo.project.name !== 'chromium',
     'One request-policy contract check is sufficient.',
   );
 

@@ -221,17 +221,27 @@ if (
 const cloudflareHeaders = (await readFile(join(dist, '_headers'), 'utf8')).replace(/\r\n?/g, '\n');
 const cloudflareHeaderBlocks = parseCloudflareHeaders(cloudflareHeaders);
 const globalHeaders = cloudflareHeaderBlocks.get('/*');
-for (const expectedDirective of [
+const expectedCloudflareCsp = [
   "default-src 'self'",
+  "base-uri 'self'",
   "connect-src 'self'",
+  "font-src 'self'",
+  "form-action 'self'",
   "frame-ancestors 'none'",
+  "frame-src 'none'",
+  "img-src 'self' data: blob:",
+  "manifest-src 'self'",
   "object-src 'none'",
   "script-src 'self'",
-]) {
-  if (!globalHeaders?.get('content-security-policy')?.[0]?.includes(expectedDirective)) {
-    throw new Error(`Cloudflare Pages CSP is missing: ${expectedDirective}`);
-  }
-}
+  "style-src 'self'",
+  "worker-src 'self'",
+].join('; ');
+requireCloudflareHeader(
+  cloudflareHeaderBlocks,
+  '/*',
+  'content-security-policy',
+  expectedCloudflareCsp,
+);
 for (const [name, value] of [
   ['referrer-policy', 'no-referrer'],
   ['x-content-type-options', 'nosniff'],
@@ -256,10 +266,6 @@ for (const path of ['/', '/index.html', '/manifest.webmanifest', '/sw.js']) {
     'no-cache, no-store, must-revalidate',
   );
 }
-if (/https?:\/\/|unsafe-(?:inline|eval)/i.test(cloudflareHeaders)) {
-  throw new Error('Cloudflare Pages headers must not allow external or unsafe script origins.');
-}
-
 const builtJavaScript = (
   await Promise.all(
     assetFiles

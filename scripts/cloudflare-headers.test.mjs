@@ -47,4 +47,19 @@ describe('Cloudflare Pages header parsing', () => {
       'Duplicate Cloudflare header path',
     );
   });
+
+  it('requires an exact CSP value instead of accepting extra scheme sources', () => {
+    const blocks = parseCloudflareHeaders(`
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' https:
+`);
+    expect(() =>
+      requireCloudflareHeader(
+        blocks,
+        '/*',
+        'Content-Security-Policy',
+        "default-src 'self'; script-src 'self'",
+      ),
+    ).toThrow('/* must set Content-Security-Policy');
+  });
 });
