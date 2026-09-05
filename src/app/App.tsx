@@ -72,9 +72,9 @@ export function App() {
         {t('nav.skip')}
       </a>
       <Header />
-      <PwaStatus />
       <VaultErrorBanner />
       <AppRoutes />
+      <PwaStatus />
       <AppFooter />
     </div>
   );
