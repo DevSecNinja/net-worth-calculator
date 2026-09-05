@@ -5,8 +5,8 @@
 The `Pages` workflow builds one root-based `dist` artifact from every `main` commit, verifies it, and
 deploys those exact bytes to both:
 
-- Cloudflare Pages at <https://net-worth.ravensberg.org/> and
-  <https://net-worth-calculator-xn8.pages.dev/>;
+- Cloudflare Pages directly at <https://net-worth-calculator-xn8.pages.dev/> and, through
+  user-managed DNS, at <https://net-worth.ravensberg.org/>;
 - GitHub Pages, which remains deployed as the rollback target.
 
 Same-repository pull requests receive isolated Cloudflare preview deployments. Closing a pull request
@@ -24,15 +24,14 @@ The reusable workflow receives two repository Actions secrets:
 - `CLOUDFLARE_ACCOUNT_ID`;
 - `CLOUDFLARE_API_TOKEN`.
 
-The token needs Account > Cloudflare Pages > Edit, Zone > Zone > Read, and Zone > DNS > Edit for
-`ravensberg.org`. Do not expose either value in logs, workflow inputs, local environment files, or
-documentation. The workflow creates the Pages project when absent, deploys production from `main`, and
-uses branch deployments for previews. After a successful production deploy it idempotently registers
-`net-worth.ravensberg.org`, resolves the exact project `pages.dev` target, and manages the DNS record.
-The reusable workflow reports `cloudflare-custom-domain-status`,
-`cloudflare-custom-domain-dns-target`, and `cloudflare-custom-domain-dns-action`; the expected target
-is `net-worth-calculator-xn8.pages.dev`, and the DNS action is `created` on first cutover or `no-op` on
-an already-matching later run.
+The token needs only **Account > Cloudflare Pages > Edit** for the owning account. It intentionally
+has no Zone Read or DNS Edit permission. Do not expose either value in logs, workflow inputs, local
+environment files, or documentation. The workflow creates the Pages project when absent, deploys
+production from `main`, and uses branch deployments for previews. After a successful production
+deploy it idempotently registers `net-worth.ravensberg.org` and resolves the exact project
+`pages.dev` target. The reusable workflow reports `cloudflare-custom-domain-status` and
+`cloudflare-custom-domain-dns-target`; the expected target is
+`net-worth-calculator-xn8.pages.dev`. It never reads or mutates DNS for this consumer.
 
 ## Verify a deployment
 
@@ -50,26 +49,24 @@ WebKit, mobile Chromium, and mobile WebKit. The normal `npm run test:pwa` gate s
 actual opt-in service-worker update from one build to the next, including dirty-state protection and
 old-cache cleanup; production and previews receive that exact verified artifact.
 
-## Automated DNS cutover
+## Manual DNS cutover
 
-DNS management is enabled only for non-pull-request production runs. After Cloudflare production and
-custom-domain registration succeed, the pinned central workflow:
+DNS is intentionally a user-operated control plane. The workflow registers and maintains the Pages
+custom domain, but the repository does not opt in to the central workflow's DNS mutation feature.
+This keeps the deployment token scoped to Pages and ensures Actions cannot read or change any record
+in `ravensberg.org`. The production cutover uses exactly this user-managed record: name `net-worth`,
+type `CNAME`, target `net-worth-calculator-xn8.pages.dev`.
 
-1. resolves exactly one active `ravensberg.org` zone in the configured account;
-2. resolves the deployed project's collision-safe `pages.dev` target;
-3. creates a proxied CNAME for `net-worth.ravensberg.org` only when the exact hostname has no record;
-4. performs a no-op only for one CNAME with the exact target and requested proxy state;
-5. fails without creating, replacing, or updating anything when a record conflicts or is duplicated;
-6. polls custom-domain activation for a bounded period and reports its final status.
+For a new cutover or later maintenance:
 
-Open the successful `main` Pages workflow summary and confirm the resolved project is
-`net-worth-calculator-xn8`, the target is `net-worth-calculator-xn8.pages.dev`, the DNS action is
-`created` or `no-op`, and the Pages domain status is `active`. Then verify
-`https://net-worth.ravensberg.org/` serves the successful commit, has a valid HTTPS certificate, and
-passes `DEPLOYMENT_BASE_URL=https://net-worth.ravensberg.org/ npm run test:deployment`.
-
-Do not manually overwrite a conflicting record. A conflict or a Zone Read/DNS Edit authorization
-failure is a blocked deployment that must be investigated without weakening the workflow safeguards.
+1. Open the successful `main` Pages workflow summary and confirm the resolved project is
+   `net-worth-calculator-xn8`, the custom domain is registered, and the reported target is
+   `net-worth-calculator-xn8.pages.dev`.
+2. In Cloudflare DNS, create or update exactly this record: name `net-worth`, type `CNAME`, target
+   `net-worth-calculator-xn8.pages.dev`. The user decides the proxy setting and owns the change.
+3. Wait until the Pages custom domain reports `active` and its HTTPS certificate is issued.
+4. Verify `https://net-worth.ravensberg.org/` serves the successful commit and passes
+   `DEPLOYMENT_BASE_URL=https://net-worth.ravensberg.org/ npm run test:deployment`.
 
 Do not remove the GitHub Pages custom-domain setting during cutover. Keeping it configured makes the
 rollback below possible without another repository deployment.
@@ -78,13 +75,11 @@ rollback below possible without another repository deployment.
 
 If the custom domain fails after cutover:
 
-1. In a reviewed PR, change `cloudflare-manage-dns` in `.github/workflows/pages.yml` to `false` and
-   merge it before changing the workflow-managed record.
-2. In Cloudflare DNS, change the `net-worth` CNAME target to `devsecninja.github.io`.
-3. Leave the GitHub Pages custom-domain setting as `net-worth.ravensberg.org`.
-4. Wait for DNS and TLS to settle, then verify the root URL, manifest, service worker, offline reload,
+1. In Cloudflare DNS, change the `net-worth` CNAME target to `devsecninja.github.io`.
+2. Leave the GitHub Pages custom-domain setting as `net-worth.ravensberg.org`.
+3. Wait for DNS and TLS to settle, then verify the root URL, manifest, service worker, offline reload,
    and displayed commit.
-5. Keep `net-worth-calculator-xn8.pages.dev` available for diagnosis; no browser vault migration or data
+4. Keep `net-worth-calculator-xn8.pages.dev` available for diagnosis; no browser vault migration or data
    movement is involved because each origin keeps its own encrypted local IndexedDB.
 
 After a stable observation period, choose explicitly between retaining dual deployment as a warm

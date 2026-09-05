@@ -101,9 +101,6 @@ jobs:
       cloudflare-project-name: net-worth-calculator
       cloudflare-production-branch: main
       cloudflare-custom-domain: ${{ github.event_name != 'pull_request' && 'net-worth.ravensberg.org' || '' }}
-      cloudflare-manage-dns: ${{ github.event_name != 'pull_request' }}
-      cloudflare-dns-zone: ${{ github.event_name != 'pull_request' && 'ravensberg.org' || '' }}
-      cloudflare-dns-proxied: true
     secrets:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -77,13 +77,7 @@ describe('Pages deployment workflow contract', () => {
     expect(pagesInputs).toMatch(
       /^ {6}cloudflare-custom-domain: \$\{\{\s*github\.event_name != 'pull_request' && 'net-worth\.ravensberg\.org' \|\| ''\s*\}\}$/m,
     );
-    expect(pagesInputs).toMatch(
-      /^ {6}cloudflare-manage-dns: \$\{\{\s*github\.event_name != 'pull_request'\s*\}\}$/m,
-    );
-    expect(pagesInputs).toMatch(
-      /^ {6}cloudflare-dns-zone: \$\{\{\s*github\.event_name != 'pull_request' && 'ravensberg\.org' \|\| ''\s*\}\}$/m,
-    );
-    expect(pagesInputs).toMatch(/^ {6}cloudflare-dns-proxied: true$/m);
+    expect(pagesInputs).not.toMatch(/^ {6}cloudflare-(?:manage-dns|dns-zone|dns-proxied):/m);
     expect(pagesInputs).not.toMatch(/^\s+(?:build|pre-deploy|pre-preview)-command:/m);
   });
 
