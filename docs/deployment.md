@@ -78,7 +78,8 @@ rollback below possible without another repository deployment.
 
 If the custom domain fails after cutover:
 
-1. Disable `cloudflare-manage-dns` before changing the workflow-managed record.
+1. In a reviewed PR, change `cloudflare-manage-dns` in `.github/workflows/pages.yml` to `false` and
+   merge it before changing the workflow-managed record.
 2. In Cloudflare DNS, change the `net-worth` CNAME target to `devsecninja.github.io`.
 3. Leave the GitHub Pages custom-domain setting as `net-worth.ravensberg.org`.
 4. Wait for DNS and TLS to settle, then verify the root URL, manifest, service worker, offline reload,
