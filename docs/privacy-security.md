@@ -21,8 +21,8 @@ values, settings inside the vault, and backup contents.
 
 The trusted application boundary is the reviewed static build executing in a supported browser on a
 device the user controls. Browser APIs for Web Crypto, IndexedDB, files, service workers, and random
-generation are trusted platform dependencies. GitHub Pages is trusted to deliver the expected static
-bytes but is not given vault plaintext or cryptographic keys.
+generation are trusted platform dependencies. GitHub Pages and Cloudflare Pages are trusted to
+deliver the same expected static bytes but are not given vault plaintext or cryptographic keys.
 
 The following are outside the application's control:
 
@@ -102,11 +102,12 @@ The built document supplies a restrictive meta Content Security Policy compatibl
 styles, images, workers, manifests, and Web Crypto operation. It excludes remote fonts, runtime CDNs,
 unexpected network destinations, unsafe evaluation, and injected application HTML patterns.
 
-GitHub Pages does not provide repository-controlled response security headers. A meta policy cannot
-express or reliably enforce all header-only protections, including `frame-ancestors`, reporting, HSTS,
-cross-origin isolation, and some MIME/cross-origin policies. DNS, TLS, hosting integrity, and ordinary
-request logs remain hosting-platform responsibilities. Moving hosts should add equivalent HTTP
-headers without weakening the in-document policy.
+GitHub Pages does not provide repository-controlled response security headers. The root artifact
+therefore retains its restrictive in-document policy. Cloudflare Pages applies the committed
+`_headers` policy to static responses, adding the same CSP plus `frame-ancestors`, HSTS, MIME,
+referrer, framing, and browser-capability restrictions. Hashed assets are immutable; HTML, manifest,
+and service-worker responses revalidate so explicit updates are not suppressed. DNS, TLS, hosting
+integrity, and ordinary request logs remain hosting-platform responsibilities.
 
 ## Update and supply-chain model
 

@@ -5,34 +5,99 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: pages-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+
 jobs:
-  pages:
-    uses: DevSecNinja/.github/.github/workflows/pages.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
+  build:
+    name: Build and verify root artifact
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
-      # The pinned reusable requires these at compile time even when Cloudflare jobs are disabled.
-      deployments: write
+    env:
+      EXPECTED_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      VITE_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Harden runner
+        uses: DevSecNinja/.github/actions/harden-runner@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3.0.0
+        with:
+          egress-policy: audit
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check formatting
+        run: npm run format:check
+      - name: Lint source
+        run: npm run lint
+      - name: Check types
+        run: npm run typecheck
+      - name: Run coverage
+        run: npm run test:coverage
+      - name: Build root-hosted artifact
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /
+      - name: Verify root-hosted artifact
+        run: npm run test:build
+        env:
+          EXPECTED_BASE_PATH: /
+      - name: Upload verified artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: root-dist
+          path: dist
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  pages:
+    needs: build
+    if: >-
+      always() &&
+      (needs.build.result == 'success' ||
+      (github.event_name == 'pull_request' && github.event.action == 'closed'))
+    uses: DevSecNinja/.github/.github/workflows/pages.yml@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3.0.0
+    permissions:
+      contents: read
+      deployments: write # Record Cloudflare and GitHub Pages deployments.
       id-token: write # Attest the GitHub Pages deployment with OIDC.
-      issues: write
+      issues: write # Create or update the Cloudflare preview link comment.
       pages: write # Upload and deploy the Pages artifact.
-      pull-requests: write
+      pull-requests: write # Create or update the Cloudflare preview link comment.
     with:
       # renovate: datasource=node-version depName=node
       node-version: "24"
-      node-cache: npm
+      # renovate: datasource=npm depName=wrangler
+      wrangler-version: "4.123.0"
+      artifact-name: root-dist
       artifact-path: dist
-      install-command: npm ci
-      test-command: |-
-        npm run format:check
-        npm run lint
-        npm run typecheck
-        npm run test:coverage
-      build-command: VITE_BASE_PATH=/ npm run build
-      pre-deploy-command: EXPECTED_BASE_PATH=/ npm run test:build
       github-pages: true
-      cloudflare-preview: false
+      cloudflare-production: ${{ github.event_name != 'pull_request' }}
+      cloudflare-preview: true
+      cloudflare-project-name: net-worth-calculator
+      cloudflare-production-branch: main
+    secrets:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

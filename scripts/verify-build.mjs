@@ -17,6 +17,7 @@ const required = [
   'manifest.webmanifest',
   'sw.js',
   '.nojekyll',
+  '_headers',
   'favicon.svg',
   'theme-init.js',
   'icons/icon-192.png',
@@ -214,6 +215,30 @@ if (
   )
 ) {
   throw new Error('Service worker must not cache or reference vault/data runtime resources.');
+}
+
+const cloudflareHeaders = await readFile(join(dist, '_headers'), 'utf8');
+for (const expectedHeader of [
+  "Content-Security-Policy: default-src 'self'",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "script-src 'self'",
+  'Permissions-Policy:',
+  'Referrer-Policy: no-referrer',
+  'X-Content-Type-Options: nosniff',
+  'X-Frame-Options: DENY',
+  '/assets/*',
+  'Cache-Control: public, max-age=31536000, immutable',
+  '/sw.js',
+  'Cache-Control: no-cache',
+]) {
+  if (!cloudflareHeaders.includes(expectedHeader)) {
+    throw new Error(`Cloudflare Pages headers are missing: ${expectedHeader}`);
+  }
+}
+if (/https?:\/\/|unsafe-(?:inline|eval)/i.test(cloudflareHeaders)) {
+  throw new Error('Cloudflare Pages headers must not allow external or unsafe script origins.');
 }
 
 const builtJavaScript = (
