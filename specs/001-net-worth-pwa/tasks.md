@@ -335,12 +335,12 @@ contract in representative engines and viewports.
       from `quickstart.md`
 - [x] T075 Update `specs/001-net-worth-pwa/tasks.md` to completed state and run a Spec Kit
       convergence pass against all requirements and artifacts
-- [ ] T076 Commit with conventional history, push the branch, open a detailed PR with evidence, and
+- [x] T076 Commit with conventional history, push the branch, open a detailed PR with evidence, and
       obtain green required checks for `DevSecNinja/net-worth-calculator`
-- [ ] T077 Configure repository security/features/metadata and GitHub Pages for
+- [x] T077 Configure repository security/features/metadata and GitHub Pages for
       `DevSecNinja/net-worth-calculator` through the GitHub API, then squash-merge the PR when
       policy permits
-- [ ] T078 Create and verify tag/release `v0.1.0`, trigger Pages deployment, and verify
+- [x] T078 Create and verify tag/release `v0.1.0`, trigger Pages deployment, and verify
       `https://devsecninja.github.io/net-worth-calculator/` build identity and offline shell
 
 ---
@@ -469,8 +469,8 @@ chart/table values with source semantics.
 - [x] T097 Update locale, dated-value, version-compatibility, backup, and threat-model documentation in `README.md`, `PRIVACY.md`, `docs/architecture.md`, and `docs/privacy-security.md`
 - [x] T098 Re-run and fix format, lint, strict typecheck, coverage, production build, build verification, privacy/PWA suites, and all five Playwright projects
 - [x] T099 Re-run Spec Kit analysis and convergence for FR-038-FR-049 and SC-013-SC-018 in `specs/001-net-worth-pwa/analysis.md` and `specs/001-net-worth-pwa/tasks.md`
-- [ ] T100 Commit and push the amended release candidate, then complete PR/merge/security configuration for `DevSecNinja/net-worth-calculator`
-- [ ] T101 Create and verify v0.1.0 release and the deployed GitHub Pages locale/date behavior at `https://devsecninja.github.io/net-worth-calculator/`
+- [x] T100 Commit and push the amended release candidate, then complete PR/merge/security configuration for `DevSecNinja/net-worth-calculator`
+- [x] T101 Create and verify v0.1.0 release and the deployed GitHub Pages locale/date behavior at `https://devsecninja.github.io/net-worth-calculator/`
 
 ---
 
