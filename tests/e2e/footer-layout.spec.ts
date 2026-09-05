@@ -22,7 +22,7 @@ async function exposeInstallAndRegistrationError(page: Page, locale = 'en-US') {
     });
   }, locale);
   await page.goto('./');
-  await expect(page.locator('.toast--error')).toBeVisible();
+  await expect(page.locator('.pwa-actions .toast--error')).toBeVisible();
   await page.evaluate(() => {
     const event = new Event('beforeinstallprompt', { cancelable: true });
     Object.assign(event, {
@@ -38,8 +38,8 @@ async function expectFooterContract(page: Page, privacyText: RegExp, errorText: 
   const actions = page.locator('.pwa-actions');
   const privacy = footer.getByText(privacyText);
   const version = footer.getByRole('link');
-  const install = actions.getByRole('button');
-  const error = actions.getByRole('status').filter({ hasText: errorText });
+  const install = actions.locator('.toast--install').getByRole('button');
+  const error = actions.locator('.toast--error').filter({ hasText: errorText });
 
   await footer.scrollIntoViewIfNeeded();
   await expect(privacy).toBeVisible();
@@ -94,7 +94,7 @@ test('reflows long Dutch status content without overlap or overflow', async ({ p
     /offline instellen is mislukt/i,
   );
 
-  const error = page.locator('.toast--error');
+  const error = page.locator('.pwa-actions .toast--error');
   const style = await error.evaluate((element) => {
     const computed = getComputedStyle(element);
     return {
