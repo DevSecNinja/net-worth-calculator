@@ -149,11 +149,11 @@ IndexedDB.
 ## Deployment
 
 The production workflow builds and verifies one root-hosted `dist` artifact, then deploys those exact
-bytes to GitHub Pages and Cloudflare Pages. After a successful Cloudflare production deployment and
-custom-domain registration, the pinned central workflow safely creates the proxied
-`net-worth.ravensberg.org` CNAME when it is absent. It performs a no-op only when the existing record
-already has the expected target and proxy state, and fails without changing a conflicting record.
-GitHub Pages remains deployed as the documented rollback target.
+bytes to GitHub Pages and Cloudflare Pages. The pinned central workflow registers
+`net-worth.ravensberg.org` with the Pages project but intentionally does not read or mutate DNS. For
+least privilege, the Cloudflare token needs only **Account > Cloudflare Pages > Edit**. The user owns
+cutover and rollback by managing the `net-worth` CNAME; its Cloudflare target is
+`net-worth-calculator-xn8.pages.dev`. GitHub Pages remains deployed as the documented rollback target.
 
 ```powershell
 npm ci
