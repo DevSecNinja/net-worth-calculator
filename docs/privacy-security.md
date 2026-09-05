@@ -105,9 +105,10 @@ unexpected network destinations, unsafe evaluation, and injected application HTM
 GitHub Pages does not provide repository-controlled response security headers. The root artifact
 therefore retains its restrictive in-document policy. Cloudflare Pages applies the committed
 `_headers` policy to static responses, adding the same CSP plus `frame-ancestors`, HSTS, MIME,
-referrer, framing, and browser-capability restrictions. Hashed assets are immutable; HTML, manifest,
-and service-worker responses revalidate so explicit updates are not suppressed. DNS, TLS, hosting
-integrity, and ordinary request logs remain hosting-platform responsibilities.
+referrer, framing, and browser-capability restrictions. Hashed assets are immutable; root HTML,
+manifest, and service-worker responses disable browser HTTP caching so explicit updates are not
+suppressed. DNS, TLS, hosting integrity, and ordinary request logs remain hosting-platform
+responsibilities.
 
 ## Update and supply-chain model
 

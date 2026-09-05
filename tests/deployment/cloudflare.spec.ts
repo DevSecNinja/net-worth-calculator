@@ -14,6 +14,40 @@ function isWebManifest(value: unknown): value is WebManifest {
   return typeof value === 'object' && value !== null;
 }
 
+function requestViolations(
+  request: { body: string | null; method: string; url: string },
+  markers: string[],
+): string[] {
+  const requestUrl = new URL(request.url);
+  const violations: string[] = [];
+  if (requestUrl.origin !== origin) violations.push(`external:${request.url}`);
+  if (!['GET', 'HEAD'].includes(request.method)) violations.push(`method:${request.method}`);
+  if (markers.some((marker) => request.body?.includes(marker) || request.url.includes(marker))) {
+    violations.push(`marker:${request.url}`);
+  }
+  if (requestUrl.pathname.startsWith(oldBase)) violations.push(`old-base:${request.url}`);
+  return violations;
+}
+
+test('marks sensitive or mutating requests for blocking before network routing', async (_fixtures, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium',
+    'One request-policy contract check is sufficient.',
+  );
+
+  const marker = 'DO-NOT-TRANSMIT';
+  expect(
+    requestViolations(
+      {
+        body: marker,
+        method: 'POST',
+        url: new URL('/privacy-probe', deploymentUrl).href,
+      },
+      [marker],
+    ),
+  ).toEqual(['method:POST', `marker:${new URL('/privacy-probe', deploymentUrl).href}`]);
+});
+
 test('serves the verified root PWA contract and security headers', async ({
   request,
 }, testInfo) => {
@@ -56,6 +90,7 @@ test('serves the verified root PWA contract and security headers', async ({
   const serviceWorkerResponse = await request.get(new URL('/sw.js', deploymentUrl).href);
   expect(serviceWorkerResponse.status()).toBe(200);
   expect(serviceWorkerResponse.headers()['cache-control']).toContain('no-cache');
+  expect(serviceWorkerResponse.headers()['cache-control']).toContain('no-store');
   const serviceWorker = await serviceWorkerResponse.text();
   expect(serviceWorker).toContain('precacheAndRoute');
   expect(serviceWorker).not.toContain(oldBase);
@@ -76,30 +111,15 @@ test('keeps financial markers local across deployed browsers', async ({ context,
 
   await context.route('**/*', async (route) => {
     const request = route.request();
-    const serialized = JSON.stringify({
+    const requestSummary = {
       body: request.postData(),
       method: request.method(),
       url: request.url(),
-    });
-    requests.push(serialized);
-    let blocked = false;
-    if (new URL(request.url()).origin !== origin) {
-      violations.push(`external:${request.url()}`);
-      blocked = true;
-    }
-    if (!['GET', 'HEAD'].includes(request.method())) {
-      violations.push(`method:${request.method()}`);
-      blocked = true;
-    }
-    if (Object.values(markers).some((marker) => serialized.includes(marker))) {
-      violations.push(`marker:${request.url()}`);
-      blocked = true;
-    }
-    if (new URL(request.url()).pathname.startsWith(oldBase)) {
-      violations.push(`old-base:${request.url()}`);
-      blocked = true;
-    }
-    if (blocked) {
+    };
+    requests.push(JSON.stringify({ method: requestSummary.method, url: requestSummary.url }));
+    const blockedReasons = requestViolations(requestSummary, Object.values(markers));
+    violations.push(...blockedReasons);
+    if (blockedReasons.length > 0) {
       await route.abort('blockedbyclient');
       return;
     }

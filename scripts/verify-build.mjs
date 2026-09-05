@@ -230,9 +230,9 @@ for (const expectedHeader of [
   'X-Frame-Options: DENY',
   '/assets/*',
   'Cache-Control: public, max-age=31536000, immutable',
-  '/\n  Cache-Control: no-cache',
+  '/\n  Cache-Control: no-cache, no-store, must-revalidate',
   '/sw.js',
-  'Cache-Control: no-cache',
+  'Cache-Control: no-cache, no-store, must-revalidate',
 ]) {
   if (!cloudflareHeaders.includes(expectedHeader)) {
     throw new Error(`Cloudflare Pages headers are missing: ${expectedHeader}`);
