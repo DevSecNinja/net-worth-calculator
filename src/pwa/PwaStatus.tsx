@@ -66,9 +66,11 @@ export function PwaStatus() {
       ) : null}
       <div className="pwa-actions" role="region" aria-label={t('pwa.statusRegion')}>
         {install.canInstall ? (
-          <Button type="button" variant="ghost" onClick={() => void install.install()}>
-            {t('pwa.install')}
-          </Button>
+          <div className="toast toast--install">
+            <Button type="button" variant="ghost" onClick={() => void install.install()}>
+              {t('pwa.install')}
+            </Button>
+          </div>
         ) : null}
         {update.offlineReady ? (
           <div className="toast" role="status">
@@ -90,12 +92,12 @@ export function PwaStatus() {
           </div>
         ) : null}
         {update.registrationError ? (
-          <p className="status-error" role="status">
+          <p className="toast toast--error status-error" role="status">
             {t('pwa.registrationError')}
           </p>
         ) : null}
         {activationError ? (
-          <p className="status-error" role="status">
+          <p className="toast toast--error status-error" role="status">
             {t('pwa.updateFailed')}
           </p>
         ) : null}

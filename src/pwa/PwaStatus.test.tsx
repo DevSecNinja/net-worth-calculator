@@ -50,6 +50,7 @@ describe('PwaStatus', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.update.activateUpdate.mockResolvedValue(undefined);
+    mocks.update.registrationError = undefined;
   });
 
   it('shows install, offline-ready, and explicit update actions', async () => {
@@ -94,5 +95,16 @@ describe('PwaStatus', () => {
     expect(
       await screen.findByText(/update could not be activated/i, { selector: '.status-error' }),
     ).toBeVisible();
+  });
+
+  it('contains registration errors in the labelled status region', () => {
+    mocks.update.registrationError = 'Service worker registration failed.';
+    renderStatus();
+
+    const region = screen.getByRole('region', { name: /application status/i });
+    const error = screen.getByText(/offline setup failed/i);
+    expect(region).toContainElement(error);
+    expect(error).toHaveAttribute('role', 'status');
+    expect(error).toHaveClass('toast', 'toast--error', 'status-error');
   });
 });
