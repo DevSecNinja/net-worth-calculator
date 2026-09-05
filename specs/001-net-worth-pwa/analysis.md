@@ -122,16 +122,16 @@ version, and found one missing buildable success-criterion check.
 - **Functional requirements checked**: 49
 - **Success criteria checked**: 18
 - **User stories checked**: 9
-- **Tasks checked**: 102
-- **Implemented tasks complete**: 97
-- **Release tasks pending**: 5
+- **Tasks checked**: 104
+- **Implemented tasks complete**: 104/104
+- **Release tasks pending**: 0
 - **Requirement coverage**: 100%
 - **Constitution conflicts**: 0
 - **Unresolved clarification markers**: 0
 - **Open convergence findings**: 0
 
-**Final result**: The implementation and release artifacts are internally consistent. Only the
-explicit PR, repository configuration, release, and deployment tasks T076-T078 and T100-T101 remain.
+**Final result**: The implementation and release artifacts are internally consistent, and all
+implementation, PR, repository configuration, release, and deployment tasks are complete.
 
 ## Sample Portfolio Amendment Analysis: 2026-09-04
 
@@ -145,8 +145,24 @@ portfolio rather than a minimal placeholder fixture.
 - **Functional requirements checked**: 49
 - **Success criteria checked**: 19
 - **Tasks checked**: 104
-- **Implemented tasks complete**: 99
-- **Release tasks pending**: 5
+- **Implemented tasks complete**: 104/104
+- **Release tasks pending**: 0
 - **Requirement coverage**: 100%
 - **Constitution conflicts**: 0
 - **Open convergence findings**: 0
+
+## Release Completion Evidence: 2026-09-05
+
+- Foundation: [PR #1](https://github.com/DevSecNinja/net-worth-calculator/pull/1)
+- Localization and exact dates:
+  [PR #6](https://github.com/DevSecNinja/net-worth-calculator/pull/6)
+- Released `main` commit: `2d1d1d4a2607a27b1c97cf9a6d49e46824fdcbcc`
+- Release: [`v0.1.0`](https://github.com/DevSecNinja/net-worth-calculator/releases/tag/v0.1.0)
+- Pages deployment:
+  [run 33956469455](https://github.com/DevSecNinja/net-worth-calculator/actions/runs/33956469455)
+- Public site: [net-worth.ravensberg.org](https://net-worth.ravensberg.org/); the legacy
+  [GitHub Pages URL](https://devsecninja.github.io/net-worth-calculator/) redirects there.
+- Repository security: CodeQL default setup is configured.
+
+Live verification proved build identity `v0.1.0 (2d1d1d4)`, Dutch sample and date behavior, 15
+same-origin cache entries with no vault data, zero external requests, and an offline About reload.
