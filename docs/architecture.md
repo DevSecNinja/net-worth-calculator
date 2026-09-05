@@ -131,4 +131,6 @@ Cloudflare is not the current host. No runtime product service is host-specific.
 PR CI runs formatting, ESLint, strict TypeScript, coverage, production build verification, privacy,
 PWA, and all configured desktop/mobile Playwright projects. Organization reusable workflows and
 third-party actions are pinned to immutable commits. Release Please owns conventional semantic version
-PRs and tags; the tag-triggered release workflow generates release notes with git-cliff.
+PRs, tags, and direct GitHub Release publication. The central v3 workflow requires installed GitHub App
+credentials, mints a short-lived token, and fails closed without a `GITHUB_TOKEN` fallback. This simple
+static PWA has no separate tag-triggered publisher because it has no release assets or attestations.

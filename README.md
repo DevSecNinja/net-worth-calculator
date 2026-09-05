@@ -169,9 +169,18 @@ credentials under **Settings > Secrets and variables > Actions**:
 - Secret `RELEASE_PLEASE_APP_PRIVATE_KEY`: the GitHub App private key.
 
 Install the app for this repository with **Contents: write** and **Pull requests: write** repository
-permissions. The Release Please workflow deliberately fails before invoking its pinned reusable
-workflow when either credential is unavailable or empty; it never falls back to `GITHUB_TOKEN`.
-GitHub Release publication remains the responsibility of the tag-triggered release workflow.
+permissions, and enable **Allow GitHub Actions to create and approve pull requests** under
+**Settings > Actions > General > Workflow permissions**. Store the complete private key, including
+its PEM header, footer, and newlines, with:
+
+```sh
+gh secret set RELEASE_PLEASE_APP_PRIVATE_KEY --repo DevSecNinja/net-worth-calculator < app-private-key.pem
+```
+
+The central reusable workflow requires both credentials, rejects empty or whitespace-only values,
+and always authenticates with a short-lived App token; it fails closed without a `GITHUB_TOKEN`
+fallback. Release Please directly creates the version tag and GitHub Release when its release PR is
+merged. This repository intentionally has no competing tag-triggered release publisher.
 
 Cloudflare currently provides DNS only; GitHub Pages remains the hosting provider. A later Cloudflare
 Pages migration is tracked in Issue #3. That migration would use build command `npm run build`,
