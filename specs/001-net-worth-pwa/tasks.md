@@ -323,13 +323,13 @@ contract in representative engines and viewports.
       `.github/labels-base.yaml`, and `.github/copilot-instructions.md`
 - [x] T070 Configure PR-only local CI for format, lint, strict types, coverage, build, bundle,
       privacy, PWA, and multi-browser E2E in `.github/workflows/ci.yml`
-- [x] T071 [P] Add full-SHA-pinned DevSecNinja v2.5.0 lint, Pages, config-sync, release-please, and
-      tag-release callers in `.github/workflows/` with least-privilege permissions
+- [x] T071 [P] Add full-SHA-pinned DevSecNinja v2.5.0 lint, Pages, and config-sync callers plus the
+      v3.0.0 mandatory-App-auth Release Please caller in `.github/workflows/` with least-privilege
+      permissions
 - [x] T072 [P] Add synchronized central baseline/config-sync selection and Renovate policy in
       `.github/config-sync.yml`, `.github/.config-sync-ignore`, and `renovate.json5`
-- [x] T073 [P] Add package release metadata, release-please manifest/config, and git-cliff
-      configuration in `release-please-config.json`, `.release-please-manifest.json`, and
-      `cliff.toml`
+- [x] T073 [P] Add package release metadata and Release Please manifest/config for direct GitHub
+      Release publication in `release-please-config.json` and `.release-please-manifest.json`
 - [x] T074 Run and fix `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm run test:coverage`, `npm run build`, `npm run test:build`, and all Playwright projects
       from `quickstart.md`

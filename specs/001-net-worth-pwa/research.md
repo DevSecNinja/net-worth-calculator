@@ -177,17 +177,20 @@ Chromium project misses fallback and lifecycle differences.
 
 ## R12. DevSecNinja Repository Operations
 
-**Decision**: Pin every reusable `DevSecNinja/.github` caller to
-`0d0f448de257f354c89dc3a128871235d6ba8c11` (`v2.5.0`). Add local PR CI for app-specific checks,
-central lint with fail-on-error, main/manual Pages deployment of tested `dist`, config sync,
-release-please with `skip-github-release: true`, and a `v*` tag release workflow using git-cliff.
-Bootstrap Node 24 in `.mise.toml`, release metadata for `net-worth-calculator`, the synchronized
-Renovate baseline, and concise Copilot instructions. Use squash merges and conventional PR titles.
+**Decision**: Keep the non-release reusable `DevSecNinja/.github` callers pinned to
+`0d0f448de257f354c89dc3a128871235d6ba8c11` (`v2.5.0`) and pin Release Please to
+`c61e8107b080f72e25bfc41d3eef947dbfa66446` (`v3.0.0`). Add local PR CI for app-specific checks,
+central lint with fail-on-error, main/manual Pages deployment of tested `dist`, and config sync.
+Release Please uses mandatory installed-App credentials and `skip-github-release: false` to create
+the tag and GitHub Release directly; no tag-triggered publisher is configured because this static PWA
+has no release assets or attestations. Bootstrap Node 24 in `.mise.toml`, release metadata for
+`net-worth-calculator`, the synchronized Renovate baseline, and concise Copilot instructions. Use
+squash merges and conventional PR titles.
 
 **Rationale**: Full-SHA pins and centrally maintained baselines reduce supply-chain and fleet drift.
 Local CI remains load-bearing for application/PWA/browser behavior that shared lint cannot know.
-Direct `gh` release creation remains the initial-release fallback if organization App secrets are
-not installed.
+Central authentication rejects missing or blank App credentials and never falls back to
+`GITHUB_TOKEN`; direct publication avoids a duplicate-release race.
 
 **Alternatives considered**: Stale v2.2.0 pins, stock Cloudflare/APM/autofix workflows, blanket
 label deletion, and unadapted repository templates were explicitly rejected by the owner audit.
