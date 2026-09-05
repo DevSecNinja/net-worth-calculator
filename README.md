@@ -6,6 +6,8 @@ server API, analytics, telemetry, advertising, remote fonts, or runtime CDN depe
 
 **Live app:** <https://net-worth.ravensberg.org/>
 
+**Staged Cloudflare production:** <https://net-worth-calculator-xn8.pages.dev/>
+
 > [!IMPORTANT]
 > The app cannot reset or recover a forgotten passphrase. Clearing site data or losing the device
 > destroys the local vault unless you have a usable encrypted backup.
@@ -146,9 +148,10 @@ IndexedDB.
 
 ## Deployment
 
-GitHub Pages deploys `dist` from `main` to the custom domain
-<https://net-worth.ravensberg.org/>. The production workflow builds and verifies the root-hosted
-artifact:
+The production workflow builds and verifies one root-hosted `dist` artifact, then deploys those exact
+bytes to GitHub Pages and Cloudflare Pages. GitHub Pages remains the source of
+<https://net-worth.ravensberg.org/> until the documented DNS cutover is performed; Cloudflare
+production is staged at <https://net-worth-calculator-xn8.pages.dev/>.
 
 ```powershell
 npm ci
@@ -159,6 +162,12 @@ $env:EXPECTED_BASE_PATH = "/"; npm run test:build
 The GitHub Pages project URL <https://devsecninja.github.io/net-worth-calculator/> redirects to the
 custom domain. The default `npm run build` base remains `/net-worth-calculator/` for project-site CI
 compatibility and fallback hosting; `npm run test:build:bases` verifies both deployment shapes.
+
+Same-repository pull requests receive Cloudflare preview deployments and their preview is deleted when
+the pull request closes. Fork pull requests receive no deployment secrets and continue through the
+required CI workflow without a preview. See [deployment and Cloudflare cutover](docs/deployment.md) for
+the deployed-site test, exact DNS/custom-domain procedure, verification, rollback, and the eventual
+GitHub Pages retirement decision.
 
 ### Release automation credentials
 
@@ -182,10 +191,9 @@ and always authenticates with a short-lived App token; it fails closed without a
 fallback. Release Please directly creates the version tag and GitHub Release when its release PR is
 merged. This repository intentionally has no competing tag-triggered release publisher.
 
-Cloudflare currently provides DNS only; GitHub Pages remains the hosting provider. A later Cloudflare
-Pages migration is tracked in Issue #3. That migration would use build command `npm run build`,
-dependency command `npm ci`, output directory `dist`, and `VITE_BASE_PATH=/`. The hosting-neutral
-artifact needs no runtime API, database, analytics, or application-code migration.
+Cloudflare Pages is a static Direct Upload target only. The project has no Functions, Workers,
+bindings, backend, database, analytics, Web Analytics, or runtime Cloudflare dependency. The existing
+encrypted local-storage boundary is unchanged.
 
 `npm run preview` derives the serving path from the built manifest. Use `-- --base /custom-path/`
 or set `VITE_BASE_PATH` only when an explicit preview override is needed.

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 import { resolveExpectedBasePath } from './build-base.mjs';
+import { parseCloudflareHeaders, requireCloudflareHeader } from './cloudflare-headers.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = join(root, 'dist');
@@ -17,6 +18,7 @@ const required = [
   'manifest.webmanifest',
   'sw.js',
   '.nojekyll',
+  '_headers',
   'favicon.svg',
   'theme-init.js',
   'icons/icon-192.png',
@@ -216,6 +218,55 @@ if (
   throw new Error('Service worker must not cache or reference vault/data runtime resources.');
 }
 
+const cloudflareHeaders = (await readFile(join(dist, '_headers'), 'utf8')).replace(/\r\n?/g, '\n');
+const cloudflareHeaderBlocks = parseCloudflareHeaders(cloudflareHeaders);
+const globalHeaders = cloudflareHeaderBlocks.get('/*');
+const expectedCloudflareCsp = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "connect-src 'self'",
+  "font-src 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "frame-src 'none'",
+  "img-src 'self' data: blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "script-src 'self'",
+  "style-src 'self'",
+  "worker-src 'self'",
+].join('; ');
+requireCloudflareHeader(
+  cloudflareHeaderBlocks,
+  '/*',
+  'content-security-policy',
+  expectedCloudflareCsp,
+);
+for (const [name, value] of [
+  ['referrer-policy', 'no-referrer'],
+  ['strict-transport-security', 'max-age=31536000'],
+  ['x-content-type-options', 'nosniff'],
+  ['x-frame-options', 'DENY'],
+]) {
+  requireCloudflareHeader(cloudflareHeaderBlocks, '/*', name, value);
+}
+if (!globalHeaders?.has('permissions-policy')) {
+  throw new Error('Cloudflare Pages global headers are missing Permissions-Policy.');
+}
+requireCloudflareHeader(
+  cloudflareHeaderBlocks,
+  '/assets/*',
+  'cache-control',
+  'public, max-age=31536000, immutable',
+);
+for (const path of ['/', '/index.html', '/manifest.webmanifest', '/sw.js']) {
+  requireCloudflareHeader(
+    cloudflareHeaderBlocks,
+    path,
+    'cache-control',
+    'no-cache, no-store, must-revalidate',
+  );
+}
 const builtJavaScript = (
   await Promise.all(
     assetFiles

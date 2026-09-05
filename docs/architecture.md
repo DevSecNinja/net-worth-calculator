@@ -2,10 +2,12 @@
 
 ## System overview
 
-Net Worth Calculator is a single static React and TypeScript progressive web app. Vite produces a
-content-hashed `dist` artifact; GitHub Pages serves that artifact at the custom-domain root
-<https://net-worth.ravensberg.org/>. Cloudflare provides DNS only. There is no application server,
-hosted database, account system, analytics service, or runtime API.
+Net Worth Calculator is a single static React and TypeScript progressive web app. Vite produces one
+verified, content-hashed root `dist` artifact. GitHub Pages serves it at
+<https://net-worth.ravensberg.org/> and remains the custom-domain production source until the
+user-operated DNS cutover. Cloudflare Pages serves the same bytes at the staged production origin
+<https://net-worth-calculator-xn8.pages.dev/>. There is no application server, hosted database, account
+system, analytics service, runtime API, Pages Function, or Worker.
 
 ```text
 React features and accessible components
@@ -120,11 +122,21 @@ never deletes all origin caches and service-worker updates do not alter IndexedD
 required assets, CSP metadata, manifest base/scope, maskable icons, absence of source maps, bundle
 ceiling, generated precache, and vault exclusion from the service worker.
 
-The GitHub Pages production workflow uses `VITE_BASE_PATH=/` and verifies that exact artifact with
-`EXPECTED_BASE_PATH=/` for the custom domain. The default project path remains available for normal CI
-and fallback hosting, and `npm run test:build:bases` checks both forms. The `github.io` project URL
-redirects to the custom domain. A future Cloudflare Pages migration remains tracked in Issue #3;
-Cloudflare is not the current host. No runtime product service is host-specific.
+The production workflow uses `VITE_BASE_PATH=/` and verifies the artifact with
+`EXPECTED_BASE_PATH=/`, uploads it once, and passes that exact artifact to the pinned shared workflow.
+Every `main` run deploys it to GitHub Pages and Cloudflare Pages production. Same-repository pull
+requests deploy isolated Cloudflare previews and closed pull requests trigger cleanup; fork previews
+skip safely when secrets are unavailable. The default project path remains available for normal CI
+and fallback-hosting checks, and `npm run test:build:bases` checks both forms.
+
+Cloudflare Pages consumes `dist` through Direct Upload with `main` as the production branch. The
+committed `_headers` file adds response CSP/security headers and immutable caching only for hashed
+assets while keeping HTML, manifest, and service-worker updates revalidated. No Cloudflare runtime
+package or service is part of the application. After a successful production deploy, the reusable
+workflow idempotently registers `net-worth.ravensberg.org` with the Pages project and reports its
+status and resolved `pages.dev` CNAME target without modifying DNS. The `github.io` project URL
+continues to redirect to the unchanged custom domain. DNS cutover, rollback, and optional later GitHub
+Pages retirement are documented in [deployment operations](deployment.md).
 
 ## Release integrity
 
