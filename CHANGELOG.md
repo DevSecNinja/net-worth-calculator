@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Release Please updates this file from
 Conventional Commits.
 
+## [0.2.0](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.1.1...v0.2.0) (2026-09-05)
+
+
+### Features
+
+* stage Cloudflare Pages deployment ([#12](https://github.com/DevSecNinja/net-worth-calculator/issues/12)) ([0bdd7e4](https://github.com/DevSecNinja/net-worth-calculator/commit/0bdd7e493dcf15221bf279bec60f53285e68eb65))
+
 ## [0.1.1](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.1.0...v0.1.1) (2026-09-05)
 
 
