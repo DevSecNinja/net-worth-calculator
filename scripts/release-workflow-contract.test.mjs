@@ -16,14 +16,41 @@ const releaseManifest = JSON.parse(
 );
 const packageMetadata = JSON.parse(readFileSync(resolve(repositoryRoot, 'package.json'), 'utf8'));
 
+function yamlBlock(source, key, indentation) {
+  const lines = source.split('\n');
+  const blockHeader = `${' '.repeat(indentation)}${key}:`;
+  const start = lines.indexOf(blockHeader);
+
+  if (start === -1) {
+    throw new Error(`Missing YAML block: ${key}`);
+  }
+
+  let end = lines.length;
+  for (let index = start + 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.trim() && line.length - line.trimStart().length <= indentation) {
+      end = index;
+      break;
+    }
+  }
+
+  return lines.slice(start + 1, end).join('\n');
+}
+
+const releaseJob = yamlBlock(releaseWorkflow, 'release-please', 2);
+const releaseInputs = yamlBlock(releaseJob, 'with', 4);
+const releaseSecrets = yamlBlock(releaseJob, 'secrets', 4);
+
 describe('Release Please consumer contract', () => {
   it('pins central v3 and passes mandatory App credentials', () => {
-    expect(releaseWorkflow).toContain(
-      'DevSecNinja/.github/.github/workflows/release-please.yml@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3.0.0',
+    expect(releaseJob).toMatch(
+      /^ {4}uses:\s*DevSecNinja\/\.github\/\.github\/workflows\/release-please\.yml@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3\.0\.0\s*$/m,
     );
-    expect(releaseWorkflow).toContain('app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}');
-    expect(releaseWorkflow).toContain(
-      'app-private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}',
+    expect(releaseInputs).toMatch(
+      /^ {6}app-id:\s*\$\{\{\s*vars\.RELEASE_PLEASE_APP_ID\s*\}\}\s*$/m,
+    );
+    expect(releaseSecrets).toMatch(
+      /^ {6}app-private-key:\s*\$\{\{\s*secrets\.RELEASE_PLEASE_APP_PRIVATE_KEY\s*\}\}\s*$/m,
     );
   });
 
@@ -38,8 +65,8 @@ describe('Release Please consumer contract', () => {
     expect(releaseWorkflow).toMatch(
       /^concurrency:\s*\n\s+group:\s*release-please\s*\n\s+cancel-in-progress:\s*false\s*$/m,
     );
-    expect(releaseWorkflow).toContain('      contents: write');
-    expect(releaseWorkflow).toContain('      pull-requests: write');
+    expect(releaseJob).toMatch(/^ {6}contents:\s*write(?:\s+#.*)?$/m);
+    expect(releaseJob).toMatch(/^ {6}pull-requests:\s*write(?:\s+#.*)?$/m);
     expect(releaseWorkflow).not.toContain('issues: write');
   });
 
