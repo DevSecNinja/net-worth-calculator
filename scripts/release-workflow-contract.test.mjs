@@ -3,17 +3,18 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-const releaseWorkflowPath = resolve(process.cwd(), '.github/workflows/release-please.yml');
-const tagPublisherPath = resolve(process.cwd(), '.github/workflows/release.yml');
+const repositoryRoot = resolve(import.meta.dirname, '..');
+const releaseWorkflowPath = resolve(repositoryRoot, '.github/workflows/release-please.yml');
+const tagPublisherPath = resolve(repositoryRoot, '.github/workflows/release.yml');
 
-const releaseWorkflow = readFileSync(releaseWorkflowPath, 'utf8');
+const releaseWorkflow = readFileSync(releaseWorkflowPath, 'utf8').replace(/\r\n?/g, '\n');
 const releaseConfig = JSON.parse(
-  readFileSync(resolve(process.cwd(), 'release-please-config.json'), 'utf8'),
+  readFileSync(resolve(repositoryRoot, 'release-please-config.json'), 'utf8'),
 );
 const releaseManifest = JSON.parse(
-  readFileSync(resolve(process.cwd(), '.release-please-manifest.json'), 'utf8'),
+  readFileSync(resolve(repositoryRoot, '.release-please-manifest.json'), 'utf8'),
 );
-const packageMetadata = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'));
+const packageMetadata = JSON.parse(readFileSync(resolve(repositoryRoot, 'package.json'), 'utf8'));
 
 describe('Release Please consumer contract', () => {
   it('pins central v3 and passes mandatory App credentials', () => {
@@ -33,9 +34,9 @@ describe('Release Please consumer contract', () => {
   });
 
   it('preserves least privilege and serialized release runs', () => {
-    expect(releaseWorkflow).toContain('permissions:\n  contents: read');
-    expect(releaseWorkflow).toContain(
-      'concurrency:\n  group: release-please\n  cancel-in-progress: false',
+    expect(releaseWorkflow).toMatch(/^permissions:\s*\n\s+contents:\s*read\s*$/m);
+    expect(releaseWorkflow).toMatch(
+      /^concurrency:\s*\n\s+group:\s*release-please\s*\n\s+cancel-in-progress:\s*false\s*$/m,
     );
     expect(releaseWorkflow).toContain('      contents: write');
     expect(releaseWorkflow).toContain('      pull-requests: write');
