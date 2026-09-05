@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 
 import { PASSPHRASE } from '../helpers/app';
+import { buildLabel } from '../helpers/packageMetadata';
 import { startTestServer, type TestServer } from '../helpers/server';
 
 const projectPorts = new Map([
@@ -16,6 +17,7 @@ const projectPorts = new Map([
 ]);
 const versionN = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const versionN1 = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+const ciFallbackVersion = 'cccccccccccccccccccccccccccccccccccccccc';
 
 function buildVersion(sha: string, output: string) {
   rmSync(output, { recursive: true, force: true });
@@ -26,7 +28,7 @@ function buildVersion(sha: string, output: string) {
     process.execPath,
     [npmCli, 'run', 'build', '--', '--outDir', output, '--emptyOutDir'],
     {
-      env: { ...process.env, VITE_COMMIT_SHA: sha },
+      env: { ...process.env, CI: 'true', GITHUB_SHA: ciFallbackVersion, VITE_COMMIT_SHA: sha },
       stdio: 'pipe',
     },
   );
@@ -80,7 +82,7 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
       }
       return urls;
     });
-    await expect(page.getByText(/v0.1.0 \(aaaaaaa\)/i)).toBeVisible();
+    await expect(page.getByText(buildLabel(versionN), { exact: true })).toBeVisible();
 
     await server.stop();
     server = await startTestServer(secondDirectory, port);
@@ -95,14 +97,14 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
       .filter({ hasText: /new version is available/i });
     await expect(cleanUpdatePrompt).toBeVisible({ timeout: 45_000 });
     await expect(updatePrompt).toHaveAttribute('role', 'status');
-    await expect(page.getByText(/v0.1.0 \(aaaaaaa\)/i)).toBeVisible();
+    await expect(page.getByText(buildLabel(versionN), { exact: true })).toBeVisible();
 
     await cleanPage.getByRole('button', { name: /update now/i }).click();
     await expect(cleanPage.getByRole('dialog', { name: /unsaved edits/i })).toContainText(
       'Unsaved edits in another tab',
     );
     await cleanPage.getByRole('button', { name: /keep editing/i }).click();
-    await expect(page.getByText(/v0.1.0 \(aaaaaaa\)/i)).toBeVisible();
+    await expect(page.getByText(buildLabel(versionN), { exact: true })).toBeVisible();
     await cleanPage.close();
 
     await expect(page.getByLabel(/asset name/i)).toHaveValue('Unsaved update draft');
@@ -111,7 +113,9 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
 
     await page.getByRole('button', { name: /update now/i }).click();
 
-    await expect(page.getByText(/v0.1.0 \(bbbbbbb\)/i)).toBeVisible({ timeout: 45_000 });
+    await expect(page.getByText(buildLabel(versionN1), { exact: true })).toBeVisible({
+      timeout: 45_000,
+    });
     await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await page.getByLabel(/^passphrase$/i).fill(PASSPHRASE);
     await page.getByRole('button', { name: /unlock vault/i }).click();

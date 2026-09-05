@@ -3,14 +3,18 @@ import { readFile } from 'node:fs/promises';
 
 import { expect, test } from '@playwright/test';
 
+import { buildIdentity, buildLabel } from '../helpers/packageMetadata';
+
 test('built output passes the release artifact contract and exposes exact build identity', async ({
   page,
 }, workerInfo) => {
   test.skip(workerInfo.project.name !== 'chromium', 'Static artifact assertions run once.');
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  execFileSync(process.execPath, ['scripts/verify-build.mjs'], {
+  const verification = execFileSync(process.execPath, ['scripts/verify-build.mjs'], {
+    encoding: 'utf8',
     env: { ...process.env, EXPECTED_COMMIT_SHA: commit, VITE_RELEASE_BUILD: 'true' },
   });
+  expect(verification).toContain(`${buildIdentity(commit)}.`);
   const manifest = JSON.parse(await readFile('dist/manifest.webmanifest', 'utf8')) as {
     id: string;
     start_url: string;
@@ -37,8 +41,9 @@ test('built output passes the release artifact contract and exposes exact build 
 
   await page.goto('./');
   const sourceLink = page.getByRole('link', {
-    name: new RegExp(`v0\\.1\\.0 \\(${commit.slice(0, 7)}\\)`),
+    name: buildLabel(commit),
   });
+  await expect(sourceLink).toHaveText(buildLabel(commit));
   await expect(sourceLink).toHaveAttribute(
     'href',
     `https://github.com/DevSecNinja/net-worth-calculator/commit/${commit}`,

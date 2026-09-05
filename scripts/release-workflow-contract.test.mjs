@@ -75,8 +75,7 @@ describe('Release Please consumer contract', () => {
     expect(existsSync(tagPublisherPath)).toBe(false);
   });
 
-  it('preserves the currently released version', () => {
-    expect(packageMetadata.version).toBe('0.1.0');
-    expect(releaseManifest['.']).toBe('0.1.0');
+  it('keeps the release manifest aligned with package metadata', () => {
+    expect(releaseManifest['.']).toBe(packageMetadata.version);
   });
 });

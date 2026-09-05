@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 
-import packageMetadata from '../../../package.json';
 import { AppFooter } from '@/components/ui/AppFooter';
 import { LocaleProvider } from '@/features/locale/LocaleProvider';
+import { buildLabel, packageVersion } from '../../../tests/helpers/packageMetadata';
 
 import { AboutPage } from './AboutPage';
 
@@ -23,10 +23,10 @@ describe('AboutPage', () => {
     expect(screen.getByText(/complete vault is authenticated and encrypted/i)).toHaveTextContent(
       /Cache Storage contains the app shell, never vault data/i,
     );
-    expect(screen.getByText(new RegExp(`Version v${packageMetadata.version}`))).toBeVisible();
+    expect(screen.getByText(new RegExp(`Version v${packageVersion}`))).toBeVisible();
 
     const buildLinks = screen.getAllByRole('link', {
-      name: new RegExp(`${packageMetadata.version}|${testCommit.slice(0, 7)}`),
+      name: new RegExp(`${packageVersion}|${testCommit.slice(0, 7)}`),
     });
     expect(buildLinks).toHaveLength(2);
     for (const link of buildLinks) {
@@ -35,8 +35,6 @@ describe('AboutPage', () => {
         `https://github.com/DevSecNinja/net-worth-calculator/commit/${testCommit}`,
       );
     }
-    expect(
-      screen.getByText(`v${packageMetadata.version} (${testCommit.slice(0, 7)})`),
-    ).toBeVisible();
+    expect(screen.getByText(buildLabel(testCommit))).toBeVisible();
   });
 });
