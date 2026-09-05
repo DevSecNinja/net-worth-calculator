@@ -95,7 +95,9 @@ jobs:
       artifact-path: dist
       github-pages: true
       cloudflare-production: ${{ github.event_name != 'pull_request' }}
-      cloudflare-preview: true
+      cloudflare-preview: >-
+        ${{ github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository }}
       cloudflare-project-name: net-worth-calculator
       cloudflare-production-branch: main
       cloudflare-custom-domain: ${{ github.event_name != 'pull_request' && 'net-worth.ravensberg.org' || '' }}

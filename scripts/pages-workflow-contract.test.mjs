@@ -69,7 +69,9 @@ describe('Pages deployment workflow contract', () => {
     expect(pagesInputs).toMatch(
       /^ {6}cloudflare-production: \$\{\{\s*github\.event_name != 'pull_request'\s*\}\}$/m,
     );
-    expect(pagesInputs).toMatch(/^ {6}cloudflare-preview: true$/m);
+    expect(pagesInputs).toMatch(
+      /^ {6}cloudflare-preview: >-\s*\n {8}\$\{\{\s*github\.event_name == 'pull_request' &&\s*\n {8}github\.event\.pull_request\.head\.repo\.full_name == github\.repository\s*\}\}$/m,
+    );
     expect(pagesInputs).toMatch(/^ {6}cloudflare-project-name: net-worth-calculator$/m);
     expect(pagesInputs).toMatch(/^ {6}cloudflare-production-branch: main$/m);
     expect(pagesInputs).toMatch(

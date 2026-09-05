@@ -244,6 +244,7 @@ requireCloudflareHeader(
 );
 for (const [name, value] of [
   ['referrer-policy', 'no-referrer'],
+  ['strict-transport-security', 'max-age=31536000'],
   ['x-content-type-options', 'nosniff'],
   ['x-frame-options', 'DENY'],
 ]) {
