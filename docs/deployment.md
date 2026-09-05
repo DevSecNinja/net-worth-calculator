@@ -6,7 +6,7 @@ The `Pages` workflow builds one root-based `dist` artifact from every `main` com
 deploys those exact bytes to both:
 
 - GitHub Pages, which continues to serve <https://net-worth.ravensberg.org/>;
-- Cloudflare Pages at <https://net-worth-calculator.pages.dev/>.
+- Cloudflare Pages at <https://net-worth-calculator-xn8.pages.dev/>.
 
 Same-repository pull requests receive isolated Cloudflare preview deployments. Closing a pull request
 deletes its preview deployments. Fork pull requests do not receive repository secrets and therefore
@@ -26,13 +26,17 @@ The reusable workflow receives two repository Actions secrets:
 The token needs only Account > Cloudflare Pages > Edit for the owning account. Do not expose either
 value in logs, workflow inputs, local environment files, or documentation. The workflow creates the
 Pages project when absent, deploys production from `main`, and uses branch deployments for previews.
+After a successful production deploy it idempotently registers `net-worth.ravensberg.org` with the
+Pages project but does not create, update, or delete DNS. The reusable workflow reports
+`cloudflare-custom-domain-status` and `cloudflare-custom-domain-dns-target`; the resolved target is
+expected to be `net-worth-calculator-xn8.pages.dev`.
 
 ## Verify a deployment
 
 Run the deployed-site gate against the production or preview root:
 
 ```powershell
-$env:DEPLOYMENT_BASE_URL = "https://net-worth-calculator.pages.dev/"
+$env:DEPLOYMENT_BASE_URL = "https://net-worth-calculator-xn8.pages.dev/"
 npm run test:deployment
 ```
 
@@ -49,13 +53,14 @@ Do not perform these steps until the staged `pages.dev` deployment and its lates
 healthy. The current `net-worth.ravensberg.org` DNS record and GitHub Pages custom-domain setting are
 intentionally unchanged so GitHub Pages remains production and the ready rollback target.
 
-1. In Cloudflare **Workers & Pages**, open `net-worth-calculator`, choose **Custom domains**, and start
-   **Set up a domain** for `net-worth.ravensberg.org`.
-2. Complete the dashboard confirmation for the existing Cloudflare-managed zone. This associates the
-   hostname with the Pages project and changes its CNAME target to
-   `net-worth-calculator.pages.dev`. Do not create only a standalone CNAME: Cloudflare requires the
-   Pages custom-domain association as well.
-3. Wait until the Pages custom domain reports active and its certificate is issued.
+1. Open the successful `main` Pages workflow summary and confirm the custom-domain registration
+   status is `pending`, `initializing`, or `active`. Copy its
+   `cloudflare-custom-domain-dns-target` value; the expected value is
+   `net-worth-calculator-xn8.pages.dev`.
+2. In Cloudflare DNS, edit the existing `net-worth` CNAME in place and set its target to the exact
+   workflow-reported value. Do not delete the record, create a second record, or change any other DNS
+   entry.
+3. Wait until the Pages custom domain reports `active` and its certificate is issued.
 4. Verify `https://net-worth.ravensberg.org/` serves the same commit as the successful `main`
    deployment, has a valid HTTPS certificate and the documented security headers, and passes
    `DEPLOYMENT_BASE_URL=https://net-worth.ravensberg.org/ npm run test:deployment`.

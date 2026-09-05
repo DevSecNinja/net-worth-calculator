@@ -33,7 +33,7 @@ jobs:
       VITE_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Harden runner
-        uses: DevSecNinja/.github/actions/harden-runner@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3.0.0
+        uses: DevSecNinja/.github/actions/harden-runner@7a3e8e1475c658c60c23bedc7daf2e559bfe60b4 # v3.1.0
         with:
           egress-policy: audit
       - name: Checkout code
@@ -78,7 +78,7 @@ jobs:
       always() &&
       (needs.build.result == 'success' ||
       (github.event_name == 'pull_request' && github.event.action == 'closed'))
-    uses: DevSecNinja/.github/.github/workflows/pages.yml@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3.0.0
+    uses: DevSecNinja/.github/.github/workflows/pages.yml@7a3e8e1475c658c60c23bedc7daf2e559bfe60b4 # v3.1.0
     permissions:
       contents: read
       deployments: write # Record Cloudflare and GitHub Pages deployments.
@@ -98,6 +98,7 @@ jobs:
       cloudflare-preview: true
       cloudflare-project-name: net-worth-calculator
       cloudflare-production-branch: main
+      cloudflare-custom-domain: ${{ github.event_name != 'pull_request' && 'net-worth.ravensberg.org' || '' }}
     secrets:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

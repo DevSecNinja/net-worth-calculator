@@ -6,7 +6,7 @@ server API, analytics, telemetry, advertising, remote fonts, or runtime CDN depe
 
 **Live app:** <https://net-worth.ravensberg.org/>
 
-**Staged Cloudflare production:** <https://net-worth-calculator.pages.dev/>
+**Staged Cloudflare production:** <https://net-worth-calculator-xn8.pages.dev/>
 
 > [!IMPORTANT]
 > The app cannot reset or recover a forgotten passphrase. Clearing site data or losing the device
@@ -151,7 +151,7 @@ IndexedDB.
 The production workflow builds and verifies one root-hosted `dist` artifact, then deploys those exact
 bytes to GitHub Pages and Cloudflare Pages. GitHub Pages remains the source of
 <https://net-worth.ravensberg.org/> until the documented DNS cutover is performed; Cloudflare
-production is staged at <https://net-worth-calculator.pages.dev/>.
+production is staged at <https://net-worth-calculator-xn8.pages.dev/>.
 
 ```powershell
 npm ci

@@ -45,7 +45,7 @@ describe('Pages deployment workflow contract', () => {
   it('builds, verifies, and uploads one root artifact without Cloudflare credentials', () => {
     expect(buildJob).toContain("github.event.action != 'closed'");
     expect(buildJob).toMatch(
-      /uses: DevSecNinja\/\.github\/actions\/harden-runner@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3\.0\.0/,
+      /uses: DevSecNinja\/\.github\/actions\/harden-runner@7a3e8e1475c658c60c23bedc7daf2e559bfe60b4 # v3\.1\.0/,
     );
     expect(buildJob).toMatch(
       /uses: actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7\.0\.1/,
@@ -60,7 +60,7 @@ describe('Pages deployment workflow contract', () => {
 
   it('deploys the exact artifact to both production hosts and Cloudflare previews', () => {
     expect(pagesJob).toMatch(
-      /uses: DevSecNinja\/\.github\/\.github\/workflows\/pages\.yml@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3\.0\.0/,
+      /uses: DevSecNinja\/\.github\/\.github\/workflows\/pages\.yml@7a3e8e1475c658c60c23bedc7daf2e559bfe60b4 # v3\.1\.0/,
     );
     expect(pagesInputs).toMatch(/^ {6}wrangler-version: "4\.123\.0"$/m);
     expect(pagesInputs).toMatch(/^ {6}artifact-name: root-dist$/m);
@@ -72,6 +72,9 @@ describe('Pages deployment workflow contract', () => {
     expect(pagesInputs).toMatch(/^ {6}cloudflare-preview: true$/m);
     expect(pagesInputs).toMatch(/^ {6}cloudflare-project-name: net-worth-calculator$/m);
     expect(pagesInputs).toMatch(/^ {6}cloudflare-production-branch: main$/m);
+    expect(pagesInputs).toMatch(
+      /^ {6}cloudflare-custom-domain: \$\{\{\s*github\.event_name != 'pull_request' && 'net-worth\.ravensberg\.org' \|\| ''\s*\}\}$/m,
+    );
     expect(pagesInputs).not.toMatch(/^\s+(?:build|pre-deploy|pre-preview)-command:/m);
   });
 

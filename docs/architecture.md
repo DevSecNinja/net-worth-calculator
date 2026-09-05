@@ -6,7 +6,7 @@ Net Worth Calculator is a single static React and TypeScript progressive web app
 verified, content-hashed root `dist` artifact. GitHub Pages serves it at
 <https://net-worth.ravensberg.org/> and remains the custom-domain production source until the
 user-operated DNS cutover. Cloudflare Pages serves the same bytes at the staged production origin
-<https://net-worth-calculator.pages.dev/>. There is no application server, hosted database, account
+<https://net-worth-calculator-xn8.pages.dev/>. There is no application server, hosted database, account
 system, analytics service, runtime API, Pages Function, or Worker.
 
 ```text
@@ -132,9 +132,11 @@ and fallback-hosting checks, and `npm run test:build:bases` checks both forms.
 Cloudflare Pages consumes `dist` through Direct Upload with `main` as the production branch. The
 committed `_headers` file adds response CSP/security headers and immutable caching only for hashed
 assets while keeping HTML, manifest, and service-worker updates revalidated. No Cloudflare runtime
-package or service is part of the application. The `github.io` project URL continues to redirect to
-the unchanged custom domain. DNS cutover, rollback, and optional later GitHub Pages retirement are
-documented in [deployment operations](deployment.md).
+package or service is part of the application. After a successful production deploy, the reusable
+workflow idempotently registers `net-worth.ravensberg.org` with the Pages project and reports its
+status and resolved `pages.dev` CNAME target without modifying DNS. The `github.io` project URL
+continues to redirect to the unchanged custom domain. DNS cutover, rollback, and optional later GitHub
+Pages retirement are documented in [deployment operations](deployment.md).
 
 ## Release integrity
 
