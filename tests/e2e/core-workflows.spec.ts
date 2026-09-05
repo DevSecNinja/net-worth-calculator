@@ -22,7 +22,7 @@ test('creates a vault, manages financial items, and unlocks after reload', async
 
   await page.getByRole('button', { name: /lock vault/i }).click();
   await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
-  await page.reload();
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
   await page.getByLabel(/^passphrase$/i).fill(PASSPHRASE);
   await page.getByRole('button', { name: /unlock vault/i }).click();
@@ -39,7 +39,7 @@ test('changes currency only after no-conversion confirmation', async ({ page }) 
   await expect(page.getByText(/base currency changed to EUR/i)).toBeAttached();
 });
 
-test('exports and imports through portable fallback file controls', async ({ page }) => {
+test('exports and imports through portable fallback file controls', async ({ browser, page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true });
     Object.defineProperty(window, 'showOpenFilePicker', { value: undefined, configurable: true });
@@ -54,6 +54,30 @@ test('exports and imports through portable fallback file controls', async ({ pag
   expect(download.suggestedFilename()).toMatch(/^net-worth-backup-\d{4}-\d{2}-\d{2}\.nwvault$/);
   const path = await download.path();
   if (!path) throw new Error('Playwright did not provide the downloaded backup path.');
+
+  const restoredContext = await browser.newContext();
+  const restoredPage = await restoredContext.newPage();
+  await restoredPage.addInitScript(() => {
+    Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true });
+    Object.defineProperty(window, 'showOpenFilePicker', { value: undefined, configurable: true });
+  });
+  await restoredPage.goto(`${page.url().split('#')[0]}#/backup`);
+  await expect(
+    restoredPage.getByRole('heading', { name: /restore without unlocking/i }),
+  ).toBeVisible();
+  await restoredPage.getByLabel(/backup passphrase/i).fill(PASSPHRASE);
+  const restoreChooserPromise = restoredPage.waitForEvent('filechooser');
+  await restoredPage.getByRole('button', { name: /choose encrypted backup/i }).click();
+  await (await restoreChooserPromise).setFiles(path);
+  await expect(
+    restoredPage.getByRole('dialog', { name: /restore encrypted vault/i }),
+  ).toBeVisible();
+  await restoredPage.getByRole('button', { name: /^restore vault$/i }).focus();
+  await restoredPage.keyboard.press('Enter');
+  await expect(restoredPage.getByText(/encrypted backup restored/i)).toBeVisible();
+  await restoredPage.getByRole('link', { name: /^assets$/i }).click();
+  await expect(restoredPage.getByRole('heading', { name: 'Portable marker' })).toBeVisible();
+  await restoredContext.close();
 
   await page.getByLabel(/backup passphrase/i).fill(PASSPHRASE);
   const chooserPromise = page.waitForEvent('filechooser');
@@ -79,6 +103,6 @@ test('deletes the encrypted vault only after typed confirmation', async ({ page 
   await dialog.getByLabel(/type DELETE/i).fill('DELETE');
   await dialog.getByRole('button', { name: /delete vault forever/i }).click();
   await expect(page.getByRole('heading', { name: /create your encrypted vault/i })).toBeVisible();
-  await page.reload();
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: /create your encrypted vault/i })).toBeVisible();
 });

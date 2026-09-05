@@ -1,10 +1,21 @@
 import { liability } from '../../tests/fixtures/vault';
-import { projectLiability } from './amortization';
+import {
+  projectLiability,
+  projectLiabilityAtDate,
+  projectLiabilityAtDates,
+  projectionHorizon,
+} from './amortization';
 
 describe('projectLiability', () => {
   it('handles a zero rate and stops exactly at zero', () => {
     const [point] = projectLiability(liability(), { startYear: 2026, endYear: 2026 });
-    expect(point).toEqual({ year: 2026, amount: '0', source: 'projected', status: 'paid-off' });
+    expect(point).toEqual({
+      date: '2026-12-31',
+      year: 2026,
+      amount: '0',
+      source: 'projected',
+      status: 'paid-off',
+    });
   });
 
   it('marks negative amortization explicitly', () => {
@@ -30,7 +41,9 @@ describe('projectLiability', () => {
       liability({
         principal: '1200',
         monthlyPayment: '100',
-        manualBalances: [{ year: 2026, amount: '600', updatedAt: '2026-12-31T00:00:00.000Z' }],
+        manualBalances: [
+          { date: '2026-12-31', amount: '600', updatedAt: '2026-12-31T00:00:00.000Z' },
+        ],
       }),
       { startYear: 2026, endYear: 2027 },
     );
@@ -77,7 +90,9 @@ describe('projectLiability', () => {
       principal: '5000',
       monthlyPayment: '100',
       startDate: '2020-01-01',
-      manualBalances: [{ year: 2024, amount: '2400', updatedAt: '2024-12-31T00:00:00.000Z' }],
+      manualBalances: [
+        { date: '2024-12-31', amount: '2400', updatedAt: '2024-12-31T00:00:00.000Z' },
+      ],
     });
     expect(projectLiability(fixed, { startYear: 2025, endYear: 2025 })[0]).toMatchObject({
       amount: '1200',
@@ -95,5 +110,63 @@ describe('projectLiability', () => {
     const full = projectLiability(fixed, { startYear: 2026, endYear: 2027 });
     const filtered = projectLiability(fixed, { startYear: 2027, endYear: 2027 });
     expect(filtered[0]).toEqual(full.find(({ year }) => year === 2027));
+  });
+
+  it('seeds the schedule from an actual balance before the start date', () => {
+    const fixed = liability({
+      principal: '5000',
+      monthlyPayment: '100',
+      startDate: '2025-01-01',
+      manualBalances: [
+        { date: '2024-12-31', amount: '1000', updatedAt: '2024-12-31T00:00:00.000Z' },
+      ],
+    });
+    expect(projectLiability(fixed, { startYear: 2025, endYear: 2025 })[0]).toMatchObject({
+      amount: '0',
+      status: 'paid-off',
+    });
+  });
+
+  it('marks a remaining balance invalid at the exact term boundary', () => {
+    const [point] = projectLiability(
+      liability({
+        principal: '2000',
+        monthlyPayment: '100',
+        annualInterestRate: '0',
+        startDate: '2026-01-01',
+        termMonths: 12,
+      }),
+      { startYear: 2026, endYear: 2026 },
+    );
+    expect(point).toMatchObject({ amount: '800', status: 'invalid' });
+  });
+
+  it('finds the terminal payoff after a later manual balance revives the schedule', () => {
+    const fixed = liability({
+      principal: '100',
+      monthlyPayment: '100',
+      annualInterestRate: '0',
+      startDate: '2026-01-01',
+      manualBalances: [
+        { date: '2030-01-15', amount: '1200', updatedAt: '2030-01-15T00:00:00.000Z' },
+      ],
+    });
+    expect(projectionHorizon(fixed)).toBe(2030);
+  });
+
+  it('matches independent exact-date projections when deriving several dates in one pass', () => {
+    const fixed = liability({
+      principal: '5000',
+      annualInterestRate: '4',
+      monthlyPayment: '150',
+      startDate: '2024-01-15',
+      manualBalances: [
+        { date: '2025-07-15', amount: '3200', updatedAt: '2025-07-15T00:00:00.000Z' },
+      ],
+    });
+    const dates = ['2026-12-31', '2024-06-30', '2025-07-15'];
+    expect(projectLiabilityAtDates(fixed, dates, '2026-12-31')).toEqual(
+      dates.map((date) => projectLiabilityAtDate(fixed, date, '2026-12-31')),
+    );
   });
 });

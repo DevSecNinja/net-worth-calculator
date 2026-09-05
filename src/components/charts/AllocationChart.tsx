@@ -2,8 +2,10 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 import type { AllocationSlice } from '@/domain/aggregation';
 import { formatMoney } from '@/domain/currency';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 import { ChartFrame } from './ChartFrame';
+import { exactTooltipValue } from './tooltip';
 
 const colors = ['#16a34a', '#0d9488', '#2563eb', '#7c3aed', '#ca8a04', '#dc2626'];
 
@@ -11,25 +13,26 @@ export function AllocationChart({
   allocation,
   currency,
   locale,
-  year,
+  date,
 }: {
   allocation: AllocationSlice[];
   currency: string;
   locale: string;
-  year: number;
+  date: string;
 }) {
+  const { t } = useLocale();
   const data = allocation.map((slice) => ({ ...slice, numericValue: Number(slice.value) }));
   return (
     <ChartFrame
-      title="Asset allocation"
-      summary={`Explicit asset values by category for ${year}.`}
-      table={
+      title={t('chart.allocationTitle')}
+      summary={t('chart.allocationSummary', { date })}
+      table={() => (
         <table>
-          <caption>Asset allocation for {year}</caption>
+          <caption>{t('chart.allocationCaption', { date })}</caption>
           <thead>
             <tr>
-              <th>Category</th>
-              <th>Value</th>
+              <th>{t('chart.category')}</th>
+              <th>{t('chart.value')}</th>
             </tr>
           </thead>
           <tbody>
@@ -41,7 +44,7 @@ export function AllocationChart({
             ))}
           </tbody>
         </table>
-      }
+      )}
     >
       <ResponsiveContainer width="100%" height={240}>
         <PieChart>
@@ -57,7 +60,11 @@ export function AllocationChart({
               <Cell key={slice.name} fill={colors[index % colors.length] ?? '#16a34a'} />
             ))}
           </Pie>
-          <Tooltip formatter={(value) => formatMoney(String(value), currency, locale)} />
+          <Tooltip
+            formatter={(value, _name, item) =>
+              formatMoney(exactTooltipValue(item, 'value', value), currency, locale)
+            }
+          />
         </PieChart>
       </ResponsiveContainer>
     </ChartFrame>

@@ -1,4 +1,5 @@
 import { Field } from './Field';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 type PassphraseFieldsProps = {
   passphrase: string;
@@ -15,12 +16,13 @@ export function PassphraseFields({
   onPassphraseChange,
   onConfirmationChange,
   error,
-  passphraseLabel = 'Passphrase',
+  passphraseLabel,
 }: PassphraseFieldsProps) {
+  const { t } = useLocale();
   return (
     <>
       <Field
-        label={passphraseLabel}
+        label={passphraseLabel ?? t('vault.passphrase')}
         name="passphrase"
         type="password"
         autoComplete="new-password"
@@ -28,12 +30,12 @@ export function PassphraseFields({
         maxLength={1024}
         value={passphrase}
         onChange={(event) => onPassphraseChange(event.currentTarget.value)}
-        description="Use at least 12 characters. It cannot be recovered."
+        description={t('vault.passphraseHelp')}
         error={error}
         required
       />
       <Field
-        label="Confirm passphrase"
+        label={t('vault.confirmPassphrase')}
         name="confirmation"
         type="password"
         autoComplete="new-password"

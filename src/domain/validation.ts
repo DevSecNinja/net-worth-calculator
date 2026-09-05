@@ -14,6 +14,10 @@ import {
 
 const isoDateTime = z.iso.datetime({ offset: true });
 const isoDate = z.iso.date();
+const boundedIsoDate = isoDate.refine((value) => {
+  const year = Number(value.slice(0, 4));
+  return year >= MIN_YEAR && year <= MAX_YEAR;
+}, `Date year must be between ${MIN_YEAR} and ${MAX_YEAR}.`);
 const uuid = z.uuid();
 const moneyPattern = /^(?:0|[1-9]\d{0,11})(?:\.\d{1,2})?$/;
 const ratePattern = /^(?:0|[1-9]\d?)(?:\.\d{1,4})?$|^100(?:\.0{1,4})?$/;
@@ -50,16 +54,20 @@ export const yearSchema = z
   .min(MIN_YEAR, `Year must be ${MIN_YEAR} or later.`)
   .max(MAX_YEAR, `Year must be ${MAX_YEAR} or earlier.`);
 
-export const yearValueSchema = z
+export const valueObservationSchema = z
   .object({
-    year: yearSchema,
+    date: boundedIsoDate,
     amount: moneyStringSchema,
     updatedAt: isoDateTime,
   })
   .strict();
 
-function hasUniqueYears(values: readonly { year: number }[]): boolean {
-  return new Set(values.map(({ year }) => year)).size === values.length;
+function hasUniqueDates(values: readonly { date: string }[]): boolean {
+  return new Set(values.map(({ date }) => date)).size === values.length;
+}
+
+function hasChronologicalDates(values: readonly { date: string }[]): boolean {
+  return values.every((value, index) => index === 0 || values[index - 1]!.date < value.date);
 }
 
 export const assetSchema = z
@@ -71,7 +79,7 @@ export const assetSchema = z
     customType: z.string().trim().min(1).max(100).optional(),
     name: z.string().trim().min(1, 'Name is required.').max(100),
     notes: z.string().max(2000),
-    values: z.array(yearValueSchema).max(MAX_YEAR - MIN_YEAR + 1),
+    values: z.array(valueObservationSchema).max((MAX_YEAR - MIN_YEAR + 1) * 366),
     createdAt: isoDateTime,
     updatedAt: isoDateTime,
   })
@@ -91,11 +99,18 @@ export const assetSchema = z
         message: 'Custom type is only valid for custom assets.',
       });
     }
-    if (!hasUniqueYears(asset.values)) {
+    if (!hasUniqueDates(asset.values)) {
       context.addIssue({
         code: 'custom',
         path: ['values'],
-        message: 'Each asset year must be unique.',
+        message: 'Each asset observation date must be unique.',
+      });
+    }
+    if (!hasChronologicalDates(asset.values)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['values'],
+        message: 'Asset observations must be in chronological order.',
       });
     }
   });
@@ -110,10 +125,10 @@ export const liabilitySchema = z
     principal: moneyStringSchema,
     annualInterestRate: rateStringSchema,
     monthlyPayment: moneyStringSchema,
-    startDate: isoDate.optional(),
+    startDate: boundedIsoDate.optional(),
     termMonths: z.number().int().min(1).max(1200).optional(),
     notes: z.string().max(2000),
-    manualBalances: z.array(yearValueSchema).max(MAX_YEAR - MIN_YEAR + 1),
+    manualBalances: z.array(valueObservationSchema).max((MAX_YEAR - MIN_YEAR + 1) * 366),
     createdAt: isoDateTime,
     updatedAt: isoDateTime,
   })
@@ -133,11 +148,18 @@ export const liabilitySchema = z
         message: 'Custom type is only valid for custom liabilities.',
       });
     }
-    if (!hasUniqueYears(liability.manualBalances)) {
+    if (!hasUniqueDates(liability.manualBalances)) {
       context.addIssue({
         code: 'custom',
         path: ['manualBalances'],
-        message: 'Each manual balance year must be unique.',
+        message: 'Each manual balance date must be unique.',
+      });
+    }
+    if (!hasChronologicalDates(liability.manualBalances)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['manualBalances'],
+        message: 'Manual balances must be in chronological order.',
       });
     }
     if (new Decimal(liability.principal).gt(0) && new Decimal(liability.monthlyPayment).eq(0)) {
@@ -162,19 +184,6 @@ export const vaultSettingsSchema = z
           return false;
         }
       }, 'Choose a supported currency.'),
-    locale: z
-      .string()
-      .min(2)
-      .max(35)
-      .refine((locale) => {
-        if (locale === 'system') return true;
-        try {
-          new Intl.Locale(locale);
-          return true;
-        } catch {
-          return false;
-        }
-      }, 'Choose a valid locale.'),
     createdWithSampleData: z.boolean(),
   })
   .strict();
@@ -247,7 +256,7 @@ export const cipherEnvelopeSchema = z
   .object({
     format: z.literal('net-worth-vault'),
     formatVersion: z.literal(ENVELOPE_FORMAT_VERSION),
-    vaultSchemaVersion: z.union([z.literal(0), z.literal(VAULT_SCHEMA_VERSION)]),
+    vaultSchemaVersion: z.literal(VAULT_SCHEMA_VERSION),
     kdf: z
       .object({
         name: z.literal('PBKDF2'),

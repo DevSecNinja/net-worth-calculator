@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 
 import { ErrorSummary } from '@/components/forms/ErrorSummary';
 import { Field } from '@/components/forms/Field';
@@ -6,11 +7,13 @@ import { Button } from '@/components/ui/Button';
 
 import { useVault } from './useVault';
 import { validatePassphrase } from './passphrase';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 export function UnlockPage() {
   const { unlock, busy, error, clearError } = useVault();
   const [passphrase, setPassphrase] = useState('');
   const [validationError, setValidationError] = useState<string>();
+  const { t } = useLocale();
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -31,15 +34,15 @@ export function UnlockPage() {
           NW
         </div>
         <div>
-          <p className="eyebrow">Encrypted vault</p>
-          <h1>Welcome back</h1>
-          <p>Enter your passphrase to decrypt this vault for the current session.</p>
+          <p className="eyebrow">{t('vault.unlockEyebrow')}</p>
+          <h1>{t('vault.unlockTitle')}</h1>
+          <p>{t('vault.unlockHelp')}</p>
         </div>
         <ErrorSummary
           errors={[validationError, error].filter((value): value is string => Boolean(value))}
         />
         <Field
-          label="Passphrase"
+          label={t('vault.passphrase')}
           name="unlock-passphrase"
           type="password"
           autoComplete="current-password"
@@ -50,10 +53,10 @@ export function UnlockPage() {
           autoFocus
         />
         <Button type="submit" disabled={busy}>
-          {busy ? 'Unlocking...' : 'Unlock vault'}
+          {busy ? t('vault.unlocking') : t('vault.unlock')}
         </Button>
         <p className="fine-print">
-          There is no password reset. Restore an encrypted backup if needed.
+          {t('vault.noReset')} <Link to="/backup">{t('onboarding.restoreLink')}</Link>.
         </p>
       </form>
     </main>

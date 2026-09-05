@@ -1,5 +1,5 @@
 import { asset, liability, vault } from '../../tests/fixtures/vault';
-import { buildDashboardData } from './aggregation';
+import { availableYears, buildDashboardData, buildSnapshotAtDate } from './aggregation';
 
 const updatedAt = '2026-01-01T00:00:00.000Z';
 
@@ -8,8 +8,8 @@ describe('buildDashboardData', () => {
     const first = asset({
       name: 'Savings',
       values: [
-        { year: 2024, amount: '100', updatedAt },
-        { year: 2025, amount: '150', updatedAt },
+        { date: '2024-12-31', amount: '100', updatedAt },
+        { date: '2025-12-31', amount: '150', updatedAt },
       ],
     });
     const second = asset({
@@ -17,16 +17,16 @@ describe('buildDashboardData', () => {
       type: 'stocks',
       name: 'Stocks',
       values: [
-        { year: 2024, amount: '40', updatedAt },
-        { year: 2025, amount: '50', updatedAt },
+        { date: '2024-12-31', amount: '40', updatedAt },
+        { date: '2025-12-31', amount: '50', updatedAt },
       ],
     });
     const debt = liability({
       principal: '0',
       monthlyPayment: '0',
       manualBalances: [
-        { year: 2024, amount: '25', updatedAt },
-        { year: 2025, amount: '20', updatedAt },
+        { date: '2024-12-31', amount: '25', updatedAt },
+        { date: '2025-12-31', amount: '20', updatedAt },
       ],
     });
     const data = buildDashboardData(
@@ -58,7 +58,7 @@ describe('buildDashboardData', () => {
 
   it('does not carry a missing asset year forward', () => {
     const holding = asset({
-      values: [{ year: 2025, amount: '50', updatedAt }],
+      values: [{ date: '2025-12-31', amount: '50', updatedAt }],
     });
     const data = buildDashboardData(vault({ assets: [holding] }), 2024, 2025);
     expect(data.snapshots[0]).toMatchObject({ assets: '0', completeness: 'incomplete' });
@@ -69,8 +69,8 @@ describe('buildDashboardData', () => {
   it('retains zero yearly change and zero percent as defined values', () => {
     const holding = asset({
       values: [
-        { year: 2024, amount: '100', updatedAt },
-        { year: 2025, amount: '100', updatedAt },
+        { date: '2024-12-31', amount: '100', updatedAt },
+        { date: '2025-12-31', amount: '100', updatedAt },
       ],
     });
     const data = buildDashboardData(vault({ assets: [holding] }), 2024, 2025);
@@ -84,8 +84,8 @@ describe('buildDashboardData', () => {
   it('keeps CAGR undefined for non-positive endpoints', () => {
     const holding = asset({
       values: [
-        { year: 2024, amount: '0', updatedAt },
-        { year: 2025, amount: '10', updatedAt },
+        { date: '2024-12-31', amount: '0', updatedAt },
+        { date: '2025-12-31', amount: '10', updatedAt },
       ],
     });
     const data = buildDashboardData(vault({ assets: [holding] }), 2024, 2025);
@@ -94,7 +94,7 @@ describe('buildDashboardData', () => {
 
   it('keeps the full liability payoff horizon when asset years are shorter', () => {
     const holding = asset({
-      values: [{ year: 2026, amount: '5000', updatedAt }],
+      values: [{ date: '2026-12-31', amount: '5000', updatedAt }],
     });
     const debt = liability({
       principal: '2400',
@@ -122,5 +122,79 @@ describe('buildDashboardData', () => {
     const data = buildDashboardData(vault({ liabilities: [debt] }), 2026, 2026);
     expect(data.projections.get(debt.id)?.map(({ year }) => year)).toEqual([2026]);
     expect(data.fullProjections.get(debt.id)?.map(({ year }) => year)).toEqual([2026, 2027]);
+  });
+
+  it('includes liability start and payoff years alongside asset years', () => {
+    const holding = asset({
+      values: [{ date: '2025-12-31', amount: '5000', updatedAt }],
+    });
+    const debt = liability({
+      principal: '2400',
+      monthlyPayment: '100',
+      startDate: '2026-01-01',
+      termMonths: 24,
+    });
+    expect(availableYears(vault({ assets: [holding], liabilities: [debt] }))).toEqual([
+      2025, 2026, 2027,
+    ]);
+  });
+
+  it('prevents future leakage and carries a July asset observation to year end', () => {
+    const holding = asset({
+      values: [
+        { date: '2026-07-15', amount: '1000', updatedAt },
+        { date: '2027-01-01', amount: '9000', updatedAt },
+      ],
+    });
+    const july = buildSnapshotAtDate(vault({ assets: [holding] }), '2026-07-15');
+    const december = buildSnapshotAtDate(vault({ assets: [holding] }), '2026-12-31');
+    expect(july).toMatchObject({ assets: '1000', assetSource: 'actual' });
+    expect(december).toMatchObject({ assets: '1000', assetSource: 'carry-forward' });
+    expect(december.assetSources[0]).toMatchObject({
+      sourceDate: '2026-07-15',
+      status: 'carry-forward',
+    });
+  });
+
+  it('keeps same-year future observations out of annual forecasts', () => {
+    const holding = asset({
+      values: [
+        { date: '2026-07-15', amount: '1000', updatedAt },
+        { date: '2026-10-01', amount: '9000', updatedAt },
+      ],
+    });
+    const debt = liability({
+      principal: '5000',
+      monthlyPayment: '100',
+      annualInterestRate: '0',
+      startDate: '2026-01-01',
+      manualBalances: [
+        { date: '2026-07-15', amount: '1000', updatedAt },
+        { date: '2026-10-01', amount: '9000', updatedAt },
+      ],
+    });
+    const data = buildDashboardData(
+      vault({ assets: [holding], liabilities: [debt] }),
+      2026,
+      2026,
+      '2026-09-01',
+    );
+    expect(data.asOfSnapshot.assets).toBe('1000');
+    expect(data.snapshots[0]?.assets).toBe('1000');
+    expect(Number(data.snapshots[0]?.liabilities)).toBeLessThan(1000);
+  });
+
+  it('amortizes a July manual liability seed to the December 31 annual snapshot', () => {
+    const debt = liability({
+      principal: '5000',
+      monthlyPayment: '100',
+      annualInterestRate: '0',
+      startDate: '2026-01-01',
+      manualBalances: [{ date: '2026-07-15', amount: '1000', updatedAt }],
+    });
+    const data = buildDashboardData(vault({ liabilities: [debt] }), 2026, 2026, '2026-12-31');
+    expect(data.asOfSnapshot.liabilities).toBe('400');
+    expect(data.snapshots[0]?.liabilities).toBe('400');
+    expect(data.timeline.map(({ asOfDate }) => asOfDate)).toEqual(['2026-07-15', '2026-12-31']);
   });
 });

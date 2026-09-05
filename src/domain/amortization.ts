@@ -3,24 +3,240 @@ import Decimal from 'decimal.js';
 import type { Liability, LiabilityProjection } from './model';
 import { MAX_YEAR, MIN_YEAR } from './model';
 import { canonicalMoney, toDecimal } from './currency';
+import { endOfMonth, parseIsoDate, sortObservations, toIsoDate } from './observations';
 
 export type ProjectionOptions = {
   startYear: number;
   endYear: number;
+  manualCutoff?: string;
 };
 
-function startMonth(liability: Liability): { year: number; month: number } {
-  const date = liability.startDate ?? liability.createdAt.slice(0, 10);
-  const [yearText, monthText] = date.split('-');
+type ProjectionEvent =
+  | { date: string; type: 'payment'; paymentNumber: number }
+  | { date: string; type: 'manual'; amount: string };
+
+type ProjectionState = {
+  balance: Decimal;
+  nonAmortizing: boolean;
+  termExhausted: boolean;
+};
+
+function scheduleStart(liability: Liability): string {
+  return liability.startDate ?? liability.createdAt.slice(0, 10);
+}
+
+function paymentEvents(liability: Liability, targetDate: string): ProjectionEvent[] {
+  const start = parseIsoDate(scheduleStart(liability));
+  const target = parseIsoDate(targetDate);
+  const events: ProjectionEvent[] = [];
+  let paymentDate = endOfMonth(start);
+  let paymentNumber = 1;
+  while (paymentDate <= target && paymentNumber <= (liability.termMonths ?? 1200)) {
+    events.push({ date: toIsoDate(paymentDate), type: 'payment', paymentNumber });
+    paymentDate = endOfMonth(
+      new Date(Date.UTC(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth() + 1, 1)),
+    );
+    paymentNumber += 1;
+  }
+  return events;
+}
+
+export function projectLiabilityAtDate(
+  liability: Liability,
+  targetDate: string,
+  manualCutoff = targetDate,
+): LiabilityProjection {
+  const target = parseIsoDate(targetDate);
+  const startDate = scheduleStart(liability);
+  const start = parseIsoDate(startDate);
+  const manualBalances = sortObservations(liability.manualBalances).filter(
+    ({ date }) => date <= targetDate && date <= manualCutoff,
+  );
+  const exactManual = manualBalances.findLast(({ date }) => date === targetDate);
+  if (exactManual) {
+    const balance = toDecimal(exactManual.amount);
+    return {
+      date: targetDate,
+      year: target.getUTCFullYear(),
+      amount: canonicalMoney(balance),
+      source: 'actual',
+      status: balance.eq(0) ? 'paid-off' : 'actual',
+    };
+  }
+  if (target < start && manualBalances.length === 0) {
+    return {
+      date: targetDate,
+      year: target.getUTCFullYear(),
+      amount: '0',
+      source: 'projected',
+      status: 'projected',
+    };
+  }
+
+  let balance = toDecimal(liability.principal);
+  const rate = toDecimal(liability.annualInterestRate).div(100).div(12);
+  const payment = toDecimal(liability.monthlyPayment);
+  let nonAmortizing = false;
+  let termExhausted = false;
+  const events: ProjectionEvent[] = [
+    ...paymentEvents(liability, targetDate),
+    ...manualBalances.map(({ date, amount }) => ({ date, amount, type: 'manual' as const })),
+  ].toSorted((left, right) => {
+    const dateOrder = left.date.localeCompare(right.date);
+    if (dateOrder !== 0) return dateOrder;
+    return left.type === 'payment' ? -1 : 1;
+  });
+
+  for (const event of events) {
+    if (event.date < startDate && event.type === 'payment') continue;
+    if (event.type === 'manual') {
+      balance = toDecimal(event.amount);
+      nonAmortizing = false;
+      continue;
+    }
+    if (balance.lte(0)) continue;
+    const interest = balance.mul(rate);
+    if (payment.lte(interest)) nonAmortizing = true;
+    balance = Decimal.max(0, balance.plus(interest).minus(payment)).toDecimalPlaces(
+      4,
+      Decimal.ROUND_HALF_UP,
+    );
+    if (
+      liability.termMonths !== undefined &&
+      event.paymentNumber >= liability.termMonths &&
+      balance.gt(0)
+    ) {
+      termExhausted = true;
+    }
+  }
+
+  const status = termExhausted
+    ? 'invalid'
+    : balance.eq(0)
+      ? 'paid-off'
+      : nonAmortizing
+        ? 'non-amortizing'
+        : 'projected';
   return {
-    year: Number(yearText),
-    month: Math.max(0, Number(monthText) - 1),
+    date: targetDate,
+    year: target.getUTCFullYear(),
+    amount: canonicalMoney(balance),
+    source: 'projected',
+    status,
   };
+}
+
+function applyProjectionEvent(
+  liability: Liability,
+  state: ProjectionState,
+  event: ProjectionEvent,
+  rate: Decimal,
+  payment: Decimal,
+): void {
+  if (event.type === 'manual') {
+    state.balance = toDecimal(event.amount);
+    state.nonAmortizing = false;
+    return;
+  }
+  if (state.balance.lte(0)) return;
+  const interest = state.balance.mul(rate);
+  if (payment.lte(interest)) state.nonAmortizing = true;
+  state.balance = Decimal.max(0, state.balance.plus(interest).minus(payment)).toDecimalPlaces(
+    4,
+    Decimal.ROUND_HALF_UP,
+  );
+  if (
+    liability.termMonths !== undefined &&
+    event.paymentNumber >= liability.termMonths &&
+    state.balance.gt(0)
+  ) {
+    state.termExhausted = true;
+  }
+}
+
+export function projectLiabilityAtDates(
+  liability: Liability,
+  targetDates: readonly string[],
+  manualCutoff?: string,
+): LiabilityProjection[] {
+  const targets = [...new Set(targetDates)].toSorted();
+  const finalTarget = targets.at(-1);
+  if (!finalTarget) return [];
+  for (const target of targets) parseIsoDate(target);
+  const startDate = scheduleStart(liability);
+  const start = parseIsoDate(startDate);
+  const rate = toDecimal(liability.annualInterestRate).div(100).div(12);
+  const payment = toDecimal(liability.monthlyPayment);
+  const eligibleManuals = sortObservations(liability.manualBalances).filter(
+    ({ date }) => date <= finalTarget && (manualCutoff === undefined || date <= manualCutoff),
+  );
+  const events: ProjectionEvent[] = [
+    ...paymentEvents(liability, finalTarget),
+    ...eligibleManuals.map(({ date, amount }) => ({ date, amount, type: 'manual' as const })),
+  ].toSorted((left, right) => {
+    const dateOrder = left.date.localeCompare(right.date);
+    if (dateOrder !== 0) return dateOrder;
+    return left.type === 'payment' ? -1 : 1;
+  });
+  const exactManuals = new Map(eligibleManuals.map((value) => [value.date, value]));
+  const state: ProjectionState = {
+    balance: toDecimal(liability.principal),
+    nonAmortizing: false,
+    termExhausted: false,
+  };
+  let eventIndex = 0;
+  let hasManual = false;
+  const results = new Map<string, LiabilityProjection>();
+
+  for (const targetDate of targets) {
+    while (eventIndex < events.length && events[eventIndex]!.date <= targetDate) {
+      const event = events[eventIndex]!;
+      if (event.type === 'payment' && event.date < startDate) {
+        eventIndex += 1;
+        continue;
+      }
+      applyProjectionEvent(liability, state, event, rate, payment);
+      if (event.type === 'manual') hasManual = true;
+      eventIndex += 1;
+    }
+
+    const target = parseIsoDate(targetDate);
+    const exactManual = exactManuals.get(targetDate);
+    if (target < start && !hasManual) {
+      results.set(targetDate, {
+        date: targetDate,
+        year: target.getUTCFullYear(),
+        amount: '0',
+        source: 'projected',
+        status: 'projected',
+      });
+      continue;
+    }
+    const status = exactManual
+      ? state.balance.eq(0)
+        ? 'paid-off'
+        : 'actual'
+      : state.termExhausted
+        ? 'invalid'
+        : state.balance.eq(0)
+          ? 'paid-off'
+          : state.nonAmortizing
+            ? 'non-amortizing'
+            : 'projected';
+    results.set(targetDate, {
+      date: targetDate,
+      year: target.getUTCFullYear(),
+      amount: canonicalMoney(state.balance),
+      source: exactManual ? 'actual' : 'projected',
+      status,
+    });
+  }
+  return targetDates.map((targetDate) => results.get(targetDate)!);
 }
 
 export function projectLiability(
   liability: Liability,
-  { startYear, endYear }: ProjectionOptions,
+  { startYear, endYear, manualCutoff }: ProjectionOptions,
 ): LiabilityProjection[] {
   if (
     startYear < MIN_YEAR ||
@@ -31,99 +247,38 @@ export function projectLiability(
   ) {
     throw new Error('Projection range is invalid.');
   }
-
-  let balance = toDecimal(liability.principal);
-  const rate = toDecimal(liability.annualInterestRate).div(100).div(12);
-  const payment = toDecimal(liability.monthlyPayment);
-  const begins = startMonth(liability);
-  const manual = new Map(
-    liability.manualBalances.map((value) => [value.year, toDecimal(value.amount)]),
+  return projectLiabilityAtDates(
+    liability,
+    Array.from(
+      { length: endYear - startYear + 1 },
+      (_, index) => `${String(startYear + index).padStart(4, '0')}-12-31`,
+    ),
+    manualCutoff,
   );
-  const projections: LiabilityProjection[] = [];
-  let elapsedMonths = 0;
-  let nonAmortizing = false;
-  let invalid = false;
-  const earliestManualYear = liability.manualBalances.reduce(
-    (earliest, value) => Math.min(earliest, value.year),
-    begins.year,
-  );
-  const simulationStartYear = Math.min(begins.year, earliestManualYear);
-
-  for (let year = simulationStartYear; year <= endYear; year += 1) {
-    if (year < begins.year) {
-      const historical = manual.get(year);
-      if (historical) {
-        projections.push({
-          year,
-          amount: canonicalMoney(historical),
-          source: 'actual',
-          status: historical.eq(0) ? 'paid-off' : 'actual',
-        });
-      }
-      continue;
-    }
-
-    for (let month = 0; month < 12; month += 1) {
-      if (year < begins.year || (year === begins.year && month < begins.month)) continue;
-      if (balance.lte(0)) break;
-      if (liability.termMonths !== undefined && elapsedMonths >= liability.termMonths) {
-        invalid = balance.gt(0);
-        break;
-      }
-
-      const interest = balance.mul(rate);
-      if (payment.lte(interest) && balance.gt(0)) nonAmortizing = true;
-      balance = Decimal.max(0, balance.plus(interest).minus(payment)).toDecimalPlaces(
-        4,
-        Decimal.ROUND_HALF_UP,
-      );
-      elapsedMonths += 1;
-    }
-
-    const actual = manual.get(year);
-    if (actual) {
-      balance = actual;
-      projections.push({
-        year,
-        amount: canonicalMoney(balance),
-        source: 'actual',
-        status: balance.eq(0) ? 'paid-off' : 'actual',
-      });
-      nonAmortizing = false;
-      invalid = false;
-      continue;
-    }
-
-    const status = invalid
-      ? 'invalid'
-      : balance.eq(0)
-        ? 'paid-off'
-        : nonAmortizing
-          ? 'non-amortizing'
-          : 'projected';
-    projections.push({
-      year,
-      amount: canonicalMoney(balance),
-      source: 'projected',
-      status,
-    });
-  }
-
-  return projections.filter(({ year }) => year >= startYear);
 }
 
 export function projectionHorizon(liability: Liability): number {
-  const begins = startMonth(liability);
-  if (liability.termMonths !== undefined) {
-    return Math.min(
-      MAX_YEAR,
-      begins.year + Math.floor((begins.month + liability.termMonths - 1) / 12),
-    );
-  }
-  const maximum = Math.min(MAX_YEAR, begins.year + 50);
-  const payoff = projectLiability(liability, {
-    startYear: begins.year,
-    endYear: maximum,
-  }).find(({ status }) => status === 'paid-off');
-  return payoff?.year ?? maximum;
+  const startYear = Number(scheduleStart(liability).slice(0, 4));
+  if (startYear < MIN_YEAR || startYear > MAX_YEAR) throw new Error('Projection range is invalid.');
+  const latestManualYear = liability.manualBalances.reduce(
+    (latest, { date }) => Math.max(latest, Number(date.slice(0, 4))),
+    startYear,
+  );
+  const maximum = Math.min(
+    MAX_YEAR,
+    Math.max(
+      startYear + 50,
+      latestManualYear + 50,
+      liability.termMonths === undefined
+        ? startYear
+        : startYear + Math.ceil(liability.termMonths / 12),
+    ),
+  );
+  const projections = projectLiability(liability, { startYear, endYear: maximum });
+  return (
+    projections.find(({ year, status }) => year >= latestManualYear && status === 'paid-off')
+      ?.year ??
+    projections.findLast(({ year }) => year >= latestManualYear)?.year ??
+    latestManualYear
+  );
 }

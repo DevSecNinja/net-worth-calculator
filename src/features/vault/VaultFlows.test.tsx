@@ -78,7 +78,11 @@ describe('vault lifecycle', () => {
     await user.click(screen.getByRole('button', { name: /create with sample data/i }));
     expect(await screen.findByRole('heading', { name: /net worth dashboard/i })).toBeVisible();
     await user.click(screen.getByRole('link', { name: /assets/i }));
-    expect(await screen.findByRole('heading', { name: /sample emergency fund/i })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: /everyday checking/i })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /emergency savings/i })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /broad-market index fund/i })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /retirement account/i })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /^home$/i })).toBeVisible();
   });
 
   it('closes destructive confirmation when the writable lease is lost', async () => {
@@ -111,5 +115,35 @@ describe('vault lifecycle', () => {
       ).not.toBeInTheDocument(),
     );
     expect(screen.getByRole('heading', { name: /vault settings are locked/i })).toBeVisible();
+  });
+
+  it('clears passphrases and destructive confirmation whenever dialogs close', async () => {
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <App />
+      </AppProviders>,
+    );
+    await screen.findByRole('heading', { name: /create your encrypted vault/i });
+    await user.type(screen.getByLabelText(/^passphrase$/i), 'correct horse battery staple');
+    await user.type(screen.getByLabelText(/confirm passphrase/i), 'correct horse battery staple');
+    await user.click(screen.getByRole('button', { name: /create empty vault/i }));
+    await screen.findByRole('heading', { name: /build your first net worth snapshot/i });
+    await user.click(screen.getByRole('link', { name: /settings/i }));
+
+    await user.click(screen.getByRole('button', { name: /^change passphrase$/i }));
+    await user.type(screen.getByLabelText(/current passphrase/i), 'sensitive current phrase');
+    await user.type(screen.getByLabelText(/new passphrase/i), 'sensitive replacement phrase');
+    await user.click(screen.getByRole('button', { name: /close change passphrase/i }));
+    await user.click(screen.getByRole('button', { name: /^change passphrase$/i }));
+    expect(screen.getByLabelText(/current passphrase/i)).toHaveValue('');
+    expect(screen.getByLabelText(/new passphrase/i)).toHaveValue('');
+    await user.click(screen.getByRole('button', { name: /close change passphrase/i }));
+
+    await user.click(screen.getByRole('button', { name: /delete vault/i }));
+    await user.type(screen.getByLabelText(/type delete/i), 'DELETE');
+    await user.click(screen.getByRole('button', { name: /close delete encrypted vault/i }));
+    await user.click(screen.getByRole('button', { name: /delete vault/i }));
+    expect(screen.getByLabelText(/type delete/i)).toHaveValue('');
   });
 });

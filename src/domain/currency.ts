@@ -38,12 +38,57 @@ export function formatMoney(
   currency: string,
   locale: string = 'system',
 ): string {
-  const formatter = new Intl.NumberFormat(locale === 'system' ? undefined : locale, {
+  const resolvedLocale = locale === 'system' ? undefined : locale;
+  const formatter = new Intl.NumberFormat(resolvedLocale, {
     style: 'currency',
     currency,
     currencyDisplay: 'symbol',
   });
-  return formatter.format(toDecimal(value).toNumber());
+  const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
+  const rounded = toDecimal(value).toDecimalPlaces(fractionDigits, Decimal.ROUND_HALF_UP);
+  const negative = rounded.isNegative() && !rounded.isZero();
+  const [integer = '0', fraction = ''] = rounded.abs().toFixed(fractionDigits).split('.');
+  const groupedInteger = new Intl.NumberFormat(resolvedLocale, {
+    maximumFractionDigits: 0,
+    useGrouping: true,
+  }).format(BigInt(integer));
+  const localizedFraction =
+    fractionDigits > 0
+      ? new Intl.NumberFormat(resolvedLocale, {
+          minimumFractionDigits: fractionDigits,
+          maximumFractionDigits: fractionDigits,
+          useGrouping: false,
+        })
+          .formatToParts(Number(`0.${fraction}`))
+          .find(({ type }) => type === 'fraction')?.value
+      : undefined;
+  const decimalSeparator =
+    fractionDigits > 0
+      ? new Intl.NumberFormat(resolvedLocale, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+          useGrouping: false,
+        })
+          .formatToParts(1.1)
+          .find(({ type }) => type === 'decimal')?.value
+      : undefined;
+  const exactNumber =
+    fractionDigits > 0
+      ? `${groupedInteger}${decimalSeparator ?? '.'}${localizedFraction ?? fraction}`
+      : groupedInteger;
+  let insertedNumber = false;
+
+  return formatter
+    .formatToParts(negative ? -1 : 1)
+    .map((part) => {
+      if (['integer', 'group', 'decimal', 'fraction'].includes(part.type)) {
+        if (insertedNumber) return '';
+        insertedNumber = true;
+        return exactNumber;
+      }
+      return part.value;
+    })
+    .join('');
 }
 
 export function formatPercent(value: string | Decimal, locale: string = 'system'): string {

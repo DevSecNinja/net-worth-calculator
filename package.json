@@ -24,6 +24,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "npm run build && playwright test",
     "test:e2e:headed": "npm run build && playwright test --headed",
+    "test:performance": "npm run build && playwright test --config playwright.performance.config.ts",
     "test:privacy": "npm run build && playwright test tests/privacy",
     "test:pwa": "npm run build && playwright test tests/pwa",
     "typecheck": "tsc -b --pretty false"

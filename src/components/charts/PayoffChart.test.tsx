@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import type { Liability, LiabilityProjection } from '@/domain/model';
 
@@ -52,15 +53,33 @@ const projections = new Map<string, LiabilityProjection[]>([
   [
     'mortgage',
     [
-      { year: 2026, amount: '190000', source: 'actual', status: 'actual' },
-      { year: 2027, amount: '178000', source: 'projected', status: 'projected' },
+      { date: '2026-12-31', year: 2026, amount: '190000', source: 'actual', status: 'actual' },
+      {
+        date: '2027-12-31',
+        year: 2027,
+        amount: '178000',
+        source: 'projected',
+        status: 'projected',
+      },
     ],
   ],
-  ['loan', [{ year: 2027, amount: '4000', source: 'projected', status: 'projected' }]],
+  [
+    'loan',
+    [
+      {
+        date: '2027-12-31',
+        year: 2027,
+        amount: '4000',
+        source: 'projected',
+        status: 'projected',
+      },
+    ],
+  ],
 ]);
 
 describe('PayoffChart', () => {
-  it('uses null chart gaps for missing balances and exposes exactly equivalent table values', () => {
+  it('uses null chart gaps for missing balances and exposes exactly equivalent table values', async () => {
+    const user = userEvent.setup();
     render(
       <PayoffChart
         liabilities={liabilities}
@@ -71,19 +90,32 @@ describe('PayoffChart', () => {
     );
 
     expect(JSON.parse(screen.getByTestId('payoff-chart').dataset.series ?? '')).toEqual([
-      { year: 2026, mortgage: 190000, loan: null },
-      { year: 2027, mortgage: 178000, loan: 4000 },
+      {
+        year: 2026,
+        mortgage: 190000,
+        mortgageExact: '190000',
+        loan: null,
+        loanExact: null,
+      },
+      {
+        year: 2027,
+        mortgage: 178000,
+        mortgageExact: '178000',
+        loan: 4000,
+        loanExact: '4000',
+      },
     ]);
 
+    await user.click(screen.getByText(/view liability payoff data table/i));
     const rows = within(
       screen.getByRole('table', { name: /liability payoff balances by calendar year/i }),
     ).getAllByRole('row');
     expect(rows).toHaveLength(3);
     expect(rows[1]).toHaveTextContent('2026');
-    expect(rows[1]).toHaveTextContent('$190,000.00 (actual, actual)');
-    expect(rows[1]).toHaveTextContent('Not available');
+    expect(rows[1]).toHaveTextContent('$190,000.00 (Actual, Actual)');
+    expect(rows[1]).toHaveTextContent('Unavailable');
     expect(rows[1]).not.toHaveTextContent('$0.00');
-    expect(rows[2]).toHaveTextContent('$178,000.00 (projected, projected)');
-    expect(rows[2]).toHaveTextContent('$4,000.00 (projected, projected)');
+    expect(rows[2]).toHaveTextContent('$178,000.00 (Projected, Projected)');
+    expect(rows[2]).toHaveTextContent('$4,000.00 (Projected, Projected)');
   });
 });

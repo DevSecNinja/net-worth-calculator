@@ -8,20 +8,22 @@
 
 Build a static, local-first React PWA in which an in-memory vault document is serialized and
 encrypted with AES-256-GCM before every IndexedDB write. A passphrase-derived PBKDF2-SHA-256 key is
-never persisted. Pure domain modules provide deterministic money, amortization, and yearly
-aggregation. A responsive accessible shell provides vault, inventory, dashboard, backup, settings,
-and privacy views. Vite emits a content-hashed GitHub Pages artifact, while `vite-plugin-pwa`
-generates a revisioned Workbox service worker with prompt-based updates and no user-data caching.
+never persisted. Pure domain modules provide deterministic localized money parsing, exact-date
+observations, amortization, exact As of snapshots, timelines, and December 31 aggregation. A typed
+in-repository catalog localizes the complete accessible shell into English (US), English (UK), and
+Nederlands. Vite emits a content-hashed GitHub Pages artifact, while `vite-plugin-pwa` generates a
+revisioned Workbox service worker with prompt-based updates and no user-data caching.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x in strict mode, ECMAScript 2023, Node.js 24 LTS
+**Language/Version**: TypeScript 6.x in strict mode, ECMAScript 2023, Node.js 24 LTS
 
 **Primary Dependencies**: React 19; React Router with `HashRouter`; Zod; idb; decimal.js; Recharts;
 vite-plugin-pwa/Workbox. Exact versions are locked in `package-lock.json`.
 
 **Storage**: IndexedDB containing one versioned encrypted vault envelope; localStorage contains only
-non-sensitive theme and tab-lease metadata; Cache Storage contains only generated app-shell assets.
+non-sensitive theme, explicit locale override, tab lease, and cross-tab dirty-state metadata; Cache
+Storage contains only generated app-shell assets.
 
 **Testing**: Vitest, React Testing Library, user-event, fake-indexeddb, Playwright for Chromium,
 Firefox, WebKit, mobile Chromium and mobile WebKit, plus axe-core browser assertions.
@@ -37,7 +39,8 @@ checks throttled to at most one network request per hour except initial/manual c
 
 **Constraints**: No server, hosted database, analytics, telemetry, remote assets, runtime CDN,
 unsafe HTML, eval, secret persistence, or financial values in logs/URLs/cache/network. Offline after
-first load. One writable tab. GitHub Pages subpath. WCAG 2.2 AA intent.
+first load. One writable tab. GitHub Pages subpath. WCAG 2.2 AA intent. Locale changes are
+presentation-only; canonical encrypted amounts and dates are invariant.
 
 **Scale/Scope**: One active vault, up to 500 items, up to 301 supported years (1900-2200), and
 portable encrypted backups capped at 10 MiB.
@@ -46,13 +49,13 @@ portable encrypted backups capped at 10 MiB.
 
 _GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design._
 
-| Principle                           | Pre-research gate                                                     | Post-design evidence                                                                                  |
-| ----------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Local-First Privacy                 | PASS: no runtime service or external asset is planned                 | Network/cache contracts forbid user-data and external requests; privacy E2E is mandatory              |
-| Encrypt Every Persisted Vault       | PASS: only a versioned cipher envelope enters storage                 | Data model specifies AES-GCM envelope, PBKDF2 parameters, AAD, migrations, and memory-only keys       |
-| Deterministic Financial Correctness | PASS: domain functions are isolated from UI/storage                   | Money, amortization, yearly aggregation, and dashboard derivations have pure contracts and vectors    |
-| Accessible and Resilient            | PASS: all visualizations require tables and all core flows are tested | UI/PWA contract covers focus, status, reflow, reduced motion, safe areas, offline, and updates        |
-| Verification and Release Integrity  | PASS: the requested gates are first-class tasks                       | CI/release design includes strict checks, multi-browser E2E, pinned workflows, version/build identity |
+| Principle                           | Pre-research gate                                                     | Post-design evidence                                                                                         |
+| ----------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Local-First Privacy                 | PASS: no runtime service or external asset is planned                 | Network/cache contracts forbid user-data and external requests; privacy E2E is mandatory                     |
+| Encrypt Every Persisted Vault       | PASS: only a versioned cipher envelope enters storage                 | Data model specifies AES-GCM envelope, PBKDF2 parameters, AAD, strict version handling, and memory-only keys |
+| Deterministic Financial Correctness | PASS: domain functions are isolated from UI/storage                   | Money, amortization, yearly aggregation, and dashboard derivations have pure contracts and vectors           |
+| Accessible and Resilient            | PASS: all visualizations require tables and all core flows are tested | UI/PWA contract covers focus, status, reflow, reduced motion, safe areas, offline, and updates               |
+| Verification and Release Integrity  | PASS: the requested gates are first-class tasks                       | CI/release design includes strict checks, multi-browser E2E, pinned workflows, version/build identity        |
 
 No constitution violations require justification.
 
@@ -103,6 +106,7 @@ src/
 │   ├── aggregation.ts
 │   ├── amortization.ts
 │   ├── currency.ts
+│   ├── observations.ts
 │   ├── migrations.ts
 │   ├── model.ts
 │   └── validation.ts
@@ -113,6 +117,7 @@ src/
 │   ├── inventory/
 │   ├── onboarding/
 │   ├── settings/
+│   ├── locale/
 │   └── vault/
 ├── hooks/
 ├── pwa/
@@ -148,7 +153,7 @@ validation, encrypted repository boundaries, test utilities, and the responsive 
 ### Phase 1 - Private Vault MVP
 
 Deliver onboarding, vault creation/unlock/lock/change/delete, IndexedDB ciphertext-only persistence,
-single-tab lease, sample data opt-in, and crypto/storage/migration tests.
+single-tab lease, sample data opt-in, and crypto/storage/version-compatibility tests.
 
 ### Phase 2 - Financial Inventory and Insights
 
@@ -160,6 +165,13 @@ tables, time filters, empty/incomplete states, and all calculation/component tes
 Deliver encrypted import/export and capability fallbacks, currency/theme/security settings,
 About/privacy, manifest/icons, generated service worker, install/offline/update UI, and N-to-N+1
 cache/update tests.
+
+### Phase 3A - Locale and Exact-Date Amendment
+
+Deliver a complete typed catalog for `en-US`, `en-GB`, and `nl-NL`; deterministic browser
+negotiation and explicit override; localized money parsing/blur formatting with currency context;
+the initial public dated-observation schema; exact-date liability projections; As of dashboard,
+timeline, annual snapshots, source/staleness semantics, and Dutch/browser round-trip coverage.
 
 ### Phase 4 - Repository, Release, and Deployment
 

@@ -44,10 +44,12 @@ preview command from this repository, never an unpinned external server package.
 
 1. Start with cleared site storage.
 2. Create a vault using a unique marker passphrase.
-3. Explicitly choose sample data or create one asset and one liability manually.
-4. Enter at least two non-contiguous asset years and a zero-rate liability.
-5. Verify the missing asset year is marked incomplete and the liability reaches zero without a
-   negative projected balance.
+3. Explicitly choose the localized sample portfolio or create one asset and one liability manually.
+4. For the sample path, verify five asset categories, three declining liabilities, four prior
+   year-ends, a prior mid-year observation, and today's observation with no future dates.
+5. For the manual path, enter non-contiguous exact dates and a zero-rate liability; verify a target
+   before the first observation is incomplete, a later observation carries forward, and debt never
+   projects below zero.
 6. Lock, reload, reject a wrong passphrase, unlock correctly, change the passphrase, and verify the
    old passphrase fails.
 
@@ -73,8 +75,8 @@ serious or critical violations.
 3. Attempt empty, oversized, malformed, tampered, future-version, and wrong-passphrase imports.
 4. Import a valid backup, cancel overwrite, then repeat and confirm overwrite.
 
-**Expected**: All failures and cancellation preserve the current envelope. The valid confirmed
-import round-trips every field and migration output.
+**Expected**: All failures and cancellation preserve the current envelope. The valid current-format
+import round-trips every field, while unsupported pre-release formats fail safely.
 
 ## Scenario 4 - Real Offline and Deep Links
 
@@ -107,6 +109,25 @@ Run `npm run test:privacy`. The suite enters unique marker financial data and fa
 - any mutating request, beacon, WebSocket, or EventSource;
 - marker data in requests, URLs, logs, service-worker messages, web storage, or Cache Storage;
 - any remote font, CDN, analytics, telemetry, or GitHub API request.
+
+## Scenario 7 - Locale and Exact-Date Amendment
+
+1. Clear only the language override and launch with `nl-NL`, UK English, and an unsupported browser
+   language; verify negotiated language and `<html lang>`.
+2. Enter equivalent `1,234.56`, `1 234.56`, and `1.234,56` amounts in their supported locales; verify
+   identical canonical encrypted values and JPY fraction rejection.
+3. Record two asset observations and two liability manual balances in one year, including July.
+4. Move As of before, between, and after observations and verify no future leakage, source dates,
+   staleness, asset carry-forward, and liability amortization.
+5. Compare the December 31 annual table with the exact timeline.
+6. Export and import current dated fixtures; verify canonical decimal strings and exact dates
+   round-trip unchanged while unsupported pre-release formats fail without replacing local data.
+7. Run `npm run test:performance`; verify a dense encrypted 100-item, 50-year vault unlocks through
+   initial dashboard readiness within two seconds on the isolated desktop Chromium profile.
+
+**Expected**: The complete UI is translated in all three locales, language changes never alter
+currency/value, dated chart and table data agree, current-format backups preserve every observation,
+and unsupported formats are rejected.
 
 ## Production Artifact
 

@@ -64,7 +64,7 @@ test('surfaces native save cancellation and keeps the fallback app usable', asyn
   await createVault(page);
   await page.getByRole('link', { name: /backup/i }).click();
   await page.getByRole('button', { name: /save encrypted backup/i }).click();
-  await expect(page.getByRole('alert')).toContainText(/backup save was cancelled/i);
+  await expect(page.getByRole('alert')).toContainText(/file operation was cancelled/i);
   await expect(page.getByRole('heading', { name: /encrypted backup/i })).toBeVisible();
 });
 

@@ -30,7 +30,7 @@ Inclusive ranges such as `FR-007-FR-013` cover every requirement in that range.
 | FR-007-FR-013 inventory and calculations     | Yes       | T009-T011, T028-T036              | Types, decimal money, amortization, CRUD, reorder, forms                     |
 | FR-014-FR-018 dashboard and completeness     | Yes       | T037-T043                         | Pure aggregation, shared ranges, all chart/table views and empty states      |
 | FR-019-FR-020 currency and theme             | Yes       | T010-T011, T049-T052              | Formatting, currency confirmation, no-flash and live System mode             |
-| FR-021-FR-024 encrypted backup               | Yes       | T012-T013, T044-T048              | Format, migration, native/fallback files, validate-before-overwrite          |
+| FR-021-FR-024 encrypted backup               | Yes       | T012-T013, T044-T048              | Format compatibility, native/fallback files, validate-before-overwrite       |
 | FR-025-FR-029 offline/install/update         | Yes       | T004, T020, T054-T060             | Generated Workbox shell, update lifecycle, dirty state, real outage          |
 | FR-030 build identity                        | Yes       | T004, T050, T053-T054, T057       | Package version, exact SHA, About/footer and N-to-N+1 proof                  |
 | FR-031 zero-transmission privacy             | Yes       | T063, T067, T070, T074            | Browser instrumentation is an explicit CI gate                               |
@@ -46,7 +46,7 @@ Inclusive ranges such as `FR-007-FR-013` cover every requirement in that range.
 | Principle                                | Status | Evidence                                                                                        |
 | ---------------------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
 | I. Local-First Privacy                   | PASS   | No runtime service exists; browser contract and T063 fail on external or sensitive transmission |
-| II. Encrypt Every Persisted Vault        | PASS   | Whole-document AES-GCM/PBKDF2 envelope, memory-only key, migration and tamper tasks             |
+| II. Encrypt Every Persisted Vault        | PASS   | Whole-document AES-GCM/PBKDF2 envelope, memory-only key, version-rejection and tamper tasks     |
 | III. Deterministic Financial Correctness | PASS   | Decimal money plus isolated amortization/aggregation vectors precede UI tasks                   |
 | IV. Accessible and Resilient             | PASS   | Semantic tables, focus/reflow/motion requirements, built-output offline/update tests            |
 | V. Verification and Release Integrity    | PASS   | Locked dependencies, full-SHA workflow callers, 78 traceable tasks and release gates            |
@@ -85,3 +85,68 @@ Inclusive ranges such as `FR-007-FR-013` cover every requirement in that range.
 All constitution gates pass, every requirement and measurable outcome has implementation and
 validation coverage, and all reviewer-owned checklists are complete. Implementation may proceed in
 the dependency order defined by `tasks.md`.
+
+## Locale and Exact-Date Amendment Analysis: 2026-09-04
+
+The amended specification, plan, data model, contracts, tasks, implementation, and validation were
+re-analyzed after implementation.
+
+| ID | Category            | Severity | Location(s)                           | Summary                                                                                                                                                                                     | Recommendation                |
+| -- | ------------------- | -------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| A1 | Amendment alignment | None     | FR-038-FR-049, SC-013-SC-018, US8-US9 | Typed localization, canonical localized input, exact observations, As of snapshots, timeline/annual views, backup round-trip, and privacy/accessibility tests are implemented and traceable | Proceed to release validation |
+
+- **Functional requirements checked**: 49
+- **Success criteria checked**: 18
+- **User stories checked**: 9
+- **Tasks checked**: 101
+- **Amendment requirement coverage**: 100%
+- **Constitution conflicts**: 0
+- **Unresolved clarification markers**: 0
+- **New convergence findings**: 0
+
+**Convergence result**: The locale and exact-date amendment satisfies the specification, plan,
+contracts, and constitution. No additional convergence phase or tasks are required.
+
+## Final Convergence Analysis: 2026-09-04
+
+The final pass reconciled superseded year-only and prototype-migration wording, updated the toolchain
+version, and found one missing buildable success-criterion check.
+
+| ID | Category      | Severity | Location(s)                                                         | Resolution                                                                                                          |
+| -- | ------------- | -------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| C1 | Inconsistency | High     | US2, FR-008-FR-012, FR-018, FR-044-FR-049                           | Replaced stale year-only language with exact-date observation, eligibility, carry-forward, and projection semantics |
+| C2 | Inconsistency | Medium   | US4/AC5, FR-022, plan.md, data-model.md, research.md, quickstart.md | Aligned all artifacts to the initial production dated format and safe rejection of unsupported pre-release formats  |
+| C3 | Inconsistency | Low      | plan.md technical context                                           | Updated the planned strict TypeScript version from 5.x to the installed 6.x line                                    |
+| C4 | Coverage      | High     | SC-005, T102                                                        | Added and passed a production-browser 100-item/50-year unlock-to-dashboard performance gate                         |
+
+- **Functional requirements checked**: 49
+- **Success criteria checked**: 18
+- **User stories checked**: 9
+- **Tasks checked**: 102
+- **Implemented tasks complete**: 97
+- **Release tasks pending**: 5
+- **Requirement coverage**: 100%
+- **Constitution conflicts**: 0
+- **Unresolved clarification markers**: 0
+- **Open convergence findings**: 0
+
+**Final result**: The implementation and release artifacts are internally consistent. Only the
+explicit PR, repository configuration, release, and deployment tasks T076-T078 and T100-T101 remain.
+
+## Sample Portfolio Amendment Analysis: 2026-09-04
+
+The explicit sample-data requirement now traces through a localized, deterministic household
+portfolio rather than a minimal placeholder fixture.
+
+| ID | Category | Severity | Location(s)               | Resolution                                                                                                                                                                                  |
+| -- | -------- | -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1 | Coverage | None     | FR-006, SC-019, T103-T104 | Five asset categories, three declining liabilities, exact dated history, current-date and no-future bounds, localization-at-creation, and useful dashboard views are implemented and tested |
+
+- **Functional requirements checked**: 49
+- **Success criteria checked**: 19
+- **Tasks checked**: 104
+- **Implemented tasks complete**: 99
+- **Release tasks pending**: 5
+- **Requirement coverage**: 100%
+- **Constitution conflicts**: 0
+- **Open convergence findings**: 0

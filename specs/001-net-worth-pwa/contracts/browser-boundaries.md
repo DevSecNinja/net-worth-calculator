@@ -41,7 +41,7 @@ deletion have the same memory-clearing effect.
 
 ## Import Contract
 
-Parsing, shape validation, authentication, plaintext validation, and migration happen before
+Parsing, shape validation, version compatibility, authentication, and plaintext validation happen before
 overwrite confirmation and before any write transaction. The repository never attempts partial
 recovery from unauthenticated bytes. Cancellation and every failure preserve the exact current
 envelope.

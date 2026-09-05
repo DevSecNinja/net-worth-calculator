@@ -1,3 +1,5 @@
+import { useLocale } from '@/features/locale/LocaleProvider';
+
 export function RangeFilter({
   years,
   startYear,
@@ -9,11 +11,12 @@ export function RangeFilter({
   endYear: number;
   onChange: (start: number, end: number) => void;
 }) {
+  const { t } = useLocale();
   return (
     <fieldset className="range-filter">
-      <legend>Dashboard time range</legend>
+      <legend>{t('dashboard.range')}</legend>
       <label>
-        From
+        {t('dashboard.from')}
         <select
           value={startYear}
           onChange={(event) => onChange(Number(event.currentTarget.value), endYear)}
@@ -28,7 +31,7 @@ export function RangeFilter({
         </select>
       </label>
       <label>
-        To
+        {t('dashboard.to')}
         <select
           value={endYear}
           onChange={(event) => onChange(startYear, Number(event.currentTarget.value))}

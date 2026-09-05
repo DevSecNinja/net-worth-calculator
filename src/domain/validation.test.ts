@@ -8,7 +8,7 @@ describe('vault validation boundaries', () => {
         asset({
           values: [
             {
-              year: 2026,
+              date: '2026-12-31',
               amount: '999999999999.99',
               updatedAt: '2026-01-01T00:00:00.000Z',
             },
@@ -21,7 +21,7 @@ describe('vault validation boundaries', () => {
         asset({
           values: [
             {
-              year: 2026,
+              date: '2026-12-31',
               amount: '1000000000000',
               updatedAt: '2026-01-01T00:00:00.000Z',
             },
@@ -34,7 +34,7 @@ describe('vault validation boundaries', () => {
         asset({
           values: [
             {
-              year: 2026,
+              date: '2026-12-31',
               amount: '1.234',
               updatedAt: '2026-01-01T00:00:00.000Z',
             },
@@ -49,7 +49,7 @@ describe('vault validation boundaries', () => {
     expect(
       vaultSchema.safeParse(
         vault({
-          settings: { baseCurrency: 'USD', locale: 'en-US', createdWithSampleData: false },
+          settings: { baseCurrency: 'USD', createdWithSampleData: false },
           assets: [{ ...holding, values: [{ ...holding.values[0]!, amount: '1.23' }] }],
         }),
       ).success,
@@ -57,29 +57,18 @@ describe('vault validation boundaries', () => {
     expect(
       vaultSchema.safeParse(
         vault({
-          settings: { baseCurrency: 'JPY', locale: 'ja-JP', createdWithSampleData: false },
+          settings: { baseCurrency: 'JPY', createdWithSampleData: false },
           assets: [{ ...holding, values: [{ ...holding.values[0]!, amount: '1.23' }] }],
         }),
       ).success,
     ).toBe(false);
   });
 
-  it('rejects invalid locales and non-dense collection order', () => {
-    expect(
-      vaultSchema.safeParse(
-        vault({
-          settings: {
-            baseCurrency: 'USD',
-            locale: 'not a locale!',
-            createdWithSampleData: false,
-          },
-        }),
-      ).success,
-    ).toBe(false);
+  it('rejects non-dense collection order', () => {
     expect(vaultSchema.safeParse(vault({ assets: [asset({ order: 2 })] })).success).toBe(false);
   });
 
-  it('enforces custom types and unique asset years', () => {
+  it('enforces custom types and unique, chronological asset observations', () => {
     expect(assetSchema.safeParse(asset({ type: 'custom', customType: undefined })).success).toBe(
       false,
     );
@@ -91,9 +80,15 @@ describe('vault validation boundaries', () => {
     expect(
       assetSchema.safeParse({ ...holding, values: [holding.values[0], holding.values[0]] }).success,
     ).toBe(false);
+    expect(
+      assetSchema.safeParse({
+        ...holding,
+        values: [holding.values[0], { ...holding.values[0]!, date: '2026-07-15' }],
+      }).success,
+    ).toBe(false);
   });
 
-  it('enforces liability custom types, unique balances, and positive payments', () => {
+  it('enforces liability custom types, sorted unique balances, and positive payments', () => {
     expect(
       liabilitySchema.safeParse(liability({ type: 'custom', customType: undefined })).success,
     ).toBe(false);
@@ -101,7 +96,9 @@ describe('vault validation boundaries', () => {
       liabilitySchema.safeParse(liability({ type: 'mortgage', customType: 'Unexpected' })).success,
     ).toBe(false);
     const debt = liability({
-      manualBalances: [{ year: 2026, amount: '100', updatedAt: '2026-01-01T00:00:00.000Z' }],
+      manualBalances: [
+        { date: '2026-12-31', amount: '100', updatedAt: '2026-01-01T00:00:00.000Z' },
+      ],
     });
     expect(liabilitySchema.safeParse(debt).success).toBe(true);
     expect(
@@ -111,11 +108,23 @@ describe('vault validation boundaries', () => {
       }).success,
     ).toBe(false);
     expect(
+      liabilitySchema.safeParse({
+        ...debt,
+        manualBalances: [
+          debt.manualBalances[0],
+          { ...debt.manualBalances[0]!, date: '2026-07-15' },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
       liabilitySchema.safeParse(liability({ principal: '10', monthlyPayment: '0' })).success,
     ).toBe(false);
     expect(
       liabilitySchema.safeParse(liability({ principal: '0', monthlyPayment: '0' })).success,
     ).toBe(true);
+    expect(liabilitySchema.safeParse(liability({ termMonths: 0 })).success).toBe(false);
+    expect(liabilitySchema.safeParse(liability({ startDate: '1800-01-01' })).success).toBe(false);
+    expect(liabilitySchema.safeParse(liability({ startDate: '2300-01-01' })).success).toBe(false);
   });
 
   it('rejects duplicate item identities and excessive vault size', () => {

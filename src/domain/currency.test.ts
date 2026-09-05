@@ -16,5 +16,6 @@ describe('currency helpers', () => {
   it('uses locale-aware currency formatting', () => {
     expect(formatMoney('1234.5', 'EUR', 'de-DE')).toMatch(/1\.234,50\s?€/);
     expect(formatMoney('1234.5', 'JPY', 'ja-JP')).toContain('1,235');
+    expect(formatMoney('498999999999995.01', 'USD', 'en-US')).toBe('$498,999,999,999,995.01');
   });
 });

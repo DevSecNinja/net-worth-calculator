@@ -4,6 +4,8 @@
 
 - All persisted application data is one UTF-8 JSON vault document encrypted as one AES-GCM
   ciphertext. IndexedDB never stores the entities below separately.
+- Plaintext vault serialization is capped at 7 MiB before encryption so its authenticated portable
+  envelope remains below the 10 MiB import limit.
 - Identifiers are random UUID strings. Dates are ISO `YYYY-MM-DD`; timestamps are ISO UTC strings;
   calendar years are integers from 1900 through 2200.
 - Money is a canonical non-negative decimal string with no grouping separator, exponent, sign, or
@@ -11,8 +13,9 @@
   currency.
 - Percent rates are canonical decimal strings from `0` through `100`. User-entered text is trimmed;
   notes are capped at 2,000 characters and names/types at 100.
-- Unknown fields are rejected at import trust boundaries. Migrations explicitly transform one known
-  schema version at a time before current-schema validation.
+- Unknown fields are rejected at import trust boundaries. The initial release accepts only the
+  current dated schema and backup format; future supported migrations must transform one known
+  version at a time before current-schema validation.
 
 ## Persisted Cipher Envelope
 
@@ -20,7 +23,7 @@
 interface CipherEnvelopeV1 {
   format: 'net-worth-vault';
   formatVersion: 1;
-  vaultSchemaVersion: 1;
+  vaultSchemaVersion: 2;
   kdf: {
     name: 'PBKDF2';
     hash: 'SHA-256';
@@ -44,7 +47,7 @@ count, currency, financial value, passphrase verifier, hint, or source filename.
 
 | Field           | Type          | Rules                                                 |
 | --------------- | ------------- | ----------------------------------------------------- |
-| `schemaVersion` | `1`           | Migrated independently from envelope format           |
+| `schemaVersion` | `2`           | Initial production schema for dated observations      |
 | `id`            | UUID          | Created once; encrypted                               |
 | `revision`      | integer       | Starts at 1; increments after each committed mutation |
 | `createdAt`     | ISO timestamp | Immutable                                             |
@@ -68,34 +71,33 @@ or lost lease. Failed transitions never replace the previous envelope.
 
 ## VaultSettings
 
-| Field                   | Type                 | Rules                                                 |
-| ----------------------- | -------------------- | ----------------------------------------------------- |
-| `baseCurrency`          | ISO 4217 string      | Exactly one; default inferred locally, fallback `USD` |
-| `locale`                | string or `"system"` | Formatting only; no remote lookup                     |
-| `createdWithSampleData` | boolean              | True only after explicit action                       |
+| Field                   | Type            | Rules                                                 |
+| ----------------------- | --------------- | ----------------------------------------------------- |
+| `baseCurrency`          | ISO 4217 string | Exactly one; default inferred locally, fallback `USD` |
+| `createdWithSampleData` | boolean         | True only after explicit action                       |
 
 Changing currency reinterprets stored numeric amounts; it does not convert them. The confirmation
 must state this explicitly.
 
 ## Asset
 
-| Field                    | Type                         | Rules                           |
-| ------------------------ | ---------------------------- | ------------------------------- |
-| `id`                     | UUID                         | Unique within vault             |
-| `order`                  | integer                      | Dense order within assets       |
-| `classification`         | `"current"` or `"long-term"` | Required                        |
-| `type`                   | AssetType                    | Required built-in or `"custom"` |
-| `customType`             | string or absent             | Required only for custom        |
-| `name`                   | string                       | 1-100 characters                |
-| `notes`                  | string                       | 0-2,000 characters              |
-| `values`                 | YearValue[]                  | Unique year, manual source only |
-| `createdAt`, `updatedAt` | ISO timestamps               | Encrypted audit metadata        |
+| Field                    | Type                         | Rules                            |
+| ------------------------ | ---------------------------- | -------------------------------- |
+| `id`                     | UUID                         | Unique within vault              |
+| `order`                  | integer                      | Dense order within assets        |
+| `classification`         | `"current"` or `"long-term"` | Required                         |
+| `type`                   | AssetType                    | Required built-in or `"custom"`  |
+| `customType`             | string or absent             | Required only for custom         |
+| `name`                   | string                       | 1-100 characters                 |
+| `notes`                  | string                       | 0-2,000 characters               |
+| `values`                 | ValueObservation[]           | Unique exact date, manual source |
+| `createdAt`, `updatedAt` | ISO timestamps               | Encrypted audit metadata         |
 
 `AssetType` is `checking`, `savings`, `cash`, `stocks`, `bonds`, `fund`, `retirement`, `property`,
 `vehicle`, `business`, `crypto`, `valuables`, or `custom`.
 
-Missing asset years remain absent. Aggregation excludes the asset for that year and reports
-incompleteness rather than carrying another year's value.
+At an exact target date, the latest eligible asset observation is carried forward unchanged and
+exposes its source date and staleness. A target before the first observation remains incomplete.
 
 ## Liability
 
@@ -112,7 +114,7 @@ incompleteness rather than carrying another year's value.
 | `startDate`              | ISO date or absent | Defaults to current date for projection |
 | `termMonths`             | integer or absent  | 1-1,200 months                          |
 | `notes`                  | string             | 0-2,000 characters                      |
-| `manualBalances`         | YearValue[]        | Unique December 31 actual balances      |
+| `manualBalances`         | ValueObservation[] | Unique exact-date actual balances       |
 | `createdAt`, `updatedAt` | ISO timestamps     | Encrypted audit metadata                |
 
 `LiabilityType` is `mortgage`, `personal-loan`, `student-loan`, `credit-card`, `vehicle-loan`,
@@ -126,22 +128,23 @@ Projection status is derived, never persisted:
 - `non-amortizing`: payment does not exceed monthly interest;
 - `invalid`: schedule fields contradict validation rules.
 
-## YearValue
+## ValueObservation
 
 | Field       | Type          | Rules                                      |
 | ----------- | ------------- | ------------------------------------------ |
-| `year`      | integer       | 1900-2200; unique within parent collection |
-| `amount`    | MoneyString   | Non-negative and bounded                   |
+| `date`      | ISO date      | 1900-2200; unique within parent collection |
+| `amount`    | MoneyString   | Non-negative, bounded, currency precision  |
 | `updatedAt` | ISO timestamp | Encrypted                                  |
 
-Manual values always represent the end of December 31. A liability manual value becomes the opening
-balance for January 1 of the following year.
+Multiple observations may share a calendar year but not a date. Collections are stored
+chronologically. A liability manual observation is an actual balance at the end of its date and
+seeds later projections.
 
 ## Derived DashboardSnapshot
 
 | Field                 | Type                            | Meaning                                              |
 | --------------------- | ------------------------------- | ---------------------------------------------------- |
-| `year`                | integer                         | Selected calendar year                               |
+| `asOfDate`            | ISO date                        | Exact target date; annual views use December 31      |
 | `assets`              | MoneyString                     | Sum of explicit asset values                         |
 | `liabilities`         | MoneyString                     | Sum of actual/projected liability balances           |
 | `netWorth`            | MoneyString                     | Assets minus liabilities; may be negative            |
@@ -149,6 +152,7 @@ balance for January 1 of the following year.
 | `yearlyChangePercent` | decimal string or undefined     | Undefined for zero/missing prior value               |
 | `cagr`                | decimal string or undefined     | Defined only across >0 years with positive endpoints |
 | `completeness`        | complete/incomplete             | Incomplete when any tracked asset lacks a value      |
+| `assetSource`         | actual/carry-forward/mixed      | Source semantics and staleness                       |
 | `liabilitySource`     | actual/projected/mixed          | Semantic status for totals                           |
 | `assetAllocation`     | category/value[]                | Explicit values only                                 |
 | `payoff`              | liability/year/balance/status[] | Projection series                                    |
@@ -186,7 +190,7 @@ The portable file wraps exactly one `CipherEnvelopeV1` plus non-sensitive format
 ```ts
 interface BackupEnvelopeV1 {
   format: 'net-worth-backup';
-  formatVersion: 1;
+  formatVersion: 2;
   exportedAt: string;
   payload: CipherEnvelopeV1;
 }
@@ -195,15 +199,15 @@ interface BackupEnvelopeV1 {
 No original filename, machine/browser data, item count, currency, account name, or value is stored.
 The JSON contract is defined in `contracts/backup-envelope.schema.json`.
 
-## Migration Policy
+## Version Policy
 
 1. Validate the outer envelope against its exact format version.
 2. Authenticate/decrypt without modifying IndexedDB.
 3. Parse the plaintext JSON with a size/depth-bounded parser input.
-4. Apply sequential pure migrations (`v1 -> v2`, never skipping versions).
+4. Reject unsupported pre-release or future versions without modifying current storage.
 5. Validate the current Vault schema.
 6. Re-encrypt with current parameters.
-7. Request overwrite confirmation.
+7. Request overwrite confirmation when a local vault exists.
 8. Commit one IndexedDB transaction and open as a new unlocked session.
 
 Unsupported future versions and any failure before step 8 leave the current envelope unchanged.

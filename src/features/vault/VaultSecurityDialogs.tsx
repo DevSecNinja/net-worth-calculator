@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ErrorSummary } from '@/components/forms/ErrorSummary';
@@ -7,6 +7,7 @@ import { PassphraseFields } from '@/components/forms/PassphraseFields';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { useDirtyState } from '@/hooks/useDirtyState';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 import { validatePassphrasePair } from './passphrase';
 import { useVault } from './useVault';
@@ -18,15 +19,26 @@ export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClo
   const [next, setNext] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState<string>();
+  const { t } = useLocale();
+  const dirtyLabel = t('vault.changePassphrase');
+
+  const close = useCallback(() => {
+    setCurrent('');
+    setNext('');
+    setConfirmation('');
+    setError(undefined);
+    setDirty(dirtyLabel, false);
+    onClose();
+  }, [dirtyLabel, onClose, setDirty]);
 
   useEffect(() => {
-    setDirty('Change passphrase', open && Boolean(current || next || confirmation));
-    return () => setDirty('Change passphrase', false);
-  }, [confirmation, current, next, open, setDirty]);
+    setDirty(dirtyLabel, open && Boolean(current || next || confirmation));
+    return () => setDirty(dirtyLabel, false);
+  }, [confirmation, current, dirtyLabel, next, open, setDirty]);
 
   useEffect(() => {
-    if (open && status !== 'unlocked') onClose();
-  }, [onClose, open, status]);
+    if (open && status !== 'unlocked') close();
+  }, [close, open, status]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -41,20 +53,20 @@ export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClo
       setNext('');
       setConfirmation('');
       setError(undefined);
-      setDirty('Change passphrase', false);
-      onClose();
+      setDirty(dirtyLabel, false);
+      close();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Passphrase change failed.');
     }
   }
 
   return (
-    <Dialog open={open} title="Change passphrase" onClose={onClose}>
+    <Dialog open={open} title={t('vault.changePassphrase')} onClose={close}>
       <form className="form-stack" onSubmit={(event) => void submit(event)}>
-        <p>Re-encrypt the complete vault. The old passphrase will stop working.</p>
+        <p>{t('vault.changeHelp')}</p>
         <ErrorSummary errors={error ? [error] : []} />
         <Field
-          label="Current passphrase"
+          label={t('vault.currentPassphrase')}
           name="current-passphrase"
           type="password"
           autoComplete="current-password"
@@ -63,7 +75,7 @@ export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClo
           required
         />
         <PassphraseFields
-          passphraseLabel="New passphrase"
+          passphraseLabel={t('vault.newPassphrase')}
           passphrase={next}
           confirmation={confirmation}
           onPassphraseChange={setNext}
@@ -72,10 +84,10 @@ export function ChangePassphraseDialog({ open, onClose }: { open: boolean; onClo
         />
         <div className="button-row">
           <Button type="submit" disabled={busy || status !== 'unlocked'}>
-            Change passphrase
+            {t('vault.changePassphrase')}
           </Button>
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
+          <Button type="button" variant="secondary" onClick={close}>
+            {t('common.cancel')}
           </Button>
         </div>
       </form>
@@ -88,10 +100,17 @@ export function DeleteVaultDialog({ open, onClose }: { open: boolean; onClose: (
   const navigate = useNavigate();
   const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState<string>();
+  const { t } = useLocale();
+
+  const close = useCallback(() => {
+    setConfirmation('');
+    setError(undefined);
+    onClose();
+  }, [onClose]);
 
   useEffect(() => {
-    if (open && status !== 'unlocked') onClose();
-  }, [onClose, open, status]);
+    if (open && status !== 'unlocked') close();
+  }, [close, open, status]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -108,15 +127,15 @@ export function DeleteVaultDialog({ open, onClose }: { open: boolean; onClose: (
   }
 
   return (
-    <Dialog open={open} title="Delete encrypted vault" onClose={onClose}>
+    <Dialog open={open} title={t('vault.deleteTitle')} onClose={close}>
       <form className="form-stack" onSubmit={(event) => void submit(event)}>
         <div className="danger-zone">
-          <strong>This cannot be undone.</strong>
-          <p>Export a backup first. No server or support team can restore this vault.</p>
+          <strong>{t('vault.deleteWarning')}</strong>
+          <p>{t('vault.deleteHelp')}</p>
         </div>
         <ErrorSummary errors={error ? [error] : []} />
         <Field
-          label="Type DELETE to confirm"
+          label={t('vault.deletePrompt')}
           name="delete-confirmation"
           value={confirmation}
           onChange={(event) => setConfirmation(event.currentTarget.value)}
@@ -125,10 +144,10 @@ export function DeleteVaultDialog({ open, onClose }: { open: boolean; onClose: (
         />
         <div className="button-row">
           <Button type="submit" variant="danger" disabled={busy || status !== 'unlocked'}>
-            Delete vault forever
+            {t('vault.deleteForever')}
           </Button>
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
+          <Button type="button" variant="secondary" onClick={close}>
+            {t('common.cancel')}
           </Button>
         </div>
       </form>

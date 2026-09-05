@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 export function ChartFrame({
   title,
@@ -9,8 +10,10 @@ export function ChartFrame({
   title: string;
   summary: string;
   children: ReactNode;
-  table: ReactNode;
+  table: () => ReactNode;
 }) {
+  const { t } = useLocale();
+  const [tableLoaded, setTableLoaded] = useState(false);
   const tableId = `${title.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}-table`;
   return (
     <section className="chart-card" aria-labelledby={`${tableId}-heading`}>
@@ -21,11 +24,18 @@ export function ChartFrame({
       <div className="chart-card__visual" aria-hidden="true" inert>
         {children}
       </div>
-      <details className="chart-card__table">
-        <summary>View {title.toLowerCase()} data table</summary>
-        <div className="table-scroll" id={tableId}>
-          {table}
-        </div>
+      <details
+        className="chart-card__table"
+        onToggle={(event) => {
+          if (event.currentTarget.open) setTableLoaded(true);
+        }}
+      >
+        <summary>{t('chart.viewTable', { title: title.toLowerCase() })}</summary>
+        {tableLoaded ? (
+          <div className="table-scroll" id={tableId}>
+            {table()}
+          </div>
+        ) : null}
       </details>
     </section>
   );

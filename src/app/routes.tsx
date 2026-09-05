@@ -8,6 +8,7 @@ import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { UnlockPage } from '@/features/vault/UnlockPage';
 import { useVault } from '@/features/vault/useVault';
+import { useLocale } from '@/features/locale/LocaleProvider';
 
 const DashboardPage = lazy(async () => {
   const module = await import('@/features/dashboard/DashboardPage');
@@ -15,11 +16,12 @@ const DashboardPage = lazy(async () => {
 });
 
 function Dashboard() {
+  const { t } = useLocale();
   return (
     <Suspense
       fallback={
         <main id="main-content" className="page centered-page" aria-busy="true">
-          <p>Preparing private insights...</p>
+          <p>{t('app.preparingInsights')}</p>
         </main>
       }
     >
@@ -30,10 +32,11 @@ function Dashboard() {
 
 function Home() {
   const { status } = useVault();
+  const { t } = useLocale();
   if (status === 'loading') {
     return (
       <main id="main-content" className="page centered-page" aria-busy="true">
-        <p>Checking for an encrypted vault...</p>
+        <p>{t('app.checkingVault')}</p>
       </main>
     );
   }
@@ -67,14 +70,7 @@ export function AppRoutes() {
           </Protected>
         }
       />
-      <Route
-        path="/backup"
-        element={
-          <Protected>
-            <BackupPage />
-          </Protected>
-        }
-      />
+      <Route path="/backup" element={<BackupPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

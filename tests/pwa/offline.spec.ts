@@ -48,7 +48,7 @@ test('reloads every route and query from app-only caches during a real origin ou
       { url: `${base}?launch=settings#/settings`, heading: /^settings$/i },
       { url: `${base}?launch=assets#/assets`, heading: /welcome back/i },
       { url: `${base}?launch=liabilities#/liabilities`, heading: /welcome back/i },
-      { url: `${base}?launch=backup#/backup`, heading: /welcome back/i },
+      { url: `${base}?launch=backup#/backup`, heading: /encrypted backup/i },
       { url: `${base}?launch=unknown#/not-a-route`, heading: /welcome back/i },
     ];
     for (const launch of launches) {

@@ -1,9 +1,11 @@
-export const VAULT_SCHEMA_VERSION = 1 as const;
+export const VAULT_SCHEMA_VERSION = 2 as const;
 export const ENVELOPE_FORMAT_VERSION = 1 as const;
-export const BACKUP_FORMAT_VERSION = 1 as const;
+export const BACKUP_FORMAT_VERSION = 2 as const;
 export const MIN_YEAR = 1900;
 export const MAX_YEAR = 2200;
 export const MAX_ITEMS = 500;
+export const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
+export const MAX_VAULT_PLAINTEXT_BYTES = 7 * 1024 * 1024;
 
 export const assetTypes = [
   'checking',
@@ -37,8 +39,8 @@ export type ThemePreference = 'light' | 'dark' | 'system';
 export type MoneyString = string;
 export type RateString = string;
 
-export type YearValue = {
-  year: number;
+export type ValueObservation = {
+  date: string;
   amount: MoneyString;
   updatedAt: string;
 };
@@ -51,7 +53,7 @@ export type Asset = {
   customType?: string | undefined;
   name: string;
   notes: string;
-  values: YearValue[];
+  values: ValueObservation[];
   createdAt: string;
   updatedAt: string;
 };
@@ -68,14 +70,13 @@ export type Liability = {
   startDate?: string | undefined;
   termMonths?: number | undefined;
   notes: string;
-  manualBalances: YearValue[];
+  manualBalances: ValueObservation[];
   createdAt: string;
   updatedAt: string;
 };
 
 export type VaultSettings = {
   baseCurrency: string;
-  locale: string;
   createdWithSampleData: boolean;
 };
 
@@ -93,7 +94,7 @@ export type Vault = {
 export type CipherEnvelopeV1 = {
   format: 'net-worth-vault';
   formatVersion: typeof ENVELOPE_FORMAT_VERSION;
-  vaultSchemaVersion: 0 | typeof VAULT_SCHEMA_VERSION;
+  vaultSchemaVersion: typeof VAULT_SCHEMA_VERSION;
   kdf: {
     name: 'PBKDF2';
     hash: 'SHA-256';
@@ -108,7 +109,7 @@ export type CipherEnvelopeV1 = {
   ciphertext: string;
 };
 
-export type BackupEnvelopeV1 = {
+export type BackupEnvelopeV2 = {
   format: 'net-worth-backup';
   formatVersion: typeof BACKUP_FORMAT_VERSION;
   exportedAt: string;
@@ -118,6 +119,7 @@ export type BackupEnvelopeV1 = {
 export type ProjectionStatus = 'actual' | 'projected' | 'paid-off' | 'non-amortizing' | 'invalid';
 
 export type LiabilityProjection = {
+  date: string;
   year: number;
   amount: MoneyString;
   source: 'actual' | 'projected';
@@ -125,6 +127,7 @@ export type LiabilityProjection = {
 };
 
 export type DashboardSnapshot = {
+  asOfDate: string;
   year: number;
   assets: MoneyString;
   liabilities: MoneyString;
@@ -133,6 +136,7 @@ export type DashboardSnapshot = {
   yearlyChangePercent?: string | undefined;
   cagr?: string | undefined;
   completeness: 'complete' | 'incomplete';
+  assetSource: 'actual' | 'carry-forward' | 'mixed' | 'unavailable';
   liabilitySource: 'actual' | 'projected' | 'mixed';
 };
 

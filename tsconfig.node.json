@@ -12,5 +12,11 @@
     "target": "ES2023",
     "types": ["node"]
   },
-  "include": ["eslint.config.js", "playwright.config.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "eslint.config.js",
+    "playwright.config.ts",
+    "playwright.performance.config.ts",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

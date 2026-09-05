@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { AppStatusProvider } from '@/components/ui/AppStatus';
@@ -47,6 +47,11 @@ function renderStatus() {
 }
 
 describe('PwaStatus', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.update.activateUpdate.mockResolvedValue(undefined);
+  });
+
   it('shows install, offline-ready, and explicit update actions', async () => {
     const user = userEvent.setup();
     renderStatus();
@@ -55,7 +60,7 @@ describe('PwaStatus', () => {
     await user.click(screen.getByRole('button', { name: /dismiss/i }));
     expect(mocks.update.dismissOfflineReady).toHaveBeenCalledOnce();
     await user.click(screen.getByRole('button', { name: /update now/i }));
-    expect(mocks.update.activateUpdate).toHaveBeenCalledOnce();
+    await waitFor(() => expect(mocks.update.activateUpdate).toHaveBeenCalledOnce());
   });
 
   it('requires explicit resolution before discarding dirty edits', async () => {
@@ -63,7 +68,7 @@ describe('PwaStatus', () => {
     renderStatus();
     await user.click(screen.getByRole('button', { name: /make dirty/i }));
     await user.click(screen.getByRole('button', { name: /update now/i }));
-    expect(screen.getByRole('dialog', { name: /unsaved edits/i })).toBeVisible();
+    expect(await screen.findByRole('dialog', { name: /unsaved edits/i })).toBeVisible();
     expect(screen.getByText('Asset editor')).toBeVisible();
     await user.click(screen.getByRole('button', { name: /discard drafts and update/i }));
     expect(mocks.update.activateUpdate).toHaveBeenCalled();
@@ -79,5 +84,15 @@ describe('PwaStatus', () => {
       window.dispatchEvent(new Event('online'));
     });
     expect(screen.queryByText(/offline - encrypted local data/i)).not.toBeInTheDocument();
+  });
+
+  it('surfaces update activation failures without an unhandled rejection', async () => {
+    mocks.update.activateUpdate.mockRejectedValueOnce(new Error('activation failed'));
+    const user = userEvent.setup();
+    renderStatus();
+    await user.click(screen.getByRole('button', { name: /update now/i }));
+    expect(
+      await screen.findByText(/update could not be activated/i, { selector: '.status-error' }),
+    ).toBeVisible();
   });
 });
