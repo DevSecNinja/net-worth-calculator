@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 import { resolveExpectedBasePath } from './build-base.mjs';
+import { parseCloudflareHeaders, requireCloudflareHeader } from './cloudflare-headers.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = join(root, 'dist');
@@ -218,25 +219,42 @@ if (
 }
 
 const cloudflareHeaders = (await readFile(join(dist, '_headers'), 'utf8')).replace(/\r\n?/g, '\n');
-for (const expectedHeader of [
-  "Content-Security-Policy: default-src 'self'",
+const cloudflareHeaderBlocks = parseCloudflareHeaders(cloudflareHeaders);
+const globalHeaders = cloudflareHeaderBlocks.get('/*');
+for (const expectedDirective of [
+  "default-src 'self'",
   "connect-src 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "script-src 'self'",
-  'Permissions-Policy:',
-  'Referrer-Policy: no-referrer',
-  'X-Content-Type-Options: nosniff',
-  'X-Frame-Options: DENY',
-  '/assets/*',
-  'Cache-Control: public, max-age=31536000, immutable',
-  '/\n  Cache-Control: no-cache, no-store, must-revalidate',
-  '/sw.js',
-  'Cache-Control: no-cache, no-store, must-revalidate',
 ]) {
-  if (!cloudflareHeaders.includes(expectedHeader)) {
-    throw new Error(`Cloudflare Pages headers are missing: ${expectedHeader}`);
+  if (!globalHeaders?.get('content-security-policy')?.[0]?.includes(expectedDirective)) {
+    throw new Error(`Cloudflare Pages CSP is missing: ${expectedDirective}`);
   }
+}
+for (const [name, value] of [
+  ['referrer-policy', 'no-referrer'],
+  ['x-content-type-options', 'nosniff'],
+  ['x-frame-options', 'DENY'],
+]) {
+  requireCloudflareHeader(cloudflareHeaderBlocks, '/*', name, value);
+}
+if (!globalHeaders?.has('permissions-policy')) {
+  throw new Error('Cloudflare Pages global headers are missing Permissions-Policy.');
+}
+requireCloudflareHeader(
+  cloudflareHeaderBlocks,
+  '/assets/*',
+  'cache-control',
+  'public, max-age=31536000, immutable',
+);
+for (const path of ['/', '/index.html', '/manifest.webmanifest', '/sw.js']) {
+  requireCloudflareHeader(
+    cloudflareHeaderBlocks,
+    path,
+    'cache-control',
+    'no-cache, no-store, must-revalidate',
+  );
 }
 if (/https?:\/\/|unsafe-(?:inline|eval)/i.test(cloudflareHeaders)) {
   throw new Error('Cloudflare Pages headers must not allow external or unsafe script origins.');
