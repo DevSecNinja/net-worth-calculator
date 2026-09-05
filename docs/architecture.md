@@ -3,11 +3,11 @@
 ## System overview
 
 Net Worth Calculator is a single static React and TypeScript progressive web app. Vite produces one
-verified, content-hashed root `dist` artifact. Cloudflare Pages serves it at
-<https://net-worth.ravensberg.org/> and the stable origin
-<https://net-worth-calculator-xn8.pages.dev/> through user-managed DNS. GitHub Pages receives the same
-bytes and remains a warm rollback target. There is no application server, hosted database, account
-system, analytics service, runtime API, Pages Function, or Worker.
+verified, content-hashed root `dist` artifact. Cloudflare Pages exposes the stable origin
+<https://net-worth-calculator-xn8.pages.dev/> directly and serves
+<https://net-worth.ravensberg.org/> through user-managed DNS. GitHub Pages receives the same bytes and
+remains a warm rollback target. There is no application server, hosted database, account system,
+analytics service, runtime API, Pages Function, or Worker.
 
 ```text
 React features and accessible components

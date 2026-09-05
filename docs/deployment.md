@@ -5,8 +5,8 @@
 The `Pages` workflow builds one root-based `dist` artifact from every `main` commit, verifies it, and
 deploys those exact bytes to both:
 
-- Cloudflare Pages at <https://net-worth.ravensberg.org/> and
-  <https://net-worth-calculator-xn8.pages.dev/> through user-managed DNS;
+- Cloudflare Pages directly at <https://net-worth-calculator-xn8.pages.dev/> and, through
+  user-managed DNS, at <https://net-worth.ravensberg.org/>;
 - GitHub Pages, which remains deployed as the rollback target.
 
 Same-repository pull requests receive isolated Cloudflare preview deployments. Closing a pull request
