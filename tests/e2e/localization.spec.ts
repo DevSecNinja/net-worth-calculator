@@ -74,7 +74,9 @@ test('creates a localized multi-year sample portfolio that stays named at creati
   await expect(page.getByRole('heading', { name: /nettovermogendashboard/i })).toBeVisible();
 
   const currentYear = await page.evaluate(() => new Date().getFullYear());
-  await page.getByText(/bekijk gegevenstabel voor trend nettovermogen/i).click();
+  const annualToggle = page.getByText(/bekijk gegevenstabel voor trend nettovermogen/i);
+  await annualToggle.focus();
+  await annualToggle.press('Enter');
   const annual = page.getByRole('table', { name: /trend nettovermogen per kalenderjaar/i });
   await expect(annual).toContainText(String(currentYear - 4));
   await expect(annual).toContainText(String(currentYear));
