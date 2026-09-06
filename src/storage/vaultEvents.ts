@@ -1,3 +1,5 @@
+import { openOptionalBroadcastChannel } from './broadcastChannel';
+
 const CHANNEL_NAME = 'nwc-vault-events';
 const STORAGE_KEY = 'nwc-vault-event';
 const VAULT_DELETED = 'vault-deleted';
@@ -5,8 +7,8 @@ const VAULT_DELETED = 'vault-deleted';
 type VaultEvent = typeof VAULT_DELETED;
 
 export function notifyVaultDeleted(): void {
-  if ('BroadcastChannel' in globalThis) {
-    const channel = new BroadcastChannel(CHANNEL_NAME);
+  const channel = openOptionalBroadcastChannel(CHANNEL_NAME);
+  if (channel) {
     channel.postMessage(VAULT_DELETED satisfies VaultEvent);
     channel.close();
   }
@@ -25,7 +27,7 @@ export function notifyVaultDeleted(): void {
 }
 
 export function subscribeToVaultDeleted(listener: () => void): () => void {
-  const channel = 'BroadcastChannel' in globalThis ? new BroadcastChannel(CHANNEL_NAME) : undefined;
+  const channel = openOptionalBroadcastChannel(CHANNEL_NAME);
   if (channel) {
     channel.onmessage = (event: MessageEvent<unknown>) => {
       if (event.data === VAULT_DELETED) listener();

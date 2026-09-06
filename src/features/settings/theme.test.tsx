@@ -73,4 +73,23 @@ describe('ThemeProvider', () => {
     });
     expect(screen.getByText('system:dark')).toBeVisible();
   });
+
+  it('uses an in-memory system preference when localStorage is security restricted', async () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('Restricted for this context.', 'SecurityError');
+    });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Restricted for this context.', 'SecurityError');
+    });
+    const user = userEvent.setup();
+    render(
+      <ThemeProvider>
+        <ThemeHarness />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('system:light')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Dark' }));
+    expect(screen.getByText('dark:dark')).toBeVisible();
+  });
 });

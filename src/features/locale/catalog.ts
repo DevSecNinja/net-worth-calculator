@@ -64,6 +64,12 @@ const enUS = {
   'onboarding.createEmpty': 'Create empty vault',
   'onboarding.createSample': 'Create with sample data',
   'onboarding.encrypting': 'Encrypting...',
+  'onboarding.cryptoUnavailable':
+    'Secure browser cryptography is unavailable. Use a current browser over HTTPS before creating a vault.',
+  'onboarding.databaseUnavailable':
+    'Encrypted local vault storage is unavailable. Allow site storage before creating a vault.',
+  'onboarding.storageUnavailable':
+    'Local session storage is blocked. Allow site storage before creating a vault.',
   'onboarding.sampleHelp':
     'Sample data is created only when you choose the sample button and can be deleted.',
   'onboarding.restorePrompt': 'Already have a backup?',
@@ -515,6 +521,12 @@ const nlNL: MessageCatalog = {
   'onboarding.createEmpty': 'Lege kluis maken',
   'onboarding.createSample': 'Met voorbeeldgegevens maken',
   'onboarding.encrypting': 'Versleutelen...',
+  'onboarding.cryptoUnavailable':
+    'Veilige browserversleuteling is niet beschikbaar. Gebruik een actuele browser via HTTPS voordat je een kluis maakt.',
+  'onboarding.databaseUnavailable':
+    'Versleutelde lokale kluisopslag is niet beschikbaar. Sta siteopslag toe voordat je een kluis maakt.',
+  'onboarding.storageUnavailable':
+    'Lokale sessieopslag is geblokkeerd. Sta siteopslag toe voordat je een kluis maakt.',
   'onboarding.sampleHelp':
     'Voorbeeldgegevens worden alleen gemaakt wanneer je deze knop kiest en kunnen worden verwijderd.',
   'onboarding.restorePrompt': 'Heb je al een back-up?',

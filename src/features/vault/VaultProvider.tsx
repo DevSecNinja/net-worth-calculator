@@ -11,6 +11,7 @@ import {
 
 import type { CipherEnvelopeV1, Vault } from '@/domain/model';
 import { addSampleData, createEmptyVault, type SampleDataLocale } from '@/domain/fixtures';
+import { detectVaultCapabilityIssue, type VaultCapabilityIssue } from '@/storage/capabilities';
 import type { VaultKeyMaterial } from '@/storage/crypto';
 import { VaultSessionLease } from '@/storage/sessionLease';
 import { notifyVaultDeleted, subscribeToVaultDeleted } from '@/storage/vaultEvents';
@@ -41,6 +42,7 @@ type VaultContextValue = {
   vault?: Vault;
   busy: boolean;
   error?: string;
+  capabilityIssue?: VaultCapabilityIssue;
   create: (
     passphrase: string,
     currency: string,
@@ -68,6 +70,16 @@ export class VaultLeaseUnavailableError extends Error {
   }
 }
 
+class VaultCapabilityError extends Error {
+  readonly issue: VaultCapabilityIssue;
+
+  constructor(issue: VaultCapabilityIssue) {
+    super('A required secure browser capability is unavailable.');
+    this.name = 'VaultCapabilityError';
+    this.issue = issue;
+  }
+}
+
 function messageFrom(error: unknown): string {
   return error instanceof Error ? error.message : 'The vault operation failed.';
 }
@@ -78,6 +90,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [material, setMaterial] = useState<VaultKeyMaterial>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const [capabilityIssue, setCapabilityIssue] = useState<VaultCapabilityIssue>();
   const lease = useRef<VaultSessionLease | undefined>(undefined);
   const lockedResetTarget = useRef<CipherEnvelopeV1 | undefined>(undefined);
   const statusRef = useRef<VaultStatus>('loading');
@@ -127,13 +140,24 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       if (lease.current) lock();
     };
     window.addEventListener('pagehide', lockForPageHide);
+    const initialCapabilityIssue = detectVaultCapabilityIssue();
+    if (initialCapabilityIssue) {
+      setCapabilityIssue(initialCapabilityIssue);
+      setStatus('absent');
+      return () => {
+        active = false;
+        generation.current += 1;
+        lease.current?.release();
+        window.removeEventListener('pagehide', lockForPageHide);
+      };
+    }
     void hasVault()
       .then((exists) => {
         if (active) setStatus(exists ? 'locked' : 'absent');
       })
-      .catch((caught: unknown) => {
+      .catch(() => {
         if (active) {
-          setError(messageFrom(caught));
+          setCapabilityIssue('indexed-db');
           setStatus('absent');
         }
       });
@@ -175,6 +199,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       setError(undefined);
       let operationLease: VaultSessionLease | undefined;
       try {
+        const currentIssue = detectVaultCapabilityIssue();
+        if (currentIssue) {
+          setCapabilityIssue(currentIssue);
+          throw new VaultCapabilityError(currentIssue);
+        }
         operationLease = acquireLease();
         let next = createEmptyVault(currency);
         if (sample) next = addSampleData(next, sampleLocale);
@@ -186,7 +215,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       } catch (caught) {
         operationLease?.release();
         if (lease.current === operationLease) lease.current = undefined;
-        if (generation.current === token) setError(messageFrom(caught));
+        if (generation.current === token && !(caught instanceof VaultCapabilityError)) {
+          setError(messageFrom(caught));
+        }
         throw caught;
       } finally {
         if (generation.current === token) setBusy(false);
@@ -397,6 +428,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       ...(vault ? { vault } : {}),
       busy,
       ...(error ? { error } : {}),
+      ...(capabilityIssue ? { capabilityIssue } : {}),
       create,
       unlock,
       lock,
@@ -411,6 +443,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }),
     [
       busy,
+      capabilityIssue,
       changePassphrase,
       cancelLockedVaultReset,
       clearError,

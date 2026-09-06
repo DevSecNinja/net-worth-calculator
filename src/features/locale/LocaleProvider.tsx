@@ -89,7 +89,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         message === t('form.errorSaveLiability') ||
         message === t('backup.exportFailed') ||
         message === t('backup.importFailed') ||
-        message === t('backup.restoreFailed')
+        message === t('backup.restoreFailed') ||
+        message === t('onboarding.cryptoUnavailable') ||
+        message === t('onboarding.databaseUnavailable') ||
+        message === t('onboarding.storageUnavailable')
       ) {
         return message;
       }

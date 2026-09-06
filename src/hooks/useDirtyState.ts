@@ -10,7 +10,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { createId } from '@/domain/model';
 import { useLocale } from '@/features/locale/LocaleProvider';
+import { openOptionalBroadcastChannel } from '@/storage/broadcastChannel';
 
 type DirtyStateContextValue = {
   dirtyNames: string[];
@@ -20,7 +22,9 @@ type DirtyStateContextValue = {
 
 const DirtyStateContext = createContext<DirtyStateContextValue | undefined>(undefined);
 const DIRTY_CHANNEL = 'nwc-dirty-state';
+const DIRTY_STORAGE_KEY = 'nwc-dirty-state-event';
 const DIRTY_RESPONSE_TIMEOUT_MS = 1_000;
+const storageAccessErrors = new Set(['QuotaExceededError', 'SecurityError']);
 
 type DirtyMessage =
   | { type: 'request'; owner: string; requestId: string }
@@ -37,20 +41,37 @@ type PendingRequest = {
 export function DirtyStateProvider({ children }: { children: ReactNode }) {
   const [dirty, setDirtySet] = useState(() => new Set<string>());
   const { t } = useLocale();
-  const owner = useRef(crypto.randomUUID());
+  const owner = useRef(createId());
   const localDirty = useRef(false);
   const remoteDirty = useRef(new Set<string>());
   const peers = useRef(new Set<string>());
   const pendingRequests = useRef(new Map<string, PendingRequest>());
-  const channel = useRef<BroadcastChannel | undefined>(undefined);
+  const publish = useRef<((message: DirtyMessage) => void) | undefined>(undefined);
+  const coordinationAvailable = useRef(false);
 
   useEffect(() => {
-    if (!('BroadcastChannel' in globalThis)) return;
-    const current = new BroadcastChannel(DIRTY_CHANNEL);
+    const current = openOptionalBroadcastChannel(DIRTY_CHANNEL);
     const requests = pendingRequests.current;
-    channel.current = current;
+    const publishMessage = (message: DirtyMessage) => {
+      let delivered = false;
+      if (current) {
+        current.postMessage(message);
+        delivered = true;
+      }
+      try {
+        localStorage.setItem(DIRTY_STORAGE_KEY, JSON.stringify(message));
+        localStorage.removeItem(DIRTY_STORAGE_KEY);
+        delivered = true;
+      } catch (error) {
+        if (!(error instanceof DOMException) || !storageAccessErrors.has(error.name)) {
+          throw error;
+        }
+      }
+      coordinationAvailable.current = delivered;
+    };
+    publish.current = publishMessage;
     const publishState = (requestId?: string, target?: string) => {
-      current.postMessage({
+      publishMessage({
         type: 'state',
         owner: owner.current,
         dirty: localDirty.current,
@@ -64,8 +85,7 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
       requests.delete(requestId);
       pending.resolve(new Set());
     };
-    current.onmessage = (event: MessageEvent<unknown>) => {
-      const message = event.data;
+    const handleMessage = (message: unknown) => {
       if (
         typeof message !== 'object' ||
         message === null ||
@@ -103,21 +123,35 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
         }
       }
     };
-    current.postMessage({
+    if (current) {
+      current.onmessage = (event: MessageEvent<unknown>) => handleMessage(event.data);
+    }
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== DIRTY_STORAGE_KEY || !event.newValue) return;
+      try {
+        handleMessage(JSON.parse(event.newValue) as unknown);
+      } catch (error) {
+        if (!(error instanceof SyntaxError)) throw error;
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    publishMessage({
       type: 'request',
       owner: owner.current,
-      requestId: crypto.randomUUID(),
+      requestId: createId(),
     } satisfies DirtyMessage);
     publishState();
     const release = () => {
-      current.postMessage({ type: 'release', owner: owner.current } satisfies DirtyMessage);
+      publishMessage({ type: 'release', owner: owner.current } satisfies DirtyMessage);
     };
     window.addEventListener('pagehide', release);
     return () => {
       release();
       window.removeEventListener('pagehide', release);
-      current.close();
-      channel.current = undefined;
+      window.removeEventListener('storage', handleStorage);
+      current?.close();
+      publish.current = undefined;
+      coordinationAvailable.current = false;
       for (const pending of requests.values()) {
         window.clearTimeout(pending.timeout);
         pending.resolve(new Set(pending.expected));
@@ -128,7 +162,7 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localDirty.current = dirty.size > 0;
-    channel.current?.postMessage({
+    publish.current?.({
       type: 'state',
       owner: owner.current,
       dirty: localDirty.current,
@@ -144,11 +178,14 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
   const collectDirtyNames = useCallback(async () => {
-    const current = channel.current;
+    const publishMessage = publish.current;
+    if (!coordinationAvailable.current || !publishMessage) {
+      return [...[...dirty].sort(), t('dirty.remote')];
+    }
     const expected = new Set(peers.current);
     let missing = new Set<string>();
-    if (current && expected.size > 0) {
-      const requestId = crypto.randomUUID();
+    if (expected.size > 0) {
+      const requestId = createId();
       missing = await new Promise<Set<string>>((resolve) => {
         const timeout = window.setTimeout(() => {
           const pending = pendingRequests.current.get(requestId);
@@ -167,7 +204,7 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
           resolve,
           timeout,
         });
-        current.postMessage({
+        publishMessage({
           type: 'request',
           owner: owner.current,
           requestId,
@@ -189,3 +226,8 @@ export function useDirtyState(): DirtyStateContextValue {
   if (!value) throw new Error('useDirtyState must be used inside DirtyStateProvider.');
   return value;
 }
+
+export const dirtyStateContract = {
+  channelName: DIRTY_CHANNEL,
+  storageKey: DIRTY_STORAGE_KEY,
+} as const;

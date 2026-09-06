@@ -60,4 +60,27 @@ describe('vault deletion events', () => {
     );
     expect(listener).toHaveBeenCalledTimes(2);
   });
+
+  it('uses the storage signal when BroadcastChannel is security restricted', () => {
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class RestrictedBroadcastChannel {
+        constructor() {
+          throw new DOMException('Restricted for this context.', 'SecurityError');
+        }
+      },
+    );
+    const listener = vi.fn();
+    const unsubscribe = subscribeToVaultDeleted(listener);
+
+    expect(() => notifyVaultDeleted()).not.toThrow();
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: vaultEventsContract.storageKey,
+        newValue: vaultEventsContract.deletedEvent,
+      }),
+    );
+    expect(listener).toHaveBeenCalledOnce();
+    unsubscribe();
+  });
 });

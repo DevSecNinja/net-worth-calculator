@@ -11,6 +11,11 @@ import {
 import type { ThemePreference } from '@/domain/model';
 
 const THEME_KEY = 'nwc-theme';
+const storageAccessErrors = new Set(['QuotaExceededError', 'SecurityError']);
+
+function isStorageAccessError(error: unknown): boolean {
+  return error instanceof DOMException && storageAccessErrors.has(error.name);
+}
 
 type ThemeContextValue = {
   preference: ThemePreference;
@@ -21,8 +26,13 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function storedTheme(): ThemePreference {
-  const value = localStorage.getItem(THEME_KEY);
-  return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
+  try {
+    const value = localStorage.getItem(THEME_KEY);
+    return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
+  } catch (error) {
+    if (isStorageAccessError(error)) return 'system';
+    throw error;
+  }
 }
 
 function systemTheme(): 'light' | 'dark' {
@@ -48,7 +58,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [effectiveTheme, preference]);
 
   const setPreference = useCallback((theme: ThemePreference) => {
-    localStorage.setItem(THEME_KEY, theme);
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch (error) {
+      if (!isStorageAccessError(error)) throw error;
+    }
     updatePreference(theme);
   }, []);
 

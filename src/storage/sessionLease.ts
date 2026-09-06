@@ -1,3 +1,7 @@
+import { createId } from '@/domain/model';
+
+import { openOptionalBroadcastChannel } from './broadcastChannel';
+
 const LEASE_KEY = 'nwc-vault-lease';
 const CHANNEL_NAME = 'nwc-vault-session';
 const LEASE_DURATION_MS = 12_000;
@@ -7,6 +11,10 @@ type LeaseRecord = {
   owner: string;
   expiresAt: number;
 };
+
+function leaseFailure(error: unknown): Error {
+  return error instanceof Error ? error : new Error('The writable vault session failed.');
+}
 
 function parseLease(value: string | null): LeaseRecord | undefined {
   if (!value) return undefined;
@@ -29,7 +37,7 @@ function parseLease(value: string | null): LeaseRecord | undefined {
 }
 
 export class VaultSessionLease {
-  readonly owner = crypto.randomUUID();
+  readonly owner = createId();
   private readonly releaseOnPageHide: boolean;
   private heartbeat: number | undefined;
   private channel: BroadcastChannel | undefined;
@@ -42,20 +50,42 @@ export class VaultSessionLease {
   acquire(): boolean {
     const current = parseLease(localStorage.getItem(LEASE_KEY));
     if (current && current.owner !== this.owner && current.expiresAt > Date.now()) return false;
-    this.writeLease();
-    const acquired = parseLease(localStorage.getItem(LEASE_KEY))?.owner === this.owner;
-    if (acquired) {
+
+    const channel = openOptionalBroadcastChannel(CHANNEL_NAME);
+    try {
+      this.channel = channel;
+      this.writeLease();
+      const acquired = parseLease(localStorage.getItem(LEASE_KEY))?.owner === this.owner;
+      if (!acquired) {
+        channel?.close();
+        this.channel = undefined;
+        return false;
+      }
+
       this.heartbeat = window.setInterval(() => {
-        if (!this.renewLease()) this.loseOwnership();
+        this.runHeartbeat();
       }, HEARTBEAT_MS);
-      if ('BroadcastChannel' in globalThis) {
-        this.channel = new BroadcastChannel(CHANNEL_NAME);
-        this.channel.onmessage = () => this.checkOwnership();
+      if (channel) {
+        channel.onmessage = () => this.checkOwnership();
       }
       window.addEventListener('storage', this.handleStorage);
       if (this.releaseOnPageHide) window.addEventListener('pagehide', this.handlePageHide);
+      return true;
+    } catch (error) {
+      if (this.heartbeat !== undefined) window.clearInterval(this.heartbeat);
+      this.heartbeat = undefined;
+      window.removeEventListener('storage', this.handleStorage);
+      if (this.releaseOnPageHide) window.removeEventListener('pagehide', this.handlePageHide);
+      try {
+        if (parseLease(localStorage.getItem(LEASE_KEY))?.owner === this.owner) {
+          localStorage.removeItem(LEASE_KEY);
+        }
+      } finally {
+        channel?.close();
+        this.channel = undefined;
+      }
+      throw error;
     }
-    return acquired;
   }
 
   release(): void {
@@ -63,12 +93,15 @@ export class VaultSessionLease {
     this.heartbeat = undefined;
     window.removeEventListener('storage', this.handleStorage);
     if (this.releaseOnPageHide) window.removeEventListener('pagehide', this.handlePageHide);
-    if (parseLease(localStorage.getItem(LEASE_KEY))?.owner === this.owner) {
-      localStorage.removeItem(LEASE_KEY);
-      this.notifyPeers();
+    try {
+      if (parseLease(localStorage.getItem(LEASE_KEY))?.owner === this.owner) {
+        localStorage.removeItem(LEASE_KEY);
+        this.notifyPeers();
+      }
+    } finally {
+      this.channel?.close();
+      this.channel = undefined;
     }
-    this.channel?.close();
-    this.channel = undefined;
   }
 
   onLost(listener: () => void): () => void {
@@ -110,9 +143,30 @@ export class VaultSessionLease {
     if (!this.ownsLease()) this.loseOwnership();
   }
 
+  private runHeartbeat(): void {
+    let failure: Error | undefined;
+    try {
+      if (this.renewLease()) return;
+    } catch (error) {
+      failure = leaseFailure(error);
+    }
+    try {
+      this.loseOwnership();
+    } catch (error) {
+      failure ??= leaseFailure(error);
+    }
+    if (failure) throw failure;
+  }
+
   private loseOwnership(): void {
-    this.release();
+    let failure: Error | undefined;
+    try {
+      this.release();
+    } catch (error) {
+      failure = leaseFailure(error);
+    }
     for (const listener of this.listeners) listener();
+    if (failure) throw failure;
   }
 }
 

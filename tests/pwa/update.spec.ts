@@ -7,6 +7,7 @@ import { expect, test } from '@playwright/test';
 import { PASSPHRASE } from '../helpers/app';
 import { buildLabel } from '../helpers/packageMetadata';
 import { startTestServer, type TestServer } from '../helpers/server';
+import { emulateInstalledStandalone } from '../helpers/standalone';
 
 const projectPorts = new Map([
   ['chromium', 4201],
@@ -14,6 +15,7 @@ const projectPorts = new Map([
   ['webkit', 4203],
   ['mobile-chromium', 4204],
   ['mobile-webkit', 4205],
+  ['iphone-14-pro-max', 4206],
 ]);
 const versionN = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const versionN1 = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
@@ -39,6 +41,9 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
   page,
 }, workerInfo) => {
   test.setTimeout(240_000);
+  if (workerInfo.project.name === 'iphone-14-pro-max') {
+    await emulateInstalledStandalone(context);
+  }
   const port = projectPorts.get(workerInfo.project.name);
   if (!port) throw new Error(`No update port configured for ${workerInfo.project.name}.`);
   const suffix = workerInfo.project.name.replaceAll(/[^a-z0-9]+/gi, '-');
@@ -124,24 +129,27 @@ test('performs a real explicit N to N+1 update without losing persisted or dirty
     await expect(page.getByText(/\$9,999\.00/)).toBeVisible();
 
     await expect
-      .poll(async () => {
-        const cacheAfter = await page.evaluate(async () => {
-          const urls: string[] = [];
-          for (const name of await caches.keys()) {
-            urls.push(...(await (await caches.open(name)).keys()).map((request) => request.url));
-          }
-          return urls;
-        });
-        const removedOldAssets = cacheBefore.filter(
-          (url) => /\/assets\/.+-[\w-]{8,}\.(?:css|js)$/.test(url) && !cacheAfter.includes(url),
-        );
-        return {
-          removed: removedOldAssets.length,
-          hasNewBuild: cacheAfter.some(
-            (url) => /\/assets\/index-[\w-]{8,}\.js$/.test(url) && !cacheBefore.includes(url),
-          ),
-        };
-      })
+      .poll(
+        async () => {
+          const cacheAfter = await page.evaluate(async () => {
+            const urls: string[] = [];
+            for (const name of await caches.keys()) {
+              urls.push(...(await (await caches.open(name)).keys()).map((request) => request.url));
+            }
+            return urls;
+          });
+          const removedOldAssets = cacheBefore.filter(
+            (url) => /\/assets\/.+-[\w-]{8,}\.(?:css|js)$/.test(url) && !cacheAfter.includes(url),
+          );
+          return {
+            removed: removedOldAssets.length,
+            hasNewBuild: cacheAfter.some(
+              (url) => /\/assets\/index-[\w-]{8,}\.js$/.test(url) && !cacheBefore.includes(url),
+            ),
+          };
+        },
+        { timeout: 30_000 },
+      )
       .toEqual({ removed: expect.any(Number), hasNewBuild: true });
 
     const finalCacheAudit = await page.evaluate(async () => {
