@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Release Please updates this file from
 Conventional Commits.
 
+## [0.5.1](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.5.0...v0.5.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* address iOS PWA follow-ups ([#30](https://github.com/DevSecNinja/net-worth-calculator/issues/30)) ([095b639](https://github.com/DevSecNinja/net-worth-calculator/commit/095b63979bb05244002a482ca7acc622d21f5872))
+* support vault creation in installed iOS PWA ([#25](https://github.com/DevSecNinja/net-worth-calculator/issues/25)) ([c9718d8](https://github.com/DevSecNinja/net-worth-calculator/commit/c9718d87a73c96cc99477d7981d3bcb591441f33))
+
 ## [0.5.0](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.4.0...v0.5.0) (2026-09-06)
 
 
