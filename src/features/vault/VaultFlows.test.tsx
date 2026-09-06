@@ -27,6 +27,12 @@ describe('vault lifecycle', () => {
     expect(
       await screen.findByRole('heading', { name: /create your encrypted vault/i }),
     ).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: /how this calculator defines net worth/i }),
+    ).toBeVisible();
+    expect(screen.getByText(/home asset minus/i)).toHaveTextContent(/\$500,000\.00/);
+    await user.selectOptions(screen.getByLabelText(/base currency/i), 'EUR');
+    expect(screen.getByText(/home asset minus/i)).toHaveTextContent(/€500,000\.00/);
     await user.type(screen.getByLabelText(/^passphrase$/i), 'correct horse battery staple');
     await user.type(screen.getByLabelText(/confirm passphrase/i), 'correct horse battery staple');
     await user.click(screen.getByRole('button', { name: /create empty vault/i }));

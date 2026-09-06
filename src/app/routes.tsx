@@ -30,6 +30,11 @@ function Dashboard() {
   );
 }
 
+function About() {
+  const { vault } = useVault();
+  return vault ? <AboutPage currency={vault.settings.baseCurrency} /> : <AboutPage />;
+}
+
 function Home() {
   const { status } = useVault();
   const { t } = useLocale();
@@ -72,7 +77,7 @@ export function AppRoutes() {
       />
       <Route path="/backup" element={<BackupPage />} />
       <Route path="/settings" element={<SettingsPage />} />
-      <Route path="/about" element={<AboutPage />} />
+      <Route path="/about" element={<About />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

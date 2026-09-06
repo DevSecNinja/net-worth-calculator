@@ -68,6 +68,12 @@ const enUS = {
     'Sample data is created only when you choose the sample button and can be deleted.',
   'onboarding.restorePrompt': 'Already have a backup?',
   'onboarding.restoreLink': 'Restore an encrypted vault',
+  'onboarding.methodologyTitle': 'How this calculator defines net worth',
+  'onboarding.methodologyText':
+    'Net worth is the value of your assets minus what you owe. A home stays an asset and its outstanding mortgage stays a liability.',
+  'onboarding.methodologyExample':
+    'A {home} home asset minus a {mortgage} mortgage liability equals {equity} home equity.',
+  'onboarding.methodologyLink': 'Read the full methodology',
   'vault.passphrase': 'Passphrase',
   'vault.confirmPassphrase': 'Confirm passphrase',
   'vault.currentPassphrase': 'Current passphrase',
@@ -135,6 +141,7 @@ const enUS = {
   'dashboard.sourceDate': 'Source date',
   'dashboard.staleDays': '{count} days old',
   'dashboard.observationSources': 'Observation sources',
+  'dashboard.methodologyLink': 'How net worth is calculated',
   'chart.viewTable': 'View {title} data table',
   'chart.trendTitle': 'Net worth trend',
   'chart.trendSummary':
@@ -302,6 +309,34 @@ const enUS = {
   'about.limitationsTitle': 'Important limitations',
   'about.buildTitle': 'Build',
   'about.sourceTitle': 'Source and security',
+  'about.methodologyTitle': 'How this calculator defines net worth',
+  'about.methodologyIntro':
+    'This calculator follows a balance-sheet definition: net worth equals total assets minus total liabilities.',
+  'about.assetsTitle': 'Assets',
+  'about.assetsDefinition':
+    'Resources you own with current economic value, including cash, investments, vehicles, businesses, and an owner-occupied home at its current market value.',
+  'about.liabilitiesTitle': 'Liabilities',
+  'about.liabilitiesDefinition':
+    'Amounts you currently owe, including outstanding mortgage principal, loans, card balances, and accrued bills or taxes.',
+  'about.equityTitle': 'Equity',
+  'about.equityDefinition':
+    'The residual value after liabilities are deducted from assets. Home equity is the home value minus the mortgage balance.',
+  'about.homeExample':
+    'Example: {home} home asset minus {mortgage} mortgage liability equals {equity} home equity.',
+  'about.expensesTitle': 'Expenses are not automatically liabilities',
+  'about.expensesText':
+    'Mortgage interest, property taxes, insurance, maintenance, repairs, and utilities are expenses or carrying costs. They become liabilities here only when an amount is currently owed or accrued.',
+  'about.liquidityTitle': 'Net worth is not the same as liquidity',
+  'about.liquidityText':
+    'A home can increase net worth without providing spendable cash. For a separate liquid-net-worth view, exclude the home and other illiquid assets while still deducting relevant liabilities.',
+  'about.valuationTitle': 'Use a supportable current value',
+  'about.valuationText':
+    'Enter a reasonable current market value. For a conservative liquidation estimate, reduce the property asset by expected selling costs before mortgage payoff, while keeping the mortgage listed separately.',
+  'about.cashFlowTitle': 'Cash flow is a separate view',
+  'about.cashFlowText':
+    'The app does not currently model income, expenses, or cash flow, and it does not guarantee investment or property returns.',
+  'about.cashFlowHeuristic':
+    "Rich Dad's 'puts money in your pocket' wording is a cash-flow heuristic. It answers a different question and does not reclassify a home in this balance-sheet calculator.",
   'about.lede':
     'Net Worth Calculator is a local-first PWA. It has no account system, database server, analytics, advertising, telemetry, remote fonts, or runtime third-party requests.',
   'about.privacyText':
@@ -378,6 +413,41 @@ const enGB: MessageCatalog = {
   'language.en-US': 'English (US)',
   'language.en-GB': 'English (UK)',
   'settings.currency': 'Currency',
+  'onboarding.methodologyTitle': 'How this calculator defines net worth',
+  'onboarding.methodologyText':
+    'Net worth is the value of your assets minus what you owe. A home remains an asset and its outstanding mortgage remains a liability.',
+  'onboarding.methodologyExample':
+    'A {home} home asset minus a {mortgage} mortgage liability equals {equity} home equity.',
+  'onboarding.methodologyLink': 'Read the full methodology',
+  'dashboard.methodologyLink': 'How net worth is calculated',
+  'about.methodologyTitle': 'How this calculator defines net worth',
+  'about.methodologyIntro':
+    'This calculator follows a balance-sheet definition: net worth equals total assets minus total liabilities.',
+  'about.assetsTitle': 'Assets',
+  'about.assetsDefinition':
+    'Resources you own with current economic value, including cash, investments, vehicles, businesses, and an owner-occupied property at its current market value.',
+  'about.liabilitiesTitle': 'Liabilities',
+  'about.liabilitiesDefinition':
+    'Amounts you currently owe, including outstanding mortgage principal, loans, card balances, and accrued bills or taxes.',
+  'about.equityTitle': 'Equity',
+  'about.equityDefinition':
+    'The residual value after liabilities are deducted from assets. Home equity is the property value minus the mortgage balance.',
+  'about.homeExample':
+    'Example: {home} home asset minus {mortgage} mortgage liability equals {equity} home equity.',
+  'about.expensesTitle': 'Expenses are not automatically liabilities',
+  'about.expensesText':
+    'Mortgage interest, council tax and other property taxes, insurance, maintenance, repairs, and utilities are expenses or carrying costs. They become liabilities here only when an amount is currently owed or accrued.',
+  'about.liquidityTitle': 'Net worth is not the same as liquidity',
+  'about.liquidityText':
+    'A home can increase net worth without providing spendable cash. For a separate liquid-net-worth view, exclude the home and other illiquid assets while still deducting relevant liabilities.',
+  'about.valuationTitle': 'Use a supportable current value',
+  'about.valuationText':
+    'Enter a reasonable current market value. For a conservative liquidation estimate, reduce the property asset by expected selling costs before mortgage repayment, while keeping the mortgage listed separately.',
+  'about.cashFlowTitle': 'Cash flow is a separate view',
+  'about.cashFlowText':
+    'The app does not currently model income, expenses, or cash flow, and it does not guarantee investment or property returns.',
+  'about.cashFlowHeuristic':
+    "Rich Dad's 'puts money in your pocket' wording is a cash-flow heuristic. It answers a different question and does not reclassify a home in this balance-sheet calculator.",
 };
 
 const nlNL: MessageCatalog = {
@@ -449,6 +519,12 @@ const nlNL: MessageCatalog = {
     'Voorbeeldgegevens worden alleen gemaakt wanneer je deze knop kiest en kunnen worden verwijderd.',
   'onboarding.restorePrompt': 'Heb je al een back-up?',
   'onboarding.restoreLink': 'Versleutelde kluis herstellen',
+  'onboarding.methodologyTitle': 'Zo definieert deze calculator nettovermogen',
+  'onboarding.methodologyText':
+    'Nettovermogen is de waarde van je bezittingen min je schulden. Een eigen woning blijft een bezit en de openstaande hypotheek blijft een schuld.',
+  'onboarding.methodologyExample':
+    'Een woning van {home} min een hypotheekschuld van {mortgage} is {equity} overwaarde.',
+  'onboarding.methodologyLink': 'Lees de volledige methode',
   'vault.passphrase': 'Wachtzin',
   'vault.confirmPassphrase': 'Bevestig wachtzin',
   'vault.currentPassphrase': 'Huidige wachtzin',
@@ -520,6 +596,7 @@ const nlNL: MessageCatalog = {
   'dashboard.sourceDate': 'Brondatum',
   'dashboard.staleDays': '{count} dagen oud',
   'dashboard.observationSources': 'Bronnen van observaties',
+  'dashboard.methodologyLink': 'Zo wordt nettovermogen berekend',
   'chart.viewTable': 'Bekijk gegevenstabel voor {title}',
   'chart.trendTitle': 'Trend nettovermogen',
   'chart.trendSummary':
@@ -686,6 +763,34 @@ const nlNL: MessageCatalog = {
   'about.limitationsTitle': 'Belangrijke beperkingen',
   'about.buildTitle': 'Build',
   'about.sourceTitle': 'Broncode en beveiliging',
+  'about.methodologyTitle': 'Zo definieert deze calculator nettovermogen',
+  'about.methodologyIntro':
+    'Deze calculator gebruikt een balansdefinitie: nettovermogen is het totaal van de bezittingen min het totaal van de schulden.',
+  'about.assetsTitle': 'Bezittingen',
+  'about.assetsDefinition':
+    'Middelen die je bezit en nu economische waarde hebben, zoals geld, beleggingen, voertuigen, ondernemingen en een eigen woning tegen de huidige marktwaarde.',
+  'about.liabilitiesTitle': 'Schulden',
+  'about.liabilitiesDefinition':
+    'Bedragen die je nu verschuldigd bent, zoals de openstaande hypotheekhoofdsom, leningen, creditcardsaldi en opgelopen rekeningen of belastingen.',
+  'about.equityTitle': 'Eigen vermogen',
+  'about.equityDefinition':
+    'De resterende waarde nadat schulden van bezittingen zijn afgetrokken. Overwaarde is de woningwaarde min de hypotheekschuld.',
+  'about.homeExample':
+    'Voorbeeld: een woning van {home} min een hypotheekschuld van {mortgage} is {equity} overwaarde.',
+  'about.expensesTitle': 'Uitgaven zijn niet automatisch schulden',
+  'about.expensesText':
+    'Hypotheekrente, belastingen, verzekeringen, onderhoud, reparaties en nutsvoorzieningen zijn uitgaven of woonlasten. Ze zijn hier alleen een schuld als een bedrag nu verschuldigd of opgebouwd is.',
+  'about.liquidityTitle': 'Nettovermogen is niet hetzelfde als liquiditeit',
+  'about.liquidityText':
+    'Een woning kan het nettovermogen verhogen zonder direct besteedbaar geld op te leveren. Voor een afzonderlijke liquide-nettovermogensweergave laat je de woning en andere illiquide bezittingen weg, maar trek je relevante schulden nog steeds af.',
+  'about.valuationTitle': 'Gebruik een onderbouwde actuele waarde',
+  'about.valuationText':
+    'Voer een redelijke huidige marktwaarde in. Verlaag voor een voorzichtige liquidatieschatting de woningwaarde met verwachte verkoopkosten vóór aflossing van de hypotheek, terwijl je de hypotheek apart laat staan.',
+  'about.cashFlowTitle': 'Kasstroom is een afzonderlijke weergave',
+  'about.cashFlowText':
+    'De app modelleert momenteel geen inkomen, uitgaven of kasstroom en garandeert geen rendement op beleggingen of vastgoed.',
+  'about.cashFlowHeuristic':
+    "De Rich Dad-omschrijving 'geld in je zak' is een kasstroomheuristiek. Die beantwoordt een andere vraag en herclassificeert een woning niet in deze balanscalculator.",
   'about.lede':
     'Nettovermogencalculator is een lokale PWA zonder accounts, databaseserver, analytics, reclame, telemetrie, externe lettertypen of externe runtimeverzoeken.',
   'about.privacyText':

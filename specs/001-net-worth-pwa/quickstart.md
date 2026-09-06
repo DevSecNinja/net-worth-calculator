@@ -129,6 +129,23 @@ Run `npm run test:privacy`. The suite enters unique marker financial data and fa
 currency/value, dated chart and table data agree, current-format backups preserve every observation,
 and unsupported formats are rejected.
 
+## Scenario 8 - Balance-Sheet Methodology
+
+1. Open onboarding in `en-US`, `en-GB`, and `nl-NL`; verify the methodology heading and home-equity
+   example are translated.
+2. Change the onboarding base currency and verify all three values in the example reformat without
+   changing the 500,000 minus 250,000 equals 250,000 relationship.
+3. Create the sample vault and follow the dashboard methodology link with keyboard only.
+4. Verify About defines assets, liabilities, equity, expenses, liquidity, conservative property
+   valuation, cash-flow scope, and the distinct Rich Dad heuristic.
+5. Confirm the sample home remains a `property` asset and its mortgage remains a separate `mortgage`
+   liability; no cash-flow classification mode exists.
+6. At a narrow viewport and 200% zoom, verify the onboarding explanation, dashboard link, and About
+   section reflow without horizontal page scrolling.
+
+**Expected**: The methodology is discoverable and locale-aware without changing calculations,
+persisted data, privacy boundaries, or asset/liability classifications.
+
 ## Production Artifact
 
 ```powershell

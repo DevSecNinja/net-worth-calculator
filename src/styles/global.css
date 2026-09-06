@@ -298,6 +298,46 @@ h2 {
   font-weight: 900;
 }
 
+.methodology-summary {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.methodology-equation {
+  padding: 0.85rem 1rem;
+  border-left: 0.3rem solid var(--primary);
+  border-radius: 0 0.6rem 0.6rem 0;
+  background: var(--primary-soft);
+  font-weight: 750;
+}
+
+.methodology-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.definition-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.definition-list div {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--surface-muted);
+}
+
+.definition-list dt {
+  font-weight: 850;
+}
+
+.definition-list dd {
+  margin: 0.25rem 0 0;
+}
+
 .form-stack {
   display: grid;
   gap: 1rem;

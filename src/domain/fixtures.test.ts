@@ -1,5 +1,6 @@
 import { buildDashboardData } from './aggregation';
 import { addSampleData, createEmptyVault } from './fixtures';
+import { assetTypes, liabilityTypes } from './model';
 import { vaultSchema } from './validation';
 
 function allDates(vault: ReturnType<typeof addSampleData>): string[] {
@@ -78,6 +79,15 @@ describe('sample household fixture', () => {
       ).toBe(true);
       expect(Number(debt.monthlyPayment)).toBeGreaterThan(0);
     }
+  });
+
+  it('keeps a home as an asset and its mortgage as a separate liability', () => {
+    expect(sample.assets.find(({ type }) => type === 'property')).toBeDefined();
+    expect(sample.liabilities.find(({ type }) => type === 'mortgage')).toBeDefined();
+    expect(assetTypes).toContain('property');
+    expect(assetTypes).not.toContain('mortgage');
+    expect(liabilityTypes).toContain('mortgage');
+    expect(liabilityTypes).not.toContain('property');
   });
 
   it('produces useful annual, timeline, allocation, carry-forward, and payoff data', () => {

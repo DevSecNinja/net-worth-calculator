@@ -24,6 +24,13 @@ describe('dashboard integration', () => {
     await user.click(screen.getByRole('button', { name: /create with sample data/i }));
 
     expect(await screen.findByRole('heading', { name: /net worth dashboard/i })).toBeVisible();
+    const methodologyLink = screen.getByRole('link', { name: /how net worth is calculated/i });
+    expect(methodologyLink).toHaveAttribute('href', '#/about#methodology');
+    await user.click(methodologyLink);
+    expect(
+      await screen.findByRole('heading', { name: /how this calculator defines net worth/i }),
+    ).toBeVisible();
+    await user.click(screen.getByRole('link', { name: /^dashboard$/i }));
     expect(screen.getByRole('heading', { name: /net worth trend/i })).toBeVisible();
     await user.click(screen.getByText(/view net worth trend data table/i));
     await user.click(screen.getByText(/view assets and liabilities data table/i));

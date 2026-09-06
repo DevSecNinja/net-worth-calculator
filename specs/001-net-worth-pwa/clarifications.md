@@ -48,3 +48,17 @@ The release scope was expanded with five locked, implementation-changing decisio
 No clarification questions remain. Functional scope, data identity, migration behavior, localization,
 accessibility, privacy, edge cases, and measurable completion signals are fully specified. The
 requirements checklist remains **16/16 passing**.
+
+## Methodology Amendment Session: 2026-09-06
+
+| Area                   | Decision                                                                                                   | Specification impact                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Product model          | Net worth uses conventional balance-sheet semantics: assets minus liabilities                              | Property remains an asset; outstanding mortgage principal remains a separate debt    |
+| Home carrying costs    | Interest, taxes, insurance, maintenance, repairs, and utilities are expenses unless currently owed/accrued | No expense categories or recurring cash-flow model are added                         |
+| Alternative framing    | Rich Dad's "puts money in your pocket" language is a distinct cash-flow heuristic                          | No toggle may create incompatible net-worth classifications                          |
+| Liquidity              | Liquid net worth may exclude a home and other illiquid assets while retaining relevant liabilities         | The concept is guidance only; no new persisted field or calculation mode is required |
+| Conservative valuation | Users may reduce property value by estimated selling costs before mortgage payoff                          | Mortgage remains separately listed to avoid double counting                          |
+| Discoverability        | Explain the method during onboarding, in About, and beside the dashboard summary                           | All content and accessibility labels are complete in `en-US`, `en-GB`, and `nl-NL`   |
+
+This amendment introduces no cash-flow tracking, runtime dependency, network request, telemetry, or
+vault-schema change.

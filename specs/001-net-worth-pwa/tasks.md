@@ -494,3 +494,15 @@ chart/table values with source semantics.
 - [x] T107 Calculate exact As of yearly change separately from unchanged annual December 31 change in `src/domain/aggregation.ts` and verify the realistic fixture in `src/domain/fixtures.test.ts` (FR-050, SC-020)
 - [x] T108 Explain and localize the metric for `en-US`, `en-GB`, and `nl-NL` in `src/features/dashboard/DashboardSummary.tsx`, `src/features/locale/catalog.ts`, and `src/features/dashboard/DashboardSummary.test.tsx` (FR-038, FR-050)
 - [x] T109 Prove defined and unavailable sample states in `tests/e2e/dated-observations.spec.ts`, run all quality/privacy/PWA/multi-browser gates, and deliver the focused release (SC-016, SC-020)
+
+---
+
+## Phase 18: Balance-Sheet Methodology Amendment
+
+- [x] T110 [P] [US10] Add complete `en-US`, `en-GB`, and `nl-NL` methodology catalog content and locale-aware home-equity examples in `src/features/locale/catalog.ts` and `src/features/locale/catalog.test.ts` (FR-051, FR-052, FR-056)
+- [x] T111 [US10] Add the concise onboarding methodology explanation before vault creation in `src/features/onboarding/OnboardingPage.tsx` and test selected-currency formatting in `src/features/vault/VaultFlows.test.tsx` (FR-051)
+- [x] T112 [P] [US10] Add the full About methodology covering balance-sheet definitions, expenses, liquidity, conservative valuation, cash-flow scope, and the Rich Dad heuristic in `src/features/about/AboutPage.tsx` and `src/features/about/AboutPage.test.tsx` (FR-052, FR-055)
+- [x] T113 [P] [US10] Add the accessible dashboard methodology link and responsive presentation in `src/features/dashboard/DashboardPage.tsx`, `src/styles/global.css`, and `src/features/dashboard/DashboardPage.test.tsx` (FR-053)
+- [x] T114 [P] [US10] Lock property-as-asset and mortgage-as-liability semantics in `src/domain/fixtures.test.ts` without adding a cash-flow classification path (FR-054)
+- [x] T115 [P] [US10] Document the balance-sheet methodology and primary sources in `README.md`, `docs/architecture.md`, and the Spec Kit specification, clarification, plan, research, quickstart, task, and analysis artifacts (FR-051-FR-056)
+- [x] T116 [US10] Run format, lint, strict typecheck, coverage, build, privacy, PWA, and multi-browser accessibility/locale gates, then prepare the focused methodology release (SC-021)

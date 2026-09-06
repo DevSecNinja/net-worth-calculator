@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 import { AppFooter } from '@/components/ui/AppFooter';
-import { LocaleProvider } from '@/features/locale/LocaleProvider';
+import { LocaleProvider, localeStorageKey } from '@/features/locale/LocaleProvider';
 import { buildLabel, packageVersion } from '../../../tests/helpers/packageMetadata';
 
 import { AboutPage } from './AboutPage';
@@ -9,11 +10,17 @@ import { AboutPage } from './AboutPage';
 const testCommit = '0123456789abcdef0123456789abcdef01234567';
 
 describe('AboutPage', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('states the local-only privacy boundaries and exact package/build identity', () => {
     render(
       <LocaleProvider>
-        <AboutPage />
-        <AppFooter />
+        <MemoryRouter initialEntries={['/about']}>
+          <AboutPage />
+          <AppFooter />
+        </MemoryRouter>
       </LocaleProvider>,
     );
 
@@ -36,5 +43,60 @@ describe('AboutPage', () => {
       );
     }
     expect(screen.getByText(buildLabel(testCommit))).toBeVisible();
+  });
+
+  it.each([
+    [
+      'en-US',
+      'How this calculator defines net worth',
+      '$500,000.00',
+      'Expenses are not automatically liabilities',
+    ],
+    [
+      'en-GB',
+      'How this calculator defines net worth',
+      '£500,000.00',
+      'Expenses are not automatically liabilities',
+    ],
+    [
+      'nl-NL',
+      'Zo definieert deze calculator nettovermogen',
+      '€ 500.000,00',
+      'Uitgaven zijn niet automatisch schulden',
+    ],
+  ] as const)(
+    'explains the complete balance-sheet methodology in %s',
+    (locale, heading, home, expenses) => {
+      localStorage.setItem(localeStorageKey, locale);
+      render(
+        <LocaleProvider>
+          <MemoryRouter initialEntries={['/about']}>
+            <AboutPage />
+          </MemoryRouter>
+        </LocaleProvider>,
+      );
+
+      expect(screen.getByRole('heading', { name: heading })).toBeVisible();
+      expect(
+        screen.getByText(new RegExp(home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))),
+      ).toHaveTextContent(/250/);
+      expect(screen.getByRole('heading', { name: expenses })).toBeVisible();
+      expect(screen.getByText(/Rich Dad|Rich Dad-omschrijving/)).toHaveTextContent(
+        /cash-flow heuristic|kasstroomheuristiek/,
+      );
+    },
+  );
+
+  it('formats the example with a supplied vault currency', () => {
+    localStorage.setItem(localeStorageKey, 'en-GB');
+    render(
+      <LocaleProvider>
+        <MemoryRouter initialEntries={['/about']}>
+          <AboutPage currency="EUR" />
+        </MemoryRouter>
+      </LocaleProvider>,
+    );
+
+    expect(screen.getByText(/home asset minus/i)).toHaveTextContent(/€500,000\.00/);
   });
 });

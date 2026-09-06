@@ -173,6 +173,13 @@ negotiation and explicit override; localized money parsing/blur formatting with 
 the initial public dated-observation schema; exact-date liability projections; As of dashboard,
 timeline, annual snapshots, source/staleness semantics, and Dutch/browser round-trip coverage.
 
+### Phase 3B - Balance-Sheet Methodology Amendment
+
+Document conventional net-worth semantics in localized onboarding and About content, format the
+home-equity example with locale-aware currency presentation, and add an accessible dashboard link to
+the methodology. Preserve the existing `property` asset and `mortgage` liability types; add no
+cash-flow fields, classification toggle, persisted data, runtime dependency, or network behavior.
+
 ### Phase 4 - Repository, Release, and Deployment
 
 Apply DevSecNinja shared configuration and pinned workflow callers, run all local and CI gates,

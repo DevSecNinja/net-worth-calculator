@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ErrorSummary } from '@/components/forms/ErrorSummary';
 import { PassphraseFields } from '@/components/forms/PassphraseFields';
 import { Button } from '@/components/ui/Button';
+import { formatMoney } from '@/domain/currency';
 import { useVault } from '@/features/vault/useVault';
 import { useLocale } from '@/features/locale/LocaleProvider';
 import { validatePassphrasePair } from '@/features/vault/passphrase';
@@ -50,6 +51,18 @@ export function OnboardingPage() {
 
       <div className="onboarding-grid">
         <section className="panel">
+          <div className="methodology-summary">
+            <h2>{t('onboarding.methodologyTitle')}</h2>
+            <p>{t('onboarding.methodologyText')}</p>
+            <p className="methodology-equation">
+              {t('onboarding.methodologyExample', {
+                home: formatMoney('500000', currency, locale),
+                mortgage: formatMoney('250000', currency, locale),
+                equity: formatMoney('250000', currency, locale),
+              })}
+            </p>
+            <Link to="/about#methodology">{t('onboarding.methodologyLink')}</Link>
+          </div>
           <h2>{t('onboarding.before')}</h2>
           <ul className="feature-list">
             <li>
