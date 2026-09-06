@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+import { createVault } from '../helpers/app';
 import {
   emulateInstalledStandalone,
   expectNoPageOverflow,
@@ -85,4 +86,20 @@ test('reflows onboarding for iPhone portrait, landscape, touch, safe areas, and 
   if (statusLayout.actionsBottom !== undefined) {
     expect(statusLayout.actionsBottom).toBeLessThanOrEqual(statusLayout.footerTop!);
   }
+});
+
+test('keeps the sample dashboard within a 320px viewport at 200% text zoom', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto('./');
+  await createVault(page, true);
+  await expect(page.locator('.chart-card')).toHaveCount(6);
+
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  await expectNoPageOverflow(page);
+
+  await page.locator('.chart-card summary').first().click();
+  await expect(page.locator('.chart-card table').first()).toBeVisible();
+  await expectNoPageOverflow(page);
 });

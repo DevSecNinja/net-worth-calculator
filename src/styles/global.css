@@ -708,6 +708,7 @@ select {
 }
 
 .chart-card {
+  max-width: 100%;
   min-width: 0;
   padding: 1.25rem;
 }
@@ -727,7 +728,11 @@ select {
 }
 
 .chart-card__visual {
+  max-width: 100%;
   min-height: 240px;
+  contain: inline-size;
+  overflow-x: auto;
+  overflow-y: hidden;
   outline: none;
 }
 
@@ -984,6 +989,23 @@ td:first-child {
 }
 
 @media (max-width: 620px) {
+  .app-header {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-header nav {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1;
+  }
+
+  .app-header > .button {
+    justify-self: start;
+  }
+
   .brand small {
     display: none;
   }
@@ -1014,9 +1036,24 @@ td:first-child {
     grid-template-columns: 1fr;
   }
 
+  .metric-card strong,
+  .chart-card__table summary {
+    overflow-wrap: anywhere;
+  }
+
+  .metric-card {
+    max-width: 100%;
+    min-width: 0;
+  }
+
   .range-filter {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .range-filter select {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .toast {
@@ -1030,6 +1067,15 @@ td:first-child {
 
   .chart-tooltip--selected {
     max-width: none;
+  }
+
+  .chart-tooltip__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chart-tooltip__row dd {
+    justify-items: start;
+    text-align: left;
   }
 
   .app-footer {

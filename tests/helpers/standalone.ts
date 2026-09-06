@@ -97,11 +97,15 @@ export async function waitForServiceWorkerControl(page: Page): Promise<void> {
 }
 
 export async function expectNoPageOverflow(page: Page): Promise<void> {
-  const dimensions = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-  }));
-  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+  await expect
+    .poll(async () => {
+      const dimensions = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      return dimensions.scrollWidth - dimensions.clientWidth;
+    })
+    .toBeLessThanOrEqual(1);
 }
 
 export async function inspectSensitivePersistence(
