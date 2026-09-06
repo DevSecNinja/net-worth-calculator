@@ -24,8 +24,10 @@ Generated service worker -> Cache Storage (app-shell resources only)
 ```
 
 `HashRouter` keeps in-app routes compatible with static hosting and direct Pages launches. Chart-heavy
-routes are lazy-loaded. Browser-level suites exercise built output through the same local preview
-harness used by CI.
+dependencies remain isolated in a generated vendor chunk, but the first unlocked dashboard is part of
+the critical startup module graph. This prevents an encrypted vault from committing before a deferred
+route fetch that an installed app can no longer satisfy. Browser-level suites exercise built output
+through the same local preview harness used by CI.
 
 ## Module boundaries
 
@@ -86,6 +88,13 @@ memory. Every committed mutation increments an encrypted revision and replaces t
 envelope atomically. A short-lived localStorage lease, `BroadcastChannel` or storage events, and
 compare-and-swap envelope checks prevent silent last-writer-wins behavior across tabs.
 
+Random local identifiers prefer `crypto.randomUUID` and use an RFC 4122 version 4 formatter backed by
+`crypto.getRandomValues` when that convenience method is absent. BroadcastChannel is optional: a
+missing or security-restricted constructor retains the existing storage-event path, while unexpected
+constructor defects still surface. Web Crypto, IndexedDB, and writable localStorage remain mandatory
+and fail closed. Onboarding probes those required capabilities before enabling currency/passphrase
+submission; IndexedDB open failures also return to the same localized unavailable state.
+
 Locked reset does not derive a key or decrypt the vault. Opening its confirmation captures the exact
 opaque envelope. Submission acquires the same writable lease used by unlocked sessions, then performs
 a strict IndexedDB compare-and-delete transaction. A foreign active lease refuses deletion; an absent
@@ -116,7 +125,7 @@ authentication and before current-schema validation.
 | Surface         | Permitted content                                                               |
 | --------------- | ------------------------------------------------------------------------------- |
 | IndexedDB       | One authenticated cipher envelope at a fixed key                                |
-| localStorage    | Theme, locale, short-lived random tab lease, and data-free deletion pulse       |
+| localStorage    | Theme, locale, short-lived random tab lease, and data-free coordination pulses  |
 | Cache Storage   | Generated HTML, JavaScript, CSS, manifest, and local image app-shell resources  |
 | JavaScript heap | Decrypted vault and derived key only while the writable session is unlocked     |
 | Backup file     | Versioned wrapper around the authenticated cipher envelope and export timestamp |
@@ -146,6 +155,13 @@ behind a one-hour throttle. A waiting worker remains inactive until the user acc
 Dirty form state must be saved or explicitly discarded before activation reloads the page. The app
 never deletes all origin caches and service-worker updates do not alter IndexedDB.
 
+The installed-iOS regression suite runs production output with the generated service worker,
+IndexedDB, and Web Crypto in a WebKit context using the iPhone 14 Pro Max CSS viewport, DPR, touch
+input, user agent, `navigator.standalone`, and standalone display media query. It covers a controlled
+post-startup cache loss, empty/sample creation, pagehide, lock/reload/unlock, real origin outage, and
+safe update. Playwright cannot automate Safari's Add to Home Screen UI or physical iOS process/cache
+eviction, so the release quickstart keeps those as explicit real-device checks.
+
 ## Build and deployment
 
 `npm run build` emits `dist`; `npm run test:build` derives the expected base from
@@ -174,8 +190,10 @@ cutover and rollback by changing the `net-worth` CNAME between
 ## Release integrity
 
 PR CI runs formatting, ESLint, strict TypeScript, coverage, production build verification, privacy,
-PWA, and all configured desktop/mobile Playwright projects. Organization reusable workflows and
-third-party actions are pinned to immutable commits. Release Please owns conventional semantic version
-PRs, tags, and direct GitHub Release publication. The central v3 workflow requires installed GitHub App
-credentials, mints a short-lived token, and fails closed without a `GITHUB_TOKEN` fallback. This simple
-static PWA has no separate tag-triggered publisher because it has no release assets or attestations.
+PWA, and all configured desktop/mobile Playwright projects. The five broad compatibility projects are
+supplemented by scoped iPhone 14 Pro Max, iPad Pro 12.9-inch, and desktop 4K projects so primary-device
+coverage does not multiply every suite. Organization reusable workflows and third-party actions are
+pinned to immutable commits. Release Please owns conventional semantic version PRs, tags, and direct
+GitHub Release publication. The central v3 workflow requires installed GitHub App credentials, mints
+a short-lived token, and fails closed without a `GITHUB_TOKEN` fallback. This simple static PWA has no
+separate tag-triggered publisher because it has no release assets or attestations.

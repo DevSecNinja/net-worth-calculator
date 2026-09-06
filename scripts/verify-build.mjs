@@ -274,6 +274,9 @@ const builtJavaScript = (
       .map((file) => readFile(join(dist, file), 'utf8')),
   )
 ).join('\n');
+if (assetFiles.some((file) => /(?:^|[\\/])DashboardPage-[^\\/]+\.js$/.test(file))) {
+  throw new Error('The first unlocked dashboard must be part of the initial PWA module graph.');
+}
 const escapedBase = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 if (!new RegExp(`["'\`]${escapedBase}sw\\.js["'\`]`).test(builtJavaScript)) {
   throw new Error(`Built application does not register the service worker from ${base}sw.js.`);

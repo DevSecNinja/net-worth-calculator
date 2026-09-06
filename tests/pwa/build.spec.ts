@@ -35,6 +35,9 @@ test('built output passes the release artifact contract and exposes exact build 
   const worker = await readFile('dist/sw.js', 'utf8');
   expect(worker).toContain('precacheAndRoute');
   expect(worker).not.toMatch(/indexedDB|net-worth-backup/);
+  expect(worker).not.toMatch(/assets\/DashboardPage-[^"]+\.js/);
+  const routes = await readFile('src/app/routes.tsx', 'utf8');
+  expect(routes).not.toMatch(/\blazy\s*\(/);
   const document = await readFile('dist/index.html', 'utf8');
   expect(document).toMatch(/<meta name="mobile-web-app-capable" content="yes"\s*\/?>/);
   expect(document).toMatch(/<meta name="apple-mobile-web-app-capable" content="yes"\s*\/?>/);

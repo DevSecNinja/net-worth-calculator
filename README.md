@@ -26,8 +26,8 @@ server API, analytics, telemetry, advertising, remote fonts, or runtime CDN depe
   locking, closing the page, or losing the single-writer lease requires another unlock.
 - Cache Storage contains only the generated application shell. It does not contain vault records,
   backups, user input, or application data responses.
-- Theme, language, short-lived tab-lease metadata, and a data-free vault-deletion pulse are
-  non-sensitive and may use localStorage.
+- Theme, language, short-lived tab-lease metadata, and data-free vault-deletion/update-coordination
+  pulses are non-sensitive and may use localStorage.
 - The application makes no runtime request to an external origin and sends no financial data.
 
 Encryption protects stored vault bytes and backup contents, not an already unlocked session. A
@@ -85,12 +85,20 @@ Runtime calculation remains entirely local; these are documentation links only.
 
 The supported target is current evergreen desktop and mobile Chromium, Firefox, and WebKit browsers.
 CI exercises desktop Chromium, Firefox, and WebKit plus representative mobile Chromium and WebKit
-profiles. HTTPS, Web Crypto, IndexedDB, service workers, and modern JavaScript are required.
+profiles. Focused compatibility projects additionally cover an installed-like iPhone 14 Pro Max at a
+430 by 932 CSS viewport and DPR 3, an iPad Pro 12.9-inch at 1024 by 1366 portrait and 1366 by 1024
+landscape viewports, and Chromium at 3840 by 2160. Large Pro Max-class phones are covered through
+430-to-480 CSS-pixel portrait reflow tests rather than speculative future device descriptors. HTTPS,
+Web Crypto, IndexedDB, service workers, and modern JavaScript are required.
 
 Installation UI and native file-system pickers are capability-dependent. Browsers that do not expose
 them continue to work through normal browser installation controls and standards-based backup
 download/upload fallbacks. Private browsing, storage restrictions, quota pressure, enterprise policy,
-or browser data eviction can prevent or remove local persistence.
+or browser data eviction can prevent or remove local persistence. Onboarding checks secure context,
+Web Crypto, IndexedDB, and writable localStorage before accepting a new passphrase and explains which
+required capability is unavailable. Automated iPhone/iPad checks emulate the application-visible
+standalone signals but do not claim to install through the physical iOS home screen; follow the
+[real-device smoke checklist](specs/003-fix-ios-pwa-vault/quickstart.md) for release confirmation.
 
 ## Local setup
 
@@ -164,9 +172,10 @@ active unlocked session blocks deletion.
 ## Offline, installation, and updates
 
 After one successful online production load, the generated service worker precaches the revisioned
-app shell. Calculations, navigation, and vault access can then work during a real origin outage.
-Unvisited or evicted assets may still require a connection, and reinstalling or clearing site data
-starts from an empty local state.
+app shell. The first unlocked dashboard is in the startup module graph, so vault creation cannot commit
+and then depend on a deferred route-module fetch. Calculations, navigation, and vault access can work
+during a real origin outage. Browser eviction of the complete site store may require another online
+load, and reinstalling or clearing site data starts from an empty local state.
 
 An install action appears only when the browser exposes an install prompt. New service-worker builds
 wait until the app reports an update and the user accepts it. Choosing **Later** keeps the current

@@ -43,6 +43,7 @@ The following are outside the application's control:
 | AES-GCM nonce reuse                     | Fresh random 96-bit IV for every encryption                                        | Depends on browser cryptographic random generation                               |
 | Plaintext recovery from another record  | Whole-document encryption prevents plaintext per-item stores and metadata indexes  | Approximate vault size and write activity may be inferred externally             |
 | Stale or concurrent tab writes          | Single-writer lease plus encrypted revisions and atomic compare-and-swap writes    | A compromised same-origin tab can still act with its privileges                  |
+| Restricted optional messaging API       | Narrow capability detection plus data-free storage-event fallback                  | Immediate peer notices may be delayed when BroadcastChannel is unavailable       |
 | Locked-vault destructive reset          | Typed warning, exclusive lease, and exact-envelope compare-and-delete              | Anyone with browser-profile access can erase local ciphertext but not decrypt it |
 | Accidental backup overwrite/import loss | Validate, authenticate, and confirm before the sole replacement transaction        | A confirmed restore intentionally replaces the one local vault                   |
 | Backup content or filename disclosure   | Generic dated filename and encrypted authenticated payload                         | Plaintext wrapper exposes format version and export timestamp                    |
@@ -69,17 +70,27 @@ passphrase verifier, hint, recovery path, recovery question, server-held key, or
 override. The locked reset path destroys ciphertext; it does not reset or recover the passphrase.
 Wrong passphrases and modified ciphertext intentionally produce the same authentication-style error.
 
+Random vault, item, and lease identifiers use browser cryptographic randomness. If the
+`crypto.randomUUID` convenience method is unavailable, the app formats `crypto.getRandomValues` bytes
+as an RFC 4122 version 4 identifier; it does not fall back to timestamps or non-cryptographic random
+numbers.
+
 ## Storage and cache boundaries
 
 IndexedDB database `net-worth-calculator` contains a fixed `vault` store and `active` key. Its value is
 the cipher envelope; domain entities and derived dashboard data are not separate records.
-localStorage may reveal the selected theme, explicit locale, a random tab owner/expiry lease, and a
-transient constant vault-deletion pulse; none contains vault content.
+localStorage may reveal the selected theme, explicit locale, a random tab owner/expiry lease, and
+transient data-free vault-deletion or dirty-state coordination pulses; none contains vault content or
+dirty field names.
 
 The Workbox service worker precaches only generated app-shell resources. There are no runtime caching
 routes. Backup extensions are denied as navigation fallbacks, and the build verifier rejects
 service-worker references to vault storage or backup data. Cache cleanup targets obsolete generated
 precache entries rather than all origin caches.
+
+The dashboard required immediately after vault creation is loaded as part of application startup.
+This prevents a successful encrypted write from being followed by a deferred module request that a
+standalone browser cannot satisfy after cache eviction or an origin outage.
 
 ## Backup and file behavior
 
@@ -148,3 +159,8 @@ the local ciphertext without knowing the passphrase, but that capability cannot 
 
 Report suspected vulnerabilities privately using [SECURITY.md](../SECURITY.md). Do not attach real
 vaults, passphrases, financial data, decrypted exports, or sensitive screenshots to a public issue.
+
+Automated installed-mode diagnostics retain only an event category and, for failed script requests, a
+query-free application asset path. They do not retain exception stacks, form values, IndexedDB rows,
+ciphertext, request bodies, or user-entered markers. The production error boundary remains localized
+and generic rather than exposing internal exception details.

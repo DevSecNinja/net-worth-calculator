@@ -1,4 +1,4 @@
-import { VaultSessionLease } from './sessionLease';
+import { sessionLeaseContract, VaultSessionLease } from './sessionLease';
 
 describe('VaultSessionLease', () => {
   it('allows only one active writer and permits takeover after release', () => {
@@ -77,7 +77,102 @@ describe('VaultSessionLease', () => {
     expect(lease.acquire()).toBe(true);
     lease.release();
 
-    expect(events).toEqual(['post:lease-changed', 'close']);
+    expect(events).toEqual(['post:lease-changed', 'post:lease-changed', 'close']);
+  });
+
+  it('keeps local lease safety when BroadcastChannel is security restricted', () => {
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class RestrictedBroadcastChannel {
+        constructor() {
+          throw new DOMException('Restricted for this context.', 'SecurityError');
+        }
+      },
+    );
+    const lease = new VaultSessionLease();
+
+    expect(lease.acquire()).toBe(true);
+    expect(lease.ownsLease()).toBe(true);
+    lease.release();
+  });
+
+  it('rolls back the lease when an unexpected channel notification fails', () => {
+    vi.useFakeTimers();
+    const close = vi.fn();
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class BrokenBroadcastChannel {
+        postMessage() {
+          throw new Error('Unexpected channel defect.');
+        }
+
+        close() {
+          close();
+        }
+      },
+    );
+    const lease = new VaultSessionLease();
+
+    expect(() => lease.acquire()).toThrow('Unexpected channel defect.');
+    expect(localStorage.getItem(sessionLeaseContract.key)).toBeNull();
+    vi.advanceTimersByTime(sessionLeaseContract.heartbeatMs * 2);
+    expect(localStorage.getItem(sessionLeaseContract.key)).toBeNull();
+    expect(close).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
+
+  it('does not write a lease when an unexpected channel constructor fails', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class BrokenBroadcastChannel {
+        constructor() {
+          throw new Error('Unexpected channel constructor defect.');
+        }
+      },
+    );
+    const lease = new VaultSessionLease();
+
+    expect(() => lease.acquire()).toThrow('Unexpected channel constructor defect.');
+    expect(localStorage.getItem(sessionLeaseContract.key)).toBeNull();
+    vi.advanceTimersByTime(sessionLeaseContract.heartbeatMs * 2);
+    expect(localStorage.getItem(sessionLeaseContract.key)).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it('clears the lease and heartbeat before surfacing a renewal failure', () => {
+    vi.useFakeTimers();
+    let messages = 0;
+    const lost = vi.fn();
+    const close = vi.fn();
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class FailingBroadcastChannel {
+        onmessage: (() => void) | null = null;
+
+        postMessage() {
+          messages += 1;
+          if (messages > 1) throw new Error('Heartbeat notification failed.');
+        }
+
+        close() {
+          close();
+        }
+      },
+    );
+    const lease = new VaultSessionLease();
+    lease.onLost(lost);
+    expect(lease.acquire()).toBe(true);
+
+    expect(() => vi.advanceTimersByTime(sessionLeaseContract.heartbeatMs)).toThrow(
+      'Heartbeat notification failed.',
+    );
+    expect(localStorage.getItem(sessionLeaseContract.key)).toBeNull();
+    expect(lost).toHaveBeenCalledOnce();
+    expect(close).toHaveBeenCalledOnce();
+    vi.advanceTimersByTime(sessionLeaseContract.heartbeatMs * 2);
+    expect(messages).toBe(3);
+    vi.useRealTimers();
   });
 
   it('keeps a transaction lease until explicit release during pagehide', () => {

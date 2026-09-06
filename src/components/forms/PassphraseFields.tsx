@@ -8,6 +8,7 @@ type PassphraseFieldsProps = {
   onConfirmationChange: (value: string) => void;
   error?: string | undefined;
   passphraseLabel?: string | undefined;
+  disabled?: boolean | undefined;
 };
 
 export function PassphraseFields({
@@ -17,6 +18,7 @@ export function PassphraseFields({
   onConfirmationChange,
   error,
   passphraseLabel,
+  disabled = false,
 }: PassphraseFieldsProps) {
   const { t } = useLocale();
   return (
@@ -32,6 +34,7 @@ export function PassphraseFields({
         onChange={(event) => onPassphraseChange(event.currentTarget.value)}
         description={t('vault.passphraseHelp')}
         error={error}
+        disabled={disabled}
         required
       />
       <Field
@@ -43,6 +46,7 @@ export function PassphraseFields({
         maxLength={1024}
         value={confirmation}
         onChange={(event) => onConfirmationChange(event.currentTarget.value)}
+        disabled={disabled}
         required
       />
     </>

@@ -100,6 +100,7 @@ describe('VaultProvider operation generation', () => {
     const started = new Promise<void>((resolve) => {
       signalStarted = resolve;
     });
+
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
@@ -117,6 +118,40 @@ describe('VaultProvider operation generation', () => {
     await waitFor(() => expect(screen.getByText('locked:sealed')).toBeVisible());
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(screen.getByText('locked:sealed')).toBeVisible();
+  });
+
+  it('does not publish an unlocked session before the encrypted create commit finishes', async () => {
+    const user = userEvent.setup();
+    render(
+      <VaultProvider>
+        <Harness />
+      </VaultProvider>,
+    );
+    await screen.findByText('absent:sealed');
+
+    let release!: () => void;
+    let signalStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      signalStarted = resolve;
+    });
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const originalEncrypt = crypto.subtle.encrypt.bind(crypto.subtle);
+    vi.spyOn(crypto.subtle, 'encrypt').mockImplementation(async (algorithm, key, data) => {
+      signalStarted();
+      await gate;
+      return originalEncrypt(algorithm, key, data);
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    await started;
+    expect(screen.getByText('absent:sealed')).toBeVisible();
+    expect(await readEnvelope()).toBeUndefined();
+
+    release();
+    await screen.findByText('unlocked:USD');
+    expect(await readEnvelope()).toBeDefined();
   });
 
   it('locks and clears in-memory material synchronously when the page is hidden', async () => {

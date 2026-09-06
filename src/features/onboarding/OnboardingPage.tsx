@@ -13,7 +13,7 @@ import { useDirtyState } from '@/hooks/useDirtyState';
 const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK'];
 
 export function OnboardingPage() {
-  const { create, busy, error } = useVault();
+  const { create, busy, error, capabilityIssue } = useVault();
   const { setDirty } = useDirtyState();
   const { locale, t } = useLocale();
   const dirtyLabel = t('dirty.vaultSetup');
@@ -39,7 +39,18 @@ export function OnboardingPage() {
     await create(passphrase, currency, action?.value === 'sample', locale).catch(() => undefined);
   }
 
-  const errors = [validationError, error].filter((value): value is string => Boolean(value));
+  const capabilityError =
+    capabilityIssue === 'insecure-context' || capabilityIssue === 'web-crypto'
+      ? t('onboarding.cryptoUnavailable')
+      : capabilityIssue === 'indexed-db'
+        ? t('onboarding.databaseUnavailable')
+        : capabilityIssue === 'local-storage'
+          ? t('onboarding.storageUnavailable')
+          : undefined;
+  const unavailable = capabilityIssue !== undefined;
+  const errors = [capabilityError, validationError, error].filter((value): value is string =>
+    Boolean(value),
+  );
 
   return (
     <main id="main-content" className="page page--onboarding">
@@ -88,7 +99,11 @@ export function OnboardingPage() {
           <ErrorSummary errors={errors} />
           <label className="field">
             <span>{t('onboarding.baseCurrency')}</span>
-            <select value={currency} onChange={(event) => setCurrency(event.currentTarget.value)}>
+            <select
+              value={currency}
+              onChange={(event) => setCurrency(event.currentTarget.value)}
+              disabled={unavailable}
+            >
               {currencies.map((code) => (
                 <option key={code} value={code}>
                   {code}
@@ -103,12 +118,13 @@ export function OnboardingPage() {
             onPassphraseChange={setPassphrase}
             onConfirmationChange={setConfirmation}
             error={validationError}
+            disabled={unavailable}
           />
           <div className="button-row">
-            <Button type="submit" value="empty" disabled={busy}>
+            <Button type="submit" value="empty" disabled={busy || unavailable}>
               {busy ? t('onboarding.encrypting') : t('onboarding.createEmpty')}
             </Button>
-            <Button type="submit" value="sample" variant="secondary" disabled={busy}>
+            <Button type="submit" value="sample" variant="secondary" disabled={busy || unavailable}>
               {t('onboarding.createSample')}
             </Button>
           </div>

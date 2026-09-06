@@ -1,8 +1,8 @@
-import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AboutPage } from '@/features/about/AboutPage';
 import { BackupPage } from '@/features/backup/BackupPage';
+import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { InventoryPage } from '@/features/inventory/InventoryPage';
 import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
@@ -10,31 +10,10 @@ import { UnlockPage } from '@/features/vault/UnlockPage';
 import { useVault } from '@/features/vault/useVault';
 import { useLocale } from '@/features/locale/LocaleProvider';
 
-const DashboardPage = lazy(async () => {
-  const module = await import('@/features/dashboard/DashboardPage');
-  return { default: module.DashboardPage };
-});
-
-function Dashboard() {
-  const { t } = useLocale();
-  return (
-    <Suspense
-      fallback={
-        <main id="main-content" className="page centered-page" aria-busy="true">
-          <p>{t('app.preparingInsights')}</p>
-        </main>
-      }
-    >
-      <DashboardPage />
-    </Suspense>
-  );
-}
-
 function About() {
   const { vault } = useVault();
   return vault ? <AboutPage currency={vault.settings.baseCurrency} /> : <AboutPage />;
 }
-
 function Home() {
   const { status } = useVault();
   const { t } = useLocale();
@@ -47,7 +26,7 @@ function Home() {
   }
   if (status === 'absent') return <OnboardingPage />;
   if (status === 'locked') return <UnlockPage />;
-  return <Dashboard />;
+  return <DashboardPage />;
 }
 
 function Protected({ children }: { children: React.ReactNode }) {

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { DirtyStateProvider, useDirtyState } from './useDirtyState';
+import { dirtyStateContract, DirtyStateProvider, useDirtyState } from './useDirtyState';
 
 class MockBroadcastChannel {
   static readonly instances = new Map<string, Set<MockBroadcastChannel>>();
@@ -102,5 +102,100 @@ describe('DirtyStateProvider', () => {
     expect(
       await screen.findByText('Unsaved edits in another tab', { selector: 'output' }),
     ).toBeVisible();
+  });
+
+  it('keeps local dirty-state checks available when BroadcastChannel is restricted', async () => {
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class RestrictedBroadcastChannel {
+        constructor() {
+          throw new DOMException('Restricted for this context.', 'SecurityError');
+        }
+      },
+    );
+    const user = userEvent.setup();
+    render(
+      <DirtyStateProvider>
+        <Probe name="local tab" />
+      </DirtyStateProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /mark local tab dirty/i }));
+    await user.click(screen.getByRole('button', { name: /check local tab/i }));
+    expect(await screen.findByText('Asset editor', { selector: 'output' })).toBeVisible();
+  });
+
+  it('coordinates remote dirty state through storage when BroadcastChannel is restricted', async () => {
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class RestrictedBroadcastChannel {
+        constructor() {
+          throw new DOMException('Restricted for this context.', 'SecurityError');
+        }
+      },
+    );
+    const nativeSetItem = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key, value) {
+      nativeSetItem.call(this, key, value);
+      if (key === dirtyStateContract.storageKey) {
+        window.dispatchEvent(new StorageEvent('storage', { key, newValue: value }));
+      }
+    });
+    const user = userEvent.setup();
+    render(
+      <>
+        <DirtyStateProvider>
+          <Probe name="first storage tab" />
+        </DirtyStateProvider>
+        <DirtyStateProvider>
+          <Probe name="second storage tab" />
+        </DirtyStateProvider>
+      </>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /mark first storage tab dirty/i }));
+    await user.click(screen.getByRole('button', { name: /check second storage tab/i }));
+    expect(
+      await screen.findByText('Unsaved edits in another tab', { selector: 'output' }),
+    ).toBeVisible();
+  });
+
+  it('requires update confirmation when both coordination mechanisms are restricted', async () => {
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class RestrictedBroadcastChannel {
+        constructor() {
+          throw new DOMException('Restricted for this context.', 'SecurityError');
+        }
+      },
+    );
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Restricted for this context.', 'SecurityError');
+    });
+    const user = userEvent.setup();
+    render(
+      <DirtyStateProvider>
+        <Probe name="restricted tab" />
+      </DirtyStateProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /check restricted tab/i }));
+    expect(
+      await screen.findByText('Unsaved edits in another tab', { selector: 'output' }),
+    ).toBeVisible();
+  });
+
+  it('keeps local dirty-state checks available when secure randomness is unavailable', async () => {
+    vi.stubGlobal('crypto', {});
+    const user = userEvent.setup();
+    render(
+      <DirtyStateProvider>
+        <Probe name="local tab" />
+      </DirtyStateProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /mark local tab dirty/i }));
+    await user.click(screen.getByRole('button', { name: /check local tab/i }));
+    expect(await screen.findByText('Asset editor', { selector: 'output' })).toBeVisible();
   });
 });
