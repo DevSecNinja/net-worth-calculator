@@ -200,9 +200,12 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
     const publishMessage = publish.current;
     const ownerId = owner.current;
     if (!coordinationAvailable.current || !publishMessage || !ownerId) {
+      const remoteMayBeDirty = remoteDirty.current.size > 0 || peers.current.size > 0;
       return [
         ...[...dirty].sort(),
-        ...(coordinationFailsClosed.current ? [t('dirty.remote')] : []),
+        ...(coordinationFailsClosed.current || (!ownerId && remoteMayBeDirty)
+          ? [t('dirty.remote')]
+          : []),
       ];
     }
     const expected = new Set(peers.current);
