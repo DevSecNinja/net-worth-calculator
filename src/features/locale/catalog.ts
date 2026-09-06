@@ -64,6 +64,8 @@ const enUS = {
   'onboarding.createEmpty': 'Create empty vault',
   'onboarding.createSample': 'Create with sample data',
   'onboarding.encrypting': 'Encrypting...',
+  'onboarding.retryCapabilities': 'Check again',
+  'onboarding.checkingCapabilities': 'Checking...',
   'onboarding.cryptoUnavailable':
     'Secure browser cryptography is unavailable. Use a current browser over HTTPS before creating a vault.',
   'onboarding.databaseUnavailable':
@@ -355,7 +357,7 @@ const enUS = {
     'This calculator is informational and is not financial, legal, tax, or investment advice.',
   'about.noMarket':
     'Market values and exchange rates are never fetched; you enter all values manually.',
-  'about.buildText': 'Version v{version}, build {build}.',
+  'about.buildText': 'Version v{version}, build',
   'about.sourceText': 'Review the public source code and report vulnerabilities privately.',
   'pwa.offline': 'Offline - encrypted local data remains available',
   'pwa.backOnline': 'Back online.',
@@ -521,6 +523,8 @@ const nlNL: MessageCatalog = {
   'onboarding.createEmpty': 'Lege kluis maken',
   'onboarding.createSample': 'Met voorbeeldgegevens maken',
   'onboarding.encrypting': 'Versleutelen...',
+  'onboarding.retryCapabilities': 'Opnieuw controleren',
+  'onboarding.checkingCapabilities': 'Controleren...',
   'onboarding.cryptoUnavailable':
     'Veilige browserversleuteling is niet beschikbaar. Gebruik een actuele browser via HTTPS voordat je een kluis maakt.',
   'onboarding.databaseUnavailable':
@@ -815,7 +819,7 @@ const nlNL: MessageCatalog = {
     'Deze calculator is informatief en geen financieel, juridisch, fiscaal of beleggingsadvies.',
   'about.noMarket':
     'Marktwaarden en wisselkoersen worden nooit opgehaald; je voert alle waarden handmatig in.',
-  'about.buildText': 'Versie v{version}, build {build}.',
+  'about.buildText': 'Versie v{version}, build',
   'about.sourceText': 'Bekijk de openbare broncode en meld kwetsbaarheden privé.',
   'pwa.offline': 'Offline - versleutelde lokale gegevens blijven beschikbaar',
   'pwa.backOnline': 'Weer online.',

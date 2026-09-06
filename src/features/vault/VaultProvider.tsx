@@ -54,6 +54,7 @@ type VaultContextValue = {
   mutate: (updater: (vault: Vault) => Vault) => Promise<void>;
   changePassphrase: (currentPassphrase: string, newPassphrase: string) => Promise<void>;
   deleteVault: () => Promise<void>;
+  retryCapabilities: () => Promise<void>;
   prepareLockedVaultReset: () => Promise<boolean>;
   cancelLockedVaultReset: () => void;
   resetLockedVault: () => Promise<void>;
@@ -141,8 +142,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener('pagehide', lockForPageHide);
     const initialCapabilityIssue = detectVaultCapabilityIssue();
+    setCapabilityIssue(initialCapabilityIssue);
     if (initialCapabilityIssue) {
-      setCapabilityIssue(initialCapabilityIssue);
       setStatus('absent');
       return () => {
         active = false;
@@ -200,8 +201,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       let operationLease: VaultSessionLease | undefined;
       try {
         const currentIssue = detectVaultCapabilityIssue();
+        setCapabilityIssue(currentIssue);
         if (currentIssue) {
-          setCapabilityIssue(currentIssue);
           throw new VaultCapabilityError(currentIssue);
         }
         operationLease = acquireLease();
@@ -421,6 +422,24 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [acquireLease, isCurrentOperation],
   );
 
+  const retryCapabilities = useCallback(async () => {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const currentIssue = detectVaultCapabilityIssue();
+      setCapabilityIssue(currentIssue);
+      if (currentIssue) return;
+      try {
+        setStatus((await hasVault()) ? 'locked' : 'absent');
+      } catch {
+        setCapabilityIssue('indexed-db');
+        setStatus('absent');
+      }
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
   const clearError = useCallback(() => setError(undefined), []);
   const value = useMemo(
     () => ({
@@ -435,6 +454,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       mutate,
       changePassphrase,
       deleteVault,
+      retryCapabilities,
       prepareLockedVaultReset,
       cancelLockedVaultReset,
       resetLockedVault,
@@ -453,6 +473,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       lock,
       mutate,
       prepareLockedVaultReset,
+      retryCapabilities,
       replaceImportedVault,
       resetLockedVault,
       status,

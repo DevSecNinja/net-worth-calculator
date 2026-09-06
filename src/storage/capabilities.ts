@@ -16,14 +16,20 @@ export function detectVaultCapabilityIssue(): VaultCapabilityIssue | undefined {
   }
   if (typeof globalThis.indexedDB?.open !== 'function') return 'indexed-db';
 
+  let available: boolean;
   try {
     localStorage.setItem(STORAGE_PROBE_KEY, '1');
-    const available = localStorage.getItem(STORAGE_PROBE_KEY) === '1';
-    localStorage.removeItem(STORAGE_PROBE_KEY);
-    return available ? undefined : 'local-storage';
+    available = localStorage.getItem(STORAGE_PROBE_KEY) === '1';
   } catch {
     return 'local-storage';
+  } finally {
+    try {
+      localStorage.removeItem(STORAGE_PROBE_KEY);
+    } catch {
+      available = false;
+    }
   }
+  return available ? undefined : 'local-storage';
 }
 
 export const vaultCapabilityContract = {

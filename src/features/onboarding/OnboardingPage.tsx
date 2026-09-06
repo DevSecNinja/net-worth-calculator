@@ -13,7 +13,7 @@ import { useDirtyState } from '@/hooks/useDirtyState';
 const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK'];
 
 export function OnboardingPage() {
-  const { create, busy, error, capabilityIssue } = useVault();
+  const { create, retryCapabilities, busy, error, capabilityIssue } = useVault();
   const { setDirty } = useDirtyState();
   const { locale, t } = useLocale();
   const dirtyLabel = t('dirty.vaultSetup');
@@ -127,6 +127,16 @@ export function OnboardingPage() {
             <Button type="submit" value="sample" variant="secondary" disabled={busy || unavailable}>
               {t('onboarding.createSample')}
             </Button>
+            {unavailable ? (
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void retryCapabilities()}
+              >
+                {busy ? t('onboarding.checkingCapabilities') : t('onboarding.retryCapabilities')}
+              </Button>
+            ) : null}
           </div>
           <p className="fine-print">{t('onboarding.sampleHelp')}</p>
           <p className="fine-print">

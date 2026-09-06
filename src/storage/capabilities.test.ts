@@ -34,4 +34,14 @@ describe('vault capability detection', () => {
     });
     expect(detectVaultCapabilityIssue()).toBe('local-storage');
   });
+
+  it('cleans up the storage marker when the probe fails after writing it', () => {
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('Restricted for this context.', 'SecurityError');
+    });
+
+    expect(detectVaultCapabilityIssue()).toBe('local-storage');
+    getItem.mockRestore();
+    expect(localStorage.getItem(vaultCapabilityContract.storageProbeKey)).toBeNull();
+  });
 });
