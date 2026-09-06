@@ -203,9 +203,7 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
       const remoteMayBeDirty = remoteDirty.current.size > 0 || peers.current.size > 0;
       return [
         ...[...dirty].sort(),
-        ...(coordinationFailsClosed.current || (!ownerId && remoteMayBeDirty)
-          ? [t('dirty.remote')]
-          : []),
+        ...(coordinationFailsClosed.current || remoteMayBeDirty ? [t('dirty.remote')] : []),
       ];
     }
     const expected = new Set(peers.current);
