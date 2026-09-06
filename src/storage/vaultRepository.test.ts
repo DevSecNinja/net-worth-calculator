@@ -1,11 +1,14 @@
 import { createEmptyVault } from '@/domain/fixtures';
 
-import { deriveVaultKey } from './crypto';
-import { deleteEnvelope, readEnvelope } from './database';
+import { createEncryptedVault, deriveVaultKey } from './crypto';
+import { deleteEnvelope, readEnvelope, writeEnvelope } from './database';
 import {
+  captureLockedVault,
   createVault,
   changeVaultPassphrase,
   hasVault,
+  LockedVaultChangedError,
+  removeLockedVault,
   removeVault,
   replaceVaultEnvelope,
   saveVault,
@@ -134,5 +137,48 @@ describe('vault repository', () => {
     const created = await createVault(createEmptyVault('USD'), passphrase);
     await deleteEnvelope();
     await expect(removeVault(created.vault, created.material)).rejects.toThrow('no longer exists');
+  });
+
+  it('deletes the captured locked envelope without deriving or decrypting a key', async () => {
+    await createVault(createEmptyVault('USD'), passphrase);
+    const expected = await captureLockedVault();
+    expect(expected).toBeDefined();
+    const derive = vi.spyOn(crypto.subtle, 'deriveKey');
+    const decrypt = vi.spyOn(crypto.subtle, 'decrypt');
+
+    await removeLockedVault(expected!, () => true);
+
+    expect(await hasVault()).toBe(false);
+    expect(derive).not.toHaveBeenCalled();
+    expect(decrypt).not.toHaveBeenCalled();
+  });
+
+  it('preserves a replacement envelope when the locked confirmation is stale', async () => {
+    await createVault(createEmptyVault('USD'), passphrase);
+    const stale = await captureLockedVault();
+    const replacement = await createEncryptedVault(createEmptyVault('EUR'), passphrase);
+    await writeEnvelope(replacement.envelope);
+
+    await expect(removeLockedVault(stale!, () => true)).rejects.toThrow(LockedVaultChangedError);
+    expect(await readEnvelope()).toEqual(replacement.envelope);
+  });
+
+  it('reports a conflict when the captured envelope was already deleted', async () => {
+    await createVault(createEmptyVault('USD'), passphrase);
+    const expected = await captureLockedVault();
+    await removeLockedVault(expected!, () => true);
+
+    await expect(removeLockedVault(expected!, () => true)).rejects.toThrow(LockedVaultChangedError);
+    expect(await hasVault()).toBe(false);
+  });
+
+  it('aborts the locked delete when exclusive ownership is lost before commit', async () => {
+    await createVault(createEmptyVault('USD'), passphrase);
+    const expected = await captureLockedVault();
+
+    await expect(removeLockedVault(expected!, () => false)).rejects.toThrow(
+      'deletion lease was lost',
+    );
+    expect(await readEnvelope()).toEqual(expected);
   });
 });

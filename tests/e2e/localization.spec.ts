@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { PASSPHRASE } from '../helpers/app';
+import { createVault, PASSPHRASE } from '../helpers/app';
 
 test('negotiates Dutch, persists language, parses localized money, and preserves value', async ({
   page,
@@ -30,6 +30,17 @@ test('negotiates Dutch, persists language, parses localized money, and preserves
   await page.getByRole('link', { name: /^dashboard$/i }).click();
   await expect(page.getByRole('region', { name: `Overzicht ${currentYear}` })).toBeVisible();
 
+  await page.getByRole('button', { name: /kluis vergrendelen/i }).click();
+  await page.goto('./');
+  await page.getByRole('button', { name: /lokale kluis verwijderen en opnieuw beginnen/i }).click();
+  const resetDialog = page.getByRole('dialog', {
+    name: /lokale kluis verwijderen en opnieuw beginnen/i,
+  });
+  await expect(resetDialog).toContainText(/wachtzinnen kunnen niet worden hersteld/i);
+  await expect(resetDialog.getByLabel(/typ VERWIJDEREN/i)).toBeVisible();
+  await resetDialog.getByRole('button', { name: /^annuleren$/i }).click();
+  await page.getByLabel(/^wachtzin$/i).fill(PASSPHRASE);
+  await page.getByRole('button', { name: /kluis ontgrendelen/i }).click();
   await page.getByRole('link', { name: /instellingen/i }).click();
   await page.getByRole('combobox', { name: 'Taal', exact: true }).selectOption('en-US');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
@@ -47,8 +58,13 @@ test('negotiates UK English and falls back unsupported languages to US English',
 }) => {
   const uk = await browser.newContext({ locale: 'en-GB' });
   const ukPage = await uk.newPage();
-  await ukPage.goto('./');
+  await createVault(ukPage);
   await expect(ukPage.locator('html')).toHaveAttribute('lang', 'en-GB');
+  await ukPage.getByRole('button', { name: /lock vault/i }).click();
+  await ukPage.getByRole('button', { name: /delete local vault and start over/i }).click();
+  await expect(
+    ukPage.getByRole('dialog', { name: /delete local vault and start over/i }),
+  ).toContainText(/passphrases cannot be recovered/i);
   await uk.close();
 
   const fallback = await browser.newContext({ locale: 'fr-FR' });

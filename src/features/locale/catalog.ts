@@ -77,6 +77,27 @@ const enUS = {
   'vault.unlock': 'Unlock vault',
   'vault.unlocking': 'Unlocking...',
   'vault.noReset': 'There is no password reset.',
+  'vault.forgotPassphrase': 'Forgot your passphrase?',
+  'vault.resetAction': 'Delete local vault and start over',
+  'vault.resetTitle': 'Delete local vault and start over',
+  'vault.resetWarning': 'This permanently removes the encrypted vault from this browser profile.',
+  'vault.resetCannotRecover': 'Passphrases cannot be recovered.',
+  'vault.resetLocalDeletion':
+    'The local encrypted vault will be permanently deleted and its financial data will become inaccessible.',
+  'vault.resetBackupRecovery':
+    'Recovery is possible only if you have an encrypted backup and the passphrase for that backup.',
+  'vault.resetBackupsRemain': 'Downloaded or copied backup files are not deleted.',
+  'vault.resetOtherProfiles': 'Vaults on other devices or browser profiles are not affected.',
+  'vault.resetConfirmation': 'DELETE',
+  'vault.resetPrompt': 'Type {confirmation} to confirm',
+  'vault.resetConfirmationError': 'Type {confirmation} exactly to confirm.',
+  'vault.resetForever': 'Delete local vault forever',
+  'vault.resetting': 'Deleting local vault...',
+  'vault.resetOtherTab':
+    'This vault is unlocked in another tab. Lock or close that tab, then try again.',
+  'vault.resetChanged':
+    'The local vault changed after this confirmation opened. Close this dialog and try again.',
+  'vault.resetFailed': 'The local vault could not be deleted safely. Nothing else was removed.',
   'vault.changePassphrase': 'Change passphrase',
   'vault.changeHelp': 'Re-encrypt the complete vault. The old passphrase will stop working.',
   'vault.deleteTitle': 'Delete encrypted vault',
@@ -429,6 +450,30 @@ const nlNL: MessageCatalog = {
   'vault.unlock': 'Kluis ontgrendelen',
   'vault.unlocking': 'Ontgrendelen...',
   'vault.noReset': 'Er is geen wachtwoordherstel.',
+  'vault.forgotPassphrase': 'Wachtzin vergeten?',
+  'vault.resetAction': 'Lokale kluis verwijderen en opnieuw beginnen',
+  'vault.resetTitle': 'Lokale kluis verwijderen en opnieuw beginnen',
+  'vault.resetWarning':
+    'Hiermee verwijder je de versleutelde kluis definitief uit dit browserprofiel.',
+  'vault.resetCannotRecover': 'Wachtzinnen kunnen niet worden hersteld.',
+  'vault.resetLocalDeletion':
+    'De lokale versleutelde kluis wordt definitief verwijderd en de financiële gegevens erin worden ontoegankelijk.',
+  'vault.resetBackupRecovery':
+    'Herstel is alleen mogelijk als je een versleutelde back-up én de wachtzin van die back-up hebt.',
+  'vault.resetBackupsRemain': 'Gedownloade of gekopieerde back-upbestanden worden niet verwijderd.',
+  'vault.resetOtherProfiles':
+    'Kluizen op andere apparaten of in andere browserprofielen worden niet beïnvloed.',
+  'vault.resetConfirmation': 'VERWIJDEREN',
+  'vault.resetPrompt': 'Typ {confirmation} ter bevestiging',
+  'vault.resetConfirmationError': 'Typ {confirmation} exact ter bevestiging.',
+  'vault.resetForever': 'Lokale kluis definitief verwijderen',
+  'vault.resetting': 'Lokale kluis verwijderen...',
+  'vault.resetOtherTab':
+    'Deze kluis is ontgrendeld in een ander tabblad. Vergrendel of sluit dat tabblad en probeer het opnieuw.',
+  'vault.resetChanged':
+    'De lokale kluis is gewijzigd nadat deze bevestiging is geopend. Sluit dit venster en probeer het opnieuw.',
+  'vault.resetFailed':
+    'De lokale kluis kon niet veilig worden verwijderd. Er is niets anders verwijderd.',
   'vault.changePassphrase': 'Wachtzin wijzigen',
   'vault.changeHelp':
     'Versleutel de volledige kluis opnieuw. De oude wachtzin werkt daarna niet meer.',

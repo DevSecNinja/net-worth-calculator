@@ -40,3 +40,8 @@ unsafe update activation, XSS, CSP bypass caused by the application, or a vulner
 General financial advice, expected browser/operating-system behavior, forgotten passphrase recovery,
 compromised devices/extensions, and denial of service requiring control of the user's browser profile
 are normally outside the vulnerability program unless they expose a distinct application flaw.
+
+The locked-screen reset intentionally allows anyone with access to the browser profile to erase the
+local encrypted vault after an explicit typed warning. It does not recover the passphrase or decrypt
+data. Deleting a different/replaced vault, bypassing an active writer lease, or affecting backups,
+preferences, caches, other profiles, or other devices remains in scope.

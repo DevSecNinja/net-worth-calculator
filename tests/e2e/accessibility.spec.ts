@@ -12,7 +12,10 @@ async function expectNoSeriousViolations(page: Page) {
   ).toEqual([]);
 }
 
-test('runs axe with contrast enabled across every core screen and dialog', async ({ page }) => {
+test('runs axe with contrast enabled across every core screen and dialog', async ({
+  page,
+  browserName,
+}) => {
   test.setTimeout(120_000);
   await page.goto('./');
   await expectNoSeriousViolations(page);
@@ -44,6 +47,26 @@ test('runs axe with contrast enabled across every core screen and dialog', async
   await page.getByRole('button', { name: /close change passphrase/i }).click();
   await page.getByRole('button', { name: /delete vault/i }).click();
   await expectNoSeriousViolations(page);
+  await page.getByRole('button', { name: /close delete encrypted vault/i }).click();
+  await page.getByRole('button', { name: /lock vault/i }).click();
+  await page.goto('./');
+  await page.setViewportSize({ width: 640, height: 900 });
+  await page.getByRole('button', { name: /delete local vault and start over/i }).click();
+  if (browserName === 'chromium') {
+    const client = await page.context().newCDPSession(page);
+    await client.send('Emulation.setPageScaleFactor', { pageScaleFactor: 2 });
+  }
+  await expectNoSeriousViolations(page);
+  const resetDialog = page.getByRole('dialog', { name: /delete local vault and start over/i });
+  const resetReflow = await resetDialog.evaluate((dialog) => ({
+    right: dialog.getBoundingClientRect().right,
+    viewport: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(resetReflow.right).toBeLessThanOrEqual(resetReflow.viewport + 1);
+  expect(resetReflow.scrollWidth).toBeLessThanOrEqual(resetReflow.viewport + 1);
+  await page.keyboard.press('Escape');
+  await expect(resetDialog).not.toBeVisible();
 });
 
 test('supports keyboard focus, error recovery, real zoom-scale reflow, motion, safe areas, and live regions', async ({

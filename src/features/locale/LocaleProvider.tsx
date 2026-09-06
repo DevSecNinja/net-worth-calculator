@@ -123,6 +123,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       if (/monthly payment must be greater/i.test(message)) return t('error.paymentRequired');
       if (/type DELETE exactly/i.test(message)) return t('error.typeDelete');
       if (/type REPLACE exactly/i.test(message)) return t('error.typeReplace');
+      if (/locked vault could not be prepared/i.test(message)) return t('vault.resetFailed');
       if (/passphrase is incorrect|cannot be authenticated/i.test(message)) {
         return t('error.authentication');
       }

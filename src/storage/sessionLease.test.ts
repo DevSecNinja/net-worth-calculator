@@ -79,4 +79,15 @@ describe('VaultSessionLease', () => {
 
     expect(events).toEqual(['post:lease-changed', 'close']);
   });
+
+  it('keeps a transaction lease until explicit release during pagehide', () => {
+    const lease = new VaultSessionLease(false);
+    expect(lease.acquire()).toBe(true);
+
+    window.dispatchEvent(new PageTransitionEvent('pagehide'));
+
+    expect(lease.ownsLease()).toBe(true);
+    lease.release();
+    expect(lease.ownsLease()).toBe(false);
+  });
 });
