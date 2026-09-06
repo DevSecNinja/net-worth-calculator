@@ -38,7 +38,13 @@ type PendingRequest = {
   timeout: number;
 };
 
-function tryCreateId(): string | undefined {
+function tryCreateCoordinationId(): string | undefined {
+  if (
+    typeof globalThis.crypto?.randomUUID !== 'function' &&
+    typeof globalThis.crypto?.getRandomValues !== 'function'
+  ) {
+    return undefined;
+  }
   try {
     return createId();
   } catch {
@@ -59,9 +65,9 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
   const coordinationFailsClosed = useRef(false);
 
   useEffect(() => {
-    const ownerId = tryCreateId();
+    const ownerId = tryCreateCoordinationId();
     if (!ownerId) return;
-    const initialRequestId = tryCreateId();
+    const initialRequestId = tryCreateCoordinationId();
     if (!initialRequestId) return;
     owner.current = ownerId;
     const current = openOptionalBroadcastChannel(DIRTY_CHANNEL);
@@ -210,7 +216,7 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
     const expected = new Set(peers.current);
     let missing = new Set<string>();
     if (expected.size > 0) {
-      const requestId = tryCreateId();
+      const requestId = tryCreateCoordinationId();
       if (!requestId) {
         return [...[...dirty].sort(), t('dirty.remote')];
       }

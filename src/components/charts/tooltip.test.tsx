@@ -6,6 +6,7 @@ import {
   ChartDetailSurface,
   chartDatumAtIndex,
   formatAllocationPercent,
+  horizontalTooltipShift,
   localizedCompletenessLabel,
   localizedProjectionStatusLabel,
   localizedSourceLabel,
@@ -31,6 +32,26 @@ describe('chart tooltip helpers', () => {
     expect(formatAllocationPercent('1', '3', 'nl-NL')).toBe('33,33%');
     expect(formatAllocationPercent('999999999999.99', '2999999999999.97', 'en-GB')).toBe('33.33%');
     expect(formatAllocationPercent('0', '0', 'nl-NL')).toBe('0%');
+  });
+
+  it.each([
+    [{ left: -25, right: 175 }, 45],
+    [{ left: 165, right: 373 }, -73],
+    [{ left: 40, right: 240 }, 0],
+  ])('clamps tooltip bounds to the visible chart scrollport', (tooltip, expectedShift) => {
+    expect(horizontalTooltipShift(tooltip, { left: 20, right: 300 }, { left: 0, right: 320 })).toBe(
+      expectedShift,
+    );
+  });
+
+  it('uses the viewport edge when the chart scrollport extends beyond it', () => {
+    expect(
+      horizontalTooltipShift(
+        { left: 165, right: 373 },
+        { left: 20, right: 420 },
+        { left: 0, right: 320 },
+      ),
+    ).toBe(-53);
   });
 
   it.each([

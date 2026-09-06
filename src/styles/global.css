@@ -125,6 +125,7 @@ h2 {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  overflow-x: clip;
   flex-direction: column;
 }
 
@@ -748,6 +749,7 @@ select {
 }
 
 .chart-card {
+  max-width: 100%;
   min-width: 0;
   padding: 1.25rem;
 }
@@ -769,8 +771,10 @@ select {
 .chart-card__visual {
   max-width: 100%;
   min-height: 240px;
+  contain: inline-size;
+  overflow-x: auto;
+  overflow-y: hidden;
   outline: none;
-  overflow-x: clip;
 }
 
 .chart-card__visual:focus-visible {
@@ -794,7 +798,7 @@ select {
 
 .chart-tooltip {
   width: max-content;
-  max-width: min(20rem, calc(100vw - 3rem));
+  max-width: min(20rem, calc(100vw - 3rem), var(--chart-tooltip-visible-width, 100vw));
   padding: 0.75rem;
   overflow-wrap: anywhere;
   color: var(--text);
@@ -1026,6 +1030,23 @@ td:first-child {
 }
 
 @media (max-width: 620px) {
+  .app-header {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-header nav {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1;
+  }
+
+  .app-header > .button {
+    justify-self: start;
+  }
+
   .brand small {
     display: none;
   }
@@ -1056,9 +1077,24 @@ td:first-child {
     grid-template-columns: 1fr;
   }
 
+  .metric-card strong,
+  .chart-card__table summary {
+    overflow-wrap: anywhere;
+  }
+
+  .metric-card {
+    max-width: 100%;
+    min-width: 0;
+  }
+
   .range-filter {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .range-filter select {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .toast {
@@ -1067,11 +1103,20 @@ td:first-child {
   }
 
   .chart-tooltip {
-    max-width: min(20rem, calc(100vw - 7rem));
+    max-width: min(20rem, calc(100vw - 7rem), var(--chart-tooltip-visible-width, 100vw));
   }
 
   .chart-tooltip--selected {
     max-width: none;
+  }
+
+  .chart-tooltip__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chart-tooltip__row dd {
+    justify-items: start;
+    text-align: left;
   }
 
   .app-footer {

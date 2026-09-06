@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import { AppErrorBoundary } from '@/app/AppErrorBoundary';
+
 import { dirtyStateContract, DirtyStateProvider, useDirtyState } from './useDirtyState';
 
 class MockBroadcastChannel {
@@ -185,17 +187,30 @@ describe('DirtyStateProvider', () => {
     ).toBeVisible();
   });
 
-  it('keeps local dirty-state checks available when secure randomness is unavailable', async () => {
-    vi.stubGlobal('crypto', {});
+  it('keeps local dirty-state checks available without opening a channel when secure randomness is unavailable', async () => {
+    const channelConstructor = vi.fn();
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class UnusedBroadcastChannel {
+        constructor() {
+          channelConstructor();
+        }
+      },
+    );
+    vi.stubGlobal('crypto', { randomUUID: undefined, getRandomValues: undefined });
     const user = userEvent.setup();
     render(
-      <DirtyStateProvider>
-        <Probe name="local tab" />
-      </DirtyStateProvider>,
+      <AppErrorBoundary>
+        <DirtyStateProvider>
+          <Probe name="local tab" />
+        </DirtyStateProvider>
+      </AppErrorBoundary>,
     );
 
     await user.click(screen.getByRole('button', { name: /mark local tab dirty/i }));
     await user.click(screen.getByRole('button', { name: /check local tab/i }));
     expect(await screen.findByText('Asset editor', { selector: 'output' })).toBeVisible();
+    expect(channelConstructor).not.toHaveBeenCalled();
+    expect(screen.queryByText(/the app could not continue safely/i)).not.toBeInTheDocument();
   });
 });
