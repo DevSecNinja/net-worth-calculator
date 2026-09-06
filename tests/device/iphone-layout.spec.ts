@@ -99,7 +99,65 @@ test('keeps the sample dashboard within a 320px viewport at 200% text zoom', asy
   });
   await expectNoPageOverflow(page);
 
-  await page.locator('.chart-card summary').first().click();
-  await expect(page.locator('.chart-card table').first()).toBeVisible();
+  const chartVisual = page.locator('.chart-card__visual').first();
+  await expect(chartVisual).toHaveCSS('overflow-x', 'auto');
+  const chartScroll = await chartVisual.evaluate((element) => {
+    const svg = element.querySelector('svg');
+    if (!svg) throw new Error('Expected the chart visual to contain an SVG.');
+    svg.style.minWidth = '40rem';
+    element.scrollLeft = element.scrollWidth;
+    const containerBounds = element.getBoundingClientRect();
+    const svgBounds = svg.getBoundingClientRect();
+    return {
+      clientWidth: element.clientWidth,
+      scrollLeft: element.scrollLeft,
+      scrollWidth: element.scrollWidth,
+      svgRight: svgBounds.right,
+      visualRight: containerBounds.right,
+    };
+  });
+  expect(chartScroll.scrollWidth).toBeGreaterThan(chartScroll.clientWidth);
+  expect(chartScroll.scrollLeft).toBeGreaterThan(0);
+  expect(chartScroll.svgRight).toBeLessThanOrEqual(chartScroll.visualRight + 1);
   await expectNoPageOverflow(page);
+
+  await page.locator('.chart-card summary').first().click();
+  const tableScroll = page.locator('.chart-card .table-scroll').first();
+  await expect(tableScroll.locator('table')).toBeVisible();
+  const tableReachability = await tableScroll.evaluate((element) => {
+    const lastCell = element.querySelector('tbody tr:last-child td:last-child');
+    if (!lastCell) throw new Error('Expected the chart data table to contain a final cell.');
+    element.scrollLeft = element.scrollWidth;
+    const containerBounds = element.getBoundingClientRect();
+    const cellBounds = lastCell.getBoundingClientRect();
+    return {
+      cellRight: cellBounds.right,
+      scrollLeft: element.scrollLeft,
+      visualRight: containerBounds.right,
+    };
+  });
+  expect(tableReachability.scrollLeft).toBeGreaterThan(0);
+  expect(tableReachability.cellRight).toBeLessThanOrEqual(tableReachability.visualRight + 1);
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('offline'));
+  });
+  await expect(page.getByText(/^Offline - encrypted local data remains available$/i)).toBeVisible();
+  await expectNoPageOverflow(page);
+
+  const statusLayout = await page.evaluate(() => {
+    const footer = document.querySelector('.app-footer')?.getBoundingClientRect();
+    const connection = document.querySelector('.connection-status')?.getBoundingClientRect();
+    const actions = document.querySelector('.pwa-actions')?.getBoundingClientRect();
+    return {
+      actionsBottom: actions && actions.height > 0 ? actions.bottom : undefined,
+      connectionBottom: connection?.bottom,
+      footerTop: footer?.top,
+    };
+  });
+  expect(statusLayout.footerTop).toBeDefined();
+  expect(statusLayout.connectionBottom).toBeLessThanOrEqual(statusLayout.footerTop!);
+  if (statusLayout.actionsBottom !== undefined) {
+    expect(statusLayout.actionsBottom).toBeLessThanOrEqual(statusLayout.footerTop!);
+  }
 });

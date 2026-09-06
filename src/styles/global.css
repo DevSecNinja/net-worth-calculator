@@ -775,7 +775,6 @@ select {
   overflow-x: auto;
   overflow-y: hidden;
   outline: none;
-  overflow-x: clip;
 }
 
 .chart-card__visual:focus-visible {
