@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 import type { DatedSnapshot } from '@/domain/aggregation';
@@ -163,4 +164,3 @@ export function TimelineChart({
     </ChartFrame>
   );
 }
-import { useState } from 'react';

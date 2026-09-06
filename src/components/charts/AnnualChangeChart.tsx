@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 import { formatMoney, formatPercent } from '@/domain/currency';
@@ -117,4 +118,3 @@ export function AnnualChangeChart({
     </ChartFrame>
   );
 }
-import { useState } from 'react';

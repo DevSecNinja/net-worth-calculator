@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 import type { Liability, LiabilityProjection } from '@/domain/model';
@@ -156,4 +157,3 @@ export function PayoffChart({
     </ChartFrame>
   );
 }
-import { useState } from 'react';

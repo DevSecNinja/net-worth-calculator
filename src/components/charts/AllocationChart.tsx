@@ -98,7 +98,10 @@ export function AllocationChart({
             }}
           >
             {data.map((slice, index) => (
-              <Cell key={slice.name} fill={colors[index % colors.length] ?? '#16a34a'} />
+              <Cell
+                key={`${slice.type}:${slice.name}`}
+                fill={colors[index % colors.length] ?? '#16a34a'}
+              />
             ))}
           </Pie>
           <ChartTooltip<AllocationDatum> buildDetail={(datum) => detailFor(datum)} />

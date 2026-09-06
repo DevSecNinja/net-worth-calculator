@@ -45,7 +45,9 @@ export function ChartFrame({
           if (event.currentTarget.open) setTableLoaded(true);
         }}
       >
-        <summary>{t('chart.viewTable', { title: title.toLowerCase() })}</summary>
+        <summary aria-describedby={instructionsId}>
+          {t('chart.viewTable', { title: title.toLowerCase() })}
+        </summary>
         {tableLoaded ? (
           <div className="table-scroll" id={tableId}>
             {table()}
