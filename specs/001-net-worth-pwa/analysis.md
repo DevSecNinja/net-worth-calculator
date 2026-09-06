@@ -166,3 +166,18 @@ portfolio rather than a minimal placeholder fixture.
 
 Live verification proved build identity `v0.1.0 (2d1d1d4)`, Dutch sample and date behavior, 15
 same-origin cache entries with no vault data, zero external requests, and an offline About reload.
+
+## Exact As-of Yearly Change Bugfix Analysis: 2026-09-06
+
+| ID | Category | Severity | Location(s)                 | Resolution                                                                                                                                                                       |
+| -- | -------- | -------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Y1 | Bugfix   | High     | FR-050, SC-020, T105-T109   | The summary now compares complete exact-date snapshots one year apart with leap-day clamping, carry-forward, liability projection/manual seeds, and no future leakage.            |
+| Y2 | Safety   | None     | Annual chart/table behavior | December 31 annual change remains separately derived from consecutive annual snapshots; existing chart/table equivalence and tooltip behavior are unchanged and fully revalidated. |
+
+- **Functional requirements checked**: 50
+- **Success criteria checked**: 20
+- **Tasks checked**: 109
+- **Implemented tasks complete**: 109/109
+- **Requirement coverage**: 100%
+- **Constitution conflicts**: 0
+- **Open convergence findings**: 0

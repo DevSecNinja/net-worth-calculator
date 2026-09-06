@@ -484,3 +484,13 @@ chart/table values with source semantics.
 
 - [x] T103 Expand the explicit sample action into a bounded, schema-valid five-asset/three-liability household history with four prior year-ends, a prior mid-year date, today's date, carry-forward, and projections in `src/domain/fixtures.ts` and `src/domain/fixtures.test.ts` (FR-006, SC-019)
 - [x] T104 Localize sample names at creation, preserve them across later language changes, and prove the populated annual/timeline/allocation/payoff experience in `src/features/onboarding/OnboardingPage.tsx`, `src/features/vault/VaultProvider.tsx`, `src/features/vault/VaultFlows.test.tsx`, and `tests/e2e/localization.spec.ts` (FR-006, SC-019)
+
+---
+
+## Phase 17: Exact As-of Yearly Change Bugfix Amendment
+
+- [x] T105 Add prior-year same-date and leap-day helper coverage in `src/domain/observations.ts` and `src/domain/observations.test.ts` (FR-050)
+- [x] T106 Add exact As of amount/percentage, zero, incomplete, carry-forward, liability seed, and no-future-leakage vectors in `src/domain/aggregation.test.ts` (FR-050)
+- [x] T107 Calculate exact As of yearly change separately from unchanged annual December 31 change in `src/domain/aggregation.ts` and verify the realistic fixture in `src/domain/fixtures.test.ts` (FR-050, SC-020)
+- [x] T108 Explain and localize the metric for `en-US`, `en-GB`, and `nl-NL` in `src/features/dashboard/DashboardSummary.tsx`, `src/features/locale/catalog.ts`, and `src/features/dashboard/DashboardSummary.test.tsx` (FR-038, FR-050)
+- [x] T109 Prove defined and unavailable sample states in `tests/e2e/dated-observations.spec.ts`, run all quality/privacy/PWA/multi-browser gates, and deliver the focused release (SC-016, SC-020)

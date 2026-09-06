@@ -52,6 +52,16 @@ export function addMonths(date: Date, months: number): Date {
   return target;
 }
 
+export function previousYearComparisonDate(date: string): string {
+  const current = parseIsoDate(date);
+  const previousYear = current.getUTCFullYear() - 1;
+  const month = current.getUTCMonth();
+  const maximumDay = new Date(Date.UTC(previousYear, month + 1, 0)).getUTCDate();
+  return toIsoDate(
+    new Date(Date.UTC(previousYear, month, Math.min(current.getUTCDate(), maximumDay))),
+  );
+}
+
 export function daysBetween(start: string, end: string): number {
   return Math.max(
     0,

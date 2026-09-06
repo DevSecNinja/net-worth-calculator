@@ -30,6 +30,7 @@ export function DashboardSummary({
     },
     {
       label: t('dashboard.yearlyChange'),
+      description: t('dashboard.yearlyChangeDetail'),
       value:
         snapshot.yearlyChange !== undefined
           ? formatMoney(snapshot.yearlyChange, currency, locale)
@@ -51,7 +52,11 @@ export function DashboardSummary({
       aria-label={t('dashboard.summaryRegion', { year: snapshot.year })}
     >
       {cards.map((card) => (
-        <article className={`metric-card metric-card--${card.tone}`} key={card.label}>
+        <article
+          className={`metric-card metric-card--${card.tone}`}
+          key={card.label}
+          aria-description={card.description}
+        >
           <p>{card.label}</p>
           <strong>{card.value}</strong>
           {card.detail ? <span>{card.detail}</span> : null}

@@ -2,6 +2,27 @@ import { expect, test } from '@playwright/test';
 
 import { createVault } from '../helpers/app';
 
+test('shows exact-date yearly change for sample data and unavailable history honestly', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await createVault(page, true);
+  const currentYear = new Date().getFullYear();
+  const yearlyChange = page.locator('article').filter({ hasText: /^Yearly change/ });
+
+  await expect(yearlyChange).not.toContainText('Not defined');
+  await expect(yearlyChange).toContainText(/\$-?[\d,]+\.\d{2}/);
+  await expect(yearlyChange).toContainText(/-?\d+(?:\.\d+)?%/);
+
+  await page.getByLabel(/as of/i).fill(`${currentYear - 3}-12-31`);
+  await expect(yearlyChange).not.toContainText('Not defined');
+  await expect(yearlyChange).toContainText(/-?\d+(?:\.\d+)?%/);
+
+  await page.getByLabel(/as of/i).fill(`${currentYear - 4}-12-31`);
+  await expect(yearlyChange).toContainText('Not defined');
+  await expect(yearlyChange).not.toContainText('%');
+});
+
 test('uses July observations for exact and December forecasts without future leakage', async ({
   page,
 }) => {

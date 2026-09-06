@@ -3,6 +3,7 @@ import {
   latestObservation,
   observationAtDate,
   observationsAtDates,
+  previousYearComparisonDate,
   sortObservations,
   toIsoDate,
 } from './observations';
@@ -44,5 +45,10 @@ describe('dated observations', () => {
 
   it('clamps leap-day month arithmetic to a valid month end', () => {
     expect(toIsoDate(addMonths(new Date('2024-02-29T00:00:00.000Z'), 12))).toBe('2025-02-28');
+  });
+
+  it('uses the same prior-year date or the last valid day for leap day', () => {
+    expect(previousYearComparisonDate('2026-09-06')).toBe('2025-09-06');
+    expect(previousYearComparisonDate('2024-02-29')).toBe('2023-02-28');
   });
 });
