@@ -53,7 +53,7 @@ requirements checklist remains **16/16 passing**.
 
 | Area                   | Decision                                                                                                   | Specification impact                                                                 |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Product model          | Net worth uses conventional balance-sheet semantics: assets minus liabilities                             | Property remains an asset; outstanding mortgage principal remains a separate debt    |
+| Product model          | Net worth uses conventional balance-sheet semantics: assets minus liabilities                              | Property remains an asset; outstanding mortgage principal remains a separate debt    |
 | Home carrying costs    | Interest, taxes, insurance, maintenance, repairs, and utilities are expenses unless currently owed/accrued | No expense categories or recurring cash-flow model are added                         |
 | Alternative framing    | Rich Dad's "puts money in your pocket" language is a distinct cash-flow heuristic                          | No toggle may create incompatible net-worth classifications                          |
 | Liquidity              | Liquid net worth may exclude a home and other illiquid assets while retaining relevant liabilities         | The concept is guidance only; no new persisted field or calculation mode is required |

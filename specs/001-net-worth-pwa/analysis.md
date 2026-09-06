@@ -153,11 +153,11 @@ portfolio rather than a minimal placeholder fixture.
 
 ## Balance-Sheet Methodology Amendment Analysis: 2026-09-06
 
-| ID | Category  | Severity | Location(s)                         | Resolution                                                                                                                                                                                      |
-| -- | --------- | -------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID | Category  | Severity | Location(s)                         | Resolution                                                                                                                                                                                            |
+| -- | --------- | -------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | M1 | Semantics | None     | FR-051-FR-056, SC-021, T110-T116    | Conventional assets-minus-liabilities treatment is explicit; property and mortgage remain separate; expenses, liquidity, conservative valuation, and cash-flow scope are documented without new modes |
-| M2 | Access    | None     | Onboarding, About, dashboard, tests | All three locales include currency-aware examples and the dashboard link scrolls and focuses the About methodology; 320px reflow and keyboard/touch behavior are browser-tested                     |
-| M3 | Privacy   | None     | Runtime and architecture            | No vault schema, storage, dependency, telemetry, runtime request, or iOS vault behavior changed                                                                                                  |
+| M2 | Access    | None     | Onboarding, About, dashboard, tests | All three locales include currency-aware examples and the dashboard link scrolls and focuses the About methodology; 320px reflow and keyboard/touch behavior are browser-tested                       |
+| M3 | Privacy   | None     | Runtime and architecture            | No vault schema, storage, dependency, telemetry, runtime request, or iOS vault behavior changed                                                                                                       |
 
 - **Functional requirements checked**: 56
 - **Success criteria checked**: 21
