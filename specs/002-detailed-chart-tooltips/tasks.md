@@ -1,7 +1,6 @@
 ---
 
-description: "Implementation tasks for detailed localized chart tooltips"
----
+## description: "Implementation tasks for detailed localized chart tooltips"
 
 # Tasks: Detailed Chart Tooltips
 

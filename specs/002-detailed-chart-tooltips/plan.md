@@ -30,7 +30,7 @@ Replace every default chart tooltip with a shared typed detail surface that rend
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - **Local-first privacy**: PASS. Tooltip state is ephemeral render state with no logging, persistence, URL, cache, analytics, or network behavior.
 - **Encrypted persistence**: PASS. Vault repository, cipher envelope, and locked-vault flows are untouched.

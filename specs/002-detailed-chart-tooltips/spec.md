@@ -8,7 +8,7 @@
 
 **Input**: User description: "Add rich localized hover, focus, and touch details to every current chart while preserving accessible data-table alternatives, financial precision, privacy, and responsive presentation."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Understand chart values at a glance (Priority: P1)
 
@@ -81,7 +81,7 @@ As a user, I can read chart details in light or dark mode and on narrow screens 
 - Long translated labels and liability names wrap without covering inaccessible content or escaping the viewport.
 - Empty charts preserve their existing empty-state and accessible behavior.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -110,7 +110,7 @@ As a user, I can read chart details in light or dark mode and on narrow screens 
 - **Observation metadata**: Optional date, source, completeness, staleness, or projection status attached to a chart datum.
 - **Accessible chart table**: The semantic tabular representation that remains equivalent to the chart's displayed data.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 
