@@ -242,6 +242,25 @@ shipping and maintaining conversion logic for data that has never existed in pro
 daily interpolation, and automatic asset growth models were rejected because they create ambiguous
 identity or fabricate values.
 
+## R16. Household Balance-Sheet Methodology
+
+**Decision**: Define net worth as total assets minus total liabilities. Record an owner-occupied home
+as a property asset at a supportable current market value and outstanding mortgage principal as a
+separate liability. Treat mortgage interest, property taxes, insurance, maintenance, repairs, and
+utilities as expenses or carrying costs unless an amount is currently owed or accrued. Explain
+liquid net worth and conservative net-sale valuation as optional user interpretations without adding
+a persisted calculation mode.
+
+**Rationale**: The Federal Reserve Financial Accounts household balance sheet reports real estate
+among assets, home mortgages among liabilities, and net worth as their residual. The Consumer
+Financial Protection Bureau likewise defines home equity as current property value minus existing
+mortgage debt. This keeps the calculator's totals comparable and avoids double counting.
+
+**Alternatives considered**: Reclassifying a home based on whether it produces cash, or adding a
+toggle for Rich Dad's "puts money in your pocket" heuristic, was rejected because it would mix
+cash-flow and balance-sheet semantics. A future cash-flow feature can model income and expenses
+without changing net-worth classifications.
+
 ## Primary Sources
 
 - [GitHub Spec Kit v1.0.4](https://github.com/github/spec-kit/releases/tag/v1.0.4)
@@ -254,3 +273,6 @@ identity or fabricate values.
 - [Workbox precaching](https://developer.chrome.com/docs/workbox/modules/workbox-precaching)
 - [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
 - [WCAG 2.2](https://www.w3.org/TR/WCAG22/)
+- [Federal Reserve Financial Accounts of the United States](https://www.federalreserve.gov/releases/z1/current/default.htm)
+- [Federal Reserve household balance sheet](https://www.federalreserve.gov/releases/z1/20240307/html/b101h.htm)
+- [Consumer Financial Protection Bureau: What is a home equity loan?](https://www.consumerfinance.gov/ask-cfpb/what-is-a-home-equity-loan-en-106/)

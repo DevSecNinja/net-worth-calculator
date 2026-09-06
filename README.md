@@ -60,6 +60,27 @@ exposes ordinary web request metadata to the hosting provider. See
 - Keyboard, touch, reduced-motion, high-zoom, responsive, and screen-reader-oriented workflows
 - Exact semantic version and source commit identity in the app
 
+## Net worth methodology
+
+This is a balance-sheet calculator: **net worth = assets - liabilities**. An owner-occupied home is
+recorded as an asset at a supportable current market value, while its outstanding mortgage principal
+is recorded separately as a liability. For example, a 500,000 home and a 250,000 mortgage contribute
+250,000 of home equity.
+
+Mortgage interest, property taxes, insurance, maintenance, repairs, and utilities are expenses or
+carrying costs, not liabilities unless an amount is currently owed or accrued. Net worth is also not
+the same as liquidity: a separate liquid-net-worth view can exclude a home and other illiquid assets
+while retaining relevant liabilities. For a conservative liquidation estimate, reduce the property
+asset by expected selling costs before mortgage payoff, but keep the mortgage separate.
+
+The app does not currently track income, expenses, or cash flow and does not guarantee investment or
+property returns. Rich Dad's "puts money in your pocket" framing is a distinct cash-flow heuristic,
+not the standard balance-sheet definition used here. This treatment follows the
+[Federal Reserve household balance sheet](https://www.federalreserve.gov/releases/z1/current/default.htm)
+and the
+[Consumer Financial Protection Bureau definition of home equity](https://www.consumerfinance.gov/ask-cfpb/what-is-a-home-equity-loan-en-106/).
+Runtime calculation remains entirely local; these are documentation links only.
+
 ## Browser support
 
 The supported target is current evergreen desktop and mobile Chromium, Firefox, and WebKit browsers.

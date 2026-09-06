@@ -12,6 +12,14 @@ async function expectNoSeriousViolations(page: Page) {
   ).toEqual([]);
 }
 
+async function expectNoHorizontalOverflow(page: Page) {
+  const reflow = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(reflow.scrollWidth).toBeLessThanOrEqual(reflow.clientWidth + 1);
+}
+
 test('runs axe with contrast enabled across every core screen and dialog', async ({
   page,
   browserName,
@@ -19,12 +27,35 @@ test('runs axe with contrast enabled across every core screen and dialog', async
   test.setTimeout(120_000);
   await page.goto('./');
   await expectNoSeriousViolations(page);
+  await expect(
+    page.getByRole('heading', { name: /how this calculator defines net worth/i }),
+  ).toBeVisible({ timeout: 30_000 });
+  await page.setViewportSize({ width: 320, height: 900 });
+  await expectNoHorizontalOverflow(page);
   await page.getByRole('link', { name: /^about$/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /how this calculator defines net worth/i }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
   await expectNoSeriousViolations(page);
   await page.getByRole('link', { name: /settings/i }).click();
   await expectNoSeriousViolations(page);
 
   await createVault(page, true);
+  await expectNoHorizontalOverflow(page);
+  await expectNoSeriousViolations(page);
+  const methodologyLink = page.getByRole('link', { name: /how net worth is calculated/i });
+  await methodologyLink.focus();
+  await expect(methodologyLink).toBeFocused();
+  await methodologyLink.press('Enter');
+  await expect(page).toHaveURL(/#\/about#methodology$/);
+  const methodologyHeading = page.getByRole('heading', {
+    name: /how this calculator defines net worth/i,
+  });
+  await expect(methodologyHeading).toBeVisible();
+  await expect(methodologyHeading).toBeFocused();
+  await expect(methodologyHeading).toBeInViewport();
+  await expectNoHorizontalOverflow(page);
   await expectNoSeriousViolations(page);
   await page.getByRole('link', { name: /^assets$/i }).click();
   await expectNoSeriousViolations(page);

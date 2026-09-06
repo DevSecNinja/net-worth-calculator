@@ -45,6 +45,29 @@ Feature code must not bypass the storage layer to persist vault data. Domain cal
 browser-independent and deterministic. Derived dashboard snapshots and chart series are recomputed
 from the unlocked vault and are never persisted or cached.
 
+## Balance-sheet methodology
+
+The domain model uses conventional household balance-sheet semantics:
+
+- net worth is total assets minus total liabilities;
+- an owner-occupied home is a `property` asset at a supportable current market value;
+- outstanding mortgage principal is a separate `mortgage` liability;
+- home equity is the residual contribution of those two entries;
+- expenses and carrying costs are outside the model unless an amount is currently owed or accrued.
+
+Liquidity is a separate analytical dimension. Users may calculate a conservative liquid-net-worth
+view by excluding home and other illiquid assets while retaining relevant liabilities, or estimate
+liquidation value by reducing the property asset for selling costs. The data model does not
+reclassify assets according to income or expenses and has no cash-flow toggle. Income, expenses, cash
+flow, and return forecasting are outside the current product scope.
+
+These semantics align with the
+[Federal Reserve Financial Accounts household balance sheet](https://www.federalreserve.gov/releases/z1/current/default.htm),
+which reports household real estate among assets and home mortgages among liabilities, and the
+[Consumer Financial Protection Bureau's home-equity definition](https://www.consumerfinance.gov/ask-cfpb/what-is-a-home-equity-loan-en-106/).
+Rich Dad's "puts money in your pocket" framing is documented as a separate cash-flow heuristic rather
+than an alternative accounting mode.
+
 ## Vault lifecycle
 
 The browser profile contains at most one active vault:

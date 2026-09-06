@@ -72,6 +72,9 @@ export function DashboardPage() {
               ? t('dashboard.complete', { date: asOfDate })
               : t('dashboard.incomplete', { date: asOfDate })}
           </p>
+          <Link className="methodology-link" to="/about#methodology">
+            <span aria-hidden="true">(i)</span> {t('dashboard.methodologyLink')}
+          </Link>
         </div>
         <div className="form-stack">
           <label className="field">

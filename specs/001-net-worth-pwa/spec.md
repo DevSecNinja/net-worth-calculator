@@ -298,6 +298,37 @@ December 31 annual snapshots and the exact timeline.
    **Then** every canonical amount and exact observation date round-trips without localization
    changing stored data.
 
+---
+
+### User Story 10 - Understand the Balance-Sheet Methodology (Priority: P1)
+
+A first-time or returning user understands what the calculator counts as assets, liabilities, equity,
+expenses, and liquidity before interpreting a net-worth result.
+
+**Why this priority**: A mathematically correct total can still mislead when users apply incompatible
+cash-flow and balance-sheet definitions.
+
+**Independent Test**: Review onboarding and About in every supported locale, change onboarding
+currency, follow the dashboard methodology link with keyboard only, and verify property/mortgage
+classification remains unchanged.
+
+**Acceptance Scenarios**:
+
+1. **Given** no vault exists, **When** onboarding appears, **Then** a concise prominent explanation
+   defines net worth as assets minus liabilities and shows a locale/currency-formatted home-equity
+   example near vault creation.
+2. **Given** any supported locale, **When** About is opened, **Then** it defines assets, liabilities,
+   equity, expenses versus accrued liabilities, liquidity, conservative property valuation, and the
+   current absence of income/expense/cash-flow and return-guarantee features.
+3. **Given** an existing user on a populated dashboard, **When** the methodology help link is
+   activated by keyboard or touch, **Then** About opens at the methodology section.
+4. **Given** an owner-occupied home and mortgage, **When** net worth is calculated, **Then** the home
+   remains a property asset, outstanding mortgage principal remains a separate liability, and equity
+   is their net contribution.
+5. **Given** a user familiar with the Rich Dad cash-flow heuristic, **When** they read the
+   methodology, **Then** the app distinguishes that heuristic without offering a reclassification
+   toggle or changing balance-sheet semantics.
+
 ### Edge Cases
 
 - Storage is unavailable, quota is exceeded, or an IndexedDB operation is interrupted.
@@ -444,6 +475,20 @@ December 31 annual snapshots and the exact timeline.
   both with normal asset carry-forward and liability projection/manual-seed rules without future
   leakage, preserve defined zero changes, omit percentage only for a zero prior net worth, and remain
   independent from December 31 annual-change semantics.
+- **FR-051**: Onboarding MUST prominently but concisely define net worth as assets minus liabilities
+  and show a locale-aware, selected-currency home-equity example before vault creation.
+- **FR-052**: About MUST define assets, liabilities, equity, expenses versus currently owed/accrued
+  liabilities, liquidity, conservative property valuation, and the absence of income, expense,
+  cash-flow, and return-guarantee features.
+- **FR-053**: A populated dashboard MUST provide an accessible keyboard/touch-operable link to the
+  About methodology section that remains usable at 200% zoom and narrow mobile widths.
+- **FR-054**: Property MUST remain an asset type and mortgage MUST remain a separate liability type;
+  the product MUST NOT reclassify either based on cash flow or provide incompatible net-worth modes.
+- **FR-055**: The Rich Dad "puts money in your pocket" framing MUST be characterized neutrally as a
+  distinct cash-flow heuristic, not as the calculator's balance-sheet definition.
+- **FR-056**: Methodology content and accessibility labels MUST be complete in `en-US`, `en-GB`, and
+  `nl-NL` and MUST introduce no runtime dependency, external request, telemetry, or vault-schema
+  change.
 
 ### Key Entities
 
@@ -516,6 +561,9 @@ December 31 annual snapshots and the exact timeline.
 - **SC-020**: The default current-date sample dashboard shows a defined localized exact-date yearly
   change amount and percentage, while dates without a complete prior-year snapshot show the
   localized undefined state.
+- **SC-021**: Component and browser tests find the methodology on onboarding, About, and the dashboard
+  in all supported locales; the example follows locale/currency formatting; property/mortgage types
+  remain separate; and 200% zoom produces no horizontal page scroll.
 
 ## Assumptions
 
