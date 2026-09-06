@@ -165,9 +165,10 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('pagehide', release);
       window.removeEventListener('storage', handleStorage);
       current?.close();
+      const hadCoordination = coordinationAvailable.current;
       publish.current = undefined;
       coordinationAvailable.current = false;
-      coordinationFailsClosed.current = false;
+      if (hadCoordination) coordinationFailsClosed.current = false;
       owner.current = undefined;
       for (const pending of requests.values()) {
         window.clearTimeout(pending.timeout);
