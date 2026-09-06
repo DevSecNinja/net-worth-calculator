@@ -125,6 +125,7 @@ h2 {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  overflow-x: clip;
   flex-direction: column;
 }
 
