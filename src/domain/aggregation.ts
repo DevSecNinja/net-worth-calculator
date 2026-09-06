@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 
-import type { DashboardSnapshot, LiabilityProjection, Vault } from './model';
+import type { AssetType, DashboardSnapshot, LiabilityProjection, Vault } from './model';
 import { MAX_YEAR, MIN_YEAR } from './model';
 import {
   projectLiability,
@@ -13,6 +13,7 @@ import { observationAtDate, observationsAtDates, type ObservationValue } from '.
 
 export type AllocationSlice = {
   name: string;
+  type: AssetType;
   value: string;
 };
 
@@ -254,20 +255,26 @@ export function buildDashboardData(
       values.filter(({ year }) => year >= firstYear && year <= lastYear),
     ]),
   );
-  const allocationMap = new Map<string, Decimal>();
+  const allocationMap = new Map<string, { name: string; type: AssetType; value: Decimal }>();
   for (const asset of vault.assets) {
     const value = observationAtDate(asset.values, asOfDate);
     if (!value) continue;
-    const category = asset.type === 'custom' ? (asset.customType ?? 'Custom') : asset.type;
-    allocationMap.set(category, (allocationMap.get(category) ?? new Decimal(0)).plus(value.amount));
+    const name = asset.type === 'custom' ? (asset.customType ?? 'custom') : asset.type;
+    const key = `${asset.type}:${name}`;
+    const existing = allocationMap.get(key);
+    allocationMap.set(key, {
+      name,
+      type: asset.type,
+      value: (existing?.value ?? new Decimal(0)).plus(value.amount),
+    });
   }
 
   return {
     snapshots,
     timeline: exactDates.map(snapshotAt),
     asOfSnapshot: snapshotAt(asOfDate),
-    allocation: [...allocationMap.entries()]
-      .map(([name, value]) => ({ name, value: canonicalMoney(value) }))
+    allocation: [...allocationMap.values()]
+      .map(({ name, type, value }) => ({ name, type, value: canonicalMoney(value) }))
       .sort((left, right) => toDecimal(right.value).cmp(left.value)),
     projections,
     fullProjections,

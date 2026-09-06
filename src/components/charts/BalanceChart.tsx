@@ -1,11 +1,27 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useState } from 'react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 import { formatMoney } from '@/domain/currency';
 import type { DashboardSnapshot } from '@/domain/model';
 import { useLocale } from '@/features/locale/LocaleProvider';
 
 import { ChartFrame } from './ChartFrame';
-import { exactTooltipValue } from './tooltip';
+import {
+  ChartTooltip,
+  chartDatumAtIndex,
+  localizedSourceLabel,
+  type ChartTooltipDetail,
+} from './tooltip';
+
+type BalanceDatum = {
+  year: number;
+  assets: number;
+  assetsExact: string;
+  liabilities: number;
+  liabilitiesExact: string;
+  netWorthExact: string;
+  liabilitySource: DashboardSnapshot['liabilitySource'];
+};
 
 export function BalanceChart({
   snapshots,
@@ -17,17 +33,37 @@ export function BalanceChart({
   locale: string;
 }) {
   const { t } = useLocale();
-  const data = snapshots.map((snapshot) => ({
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const data: BalanceDatum[] = snapshots.map((snapshot) => ({
     year: snapshot.year,
     assets: Number(snapshot.assets),
     assetsExact: snapshot.assets,
     liabilities: Number(snapshot.liabilities),
     liabilitiesExact: snapshot.liabilities,
+    netWorthExact: snapshot.netWorth,
+    liabilitySource: snapshot.liabilitySource,
   }));
+  const detailFor = (datum: BalanceDatum): ChartTooltipDetail => ({
+    title: String(datum.year),
+    rows: [
+      { label: t('dashboard.assets'), value: formatMoney(datum.assetsExact, currency, locale) },
+      {
+        label: t('dashboard.liabilities'),
+        value: formatMoney(datum.liabilitiesExact, currency, locale),
+      },
+      {
+        label: t('dashboard.netWorth'),
+        value: formatMoney(datum.netWorthExact, currency, locale),
+      },
+      { label: t('chart.debtSource'), value: localizedSourceLabel(datum.liabilitySource, t) },
+    ],
+  });
+  const selectedDatum = data.find(({ year }) => year === selectedYear);
   return (
     <ChartFrame
       title={t('chart.balanceTitle')}
       summary={t('chart.balanceSummary')}
+      selectedDetail={selectedDatum ? detailFor(selectedDatum) : null}
       table={() => (
         <table>
           <caption>{t('chart.balanceCaption')}</caption>
@@ -36,6 +72,7 @@ export function BalanceChart({
               <th>{t('chart.year')}</th>
               <th>{t('dashboard.assets')}</th>
               <th>{t('dashboard.liabilities')}</th>
+              <th>{t('dashboard.netWorth')}</th>
               <th>{t('chart.debtSource')}</th>
             </tr>
           </thead>
@@ -45,13 +82,8 @@ export function BalanceChart({
                 <th>{snapshot.year}</th>
                 <td>{formatMoney(snapshot.assets, currency, locale)}</td>
                 <td>{formatMoney(snapshot.liabilities, currency, locale)}</td>
-                <td>
-                  {snapshot.liabilitySource === 'actual'
-                    ? t('common.actual')
-                    : snapshot.liabilitySource === 'mixed'
-                      ? `${t('common.actual')} / ${t('common.projected')}`
-                      : t('common.projected')}
-                </td>
+                <td>{formatMoney(snapshot.netWorth, currency, locale)}</td>
+                <td>{localizedSourceLabel(snapshot.liabilitySource, t)}</td>
               </tr>
             ))}
           </tbody>
@@ -59,15 +91,18 @@ export function BalanceChart({
       )}
     >
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={data}>
+        <BarChart
+          accessibilityLayer={false}
+          data={data}
+          onClick={({ activeTooltipIndex }) => {
+            const datum = chartDatumAtIndex(data, activeTooltipIndex);
+            if (datum) setSelectedYear(datum.year);
+          }}
+        >
           <CartesianGrid strokeDasharray="4 4" />
           <XAxis dataKey="year" />
           <YAxis width={72} />
-          <Tooltip
-            formatter={(value, name, item) =>
-              formatMoney(exactTooltipValue(item, `${String(name)}Exact`, value), currency, locale)
-            }
-          />
+          <ChartTooltip<BalanceDatum> buildDetail={(datum) => detailFor(datum)} />
           <Bar
             dataKey="assets"
             stackId="balance"

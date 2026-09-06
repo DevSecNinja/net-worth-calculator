@@ -6,8 +6,20 @@ import type { Liability, LiabilityProjection } from '@/domain/model';
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  LineChart: ({ data, children }: { data: unknown; children: ReactNode }) => (
-    <div data-testid="payoff-chart" data-series={JSON.stringify(data)}>
+  LineChart: ({
+    data,
+    children,
+    onClick,
+  }: {
+    data: unknown;
+    children: ReactNode;
+    onClick?: (state: { activeTooltipIndex: number }) => void;
+  }) => (
+    <div
+      data-testid="payoff-chart"
+      data-series={JSON.stringify(data)}
+      onClick={() => onClick?.({ activeTooltipIndex: 0 })}
+    >
       {children}
     </div>
   ),
@@ -91,20 +103,45 @@ describe('PayoffChart', () => {
 
     expect(JSON.parse(screen.getByTestId('payoff-chart').dataset.series ?? '')).toEqual([
       {
+        details: {
+          mortgage: {
+            amount: '190000',
+            date: '2026-12-31',
+            name: 'Mortgage',
+            source: 'actual',
+            status: 'actual',
+          },
+        },
         year: 2026,
         mortgage: 190000,
-        mortgageExact: '190000',
         loan: null,
-        loanExact: null,
       },
       {
+        details: {
+          mortgage: {
+            amount: '178000',
+            date: '2027-12-31',
+            name: 'Mortgage',
+            source: 'projected',
+            status: 'projected',
+          },
+          loan: {
+            amount: '4000',
+            date: '2027-12-31',
+            name: 'Personal loan',
+            source: 'projected',
+            status: 'projected',
+          },
+        },
         year: 2027,
         mortgage: 178000,
-        mortgageExact: '178000',
         loan: 4000,
-        loanExact: '4000',
       },
     ]);
+    await user.click(screen.getByTestId('payoff-chart'));
+    expect(screen.getByTestId('chart-selected-detail')).toHaveTextContent('Mortgage');
+    expect(screen.getByTestId('chart-selected-detail')).toHaveTextContent('$190,000.00');
+    expect(screen.getByTestId('chart-selected-detail')).toHaveTextContent('Actual');
 
     await user.click(screen.getByText(/view liability payoff data table/i));
     const rows = within(

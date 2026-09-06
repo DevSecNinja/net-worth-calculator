@@ -92,8 +92,45 @@ export function formatMoney(
 }
 
 export function formatPercent(value: string | Decimal, locale: string = 'system'): string {
-  return new Intl.NumberFormat(locale === 'system' ? undefined : locale, {
+  const resolvedLocale = locale === 'system' ? undefined : locale;
+  const formatter = new Intl.NumberFormat(resolvedLocale, {
     style: 'percent',
     maximumFractionDigits: 2,
-  }).format(toDecimal(value).div(100).toNumber());
+  });
+  const rounded = toDecimal(value).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const negative = rounded.isNegative() && !rounded.isZero();
+  const [integer = '0', fraction = ''] = rounded
+    .abs()
+    .toFixed(2)
+    .replace(/(?:\.0+|(\.\d+?)0+)$/, '$1')
+    .split('.');
+  const groupedInteger = new Intl.NumberFormat(resolvedLocale, {
+    maximumFractionDigits: 0,
+    useGrouping: true,
+  }).format(BigInt(integer));
+  const decimalSeparator =
+    fraction.length > 0
+      ? new Intl.NumberFormat(resolvedLocale, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+          useGrouping: false,
+        })
+          .formatToParts(1.1)
+          .find(({ type }) => type === 'decimal')?.value
+      : undefined;
+  const exactNumber =
+    fraction.length > 0 ? `${groupedInteger}${decimalSeparator ?? '.'}${fraction}` : groupedInteger;
+  let insertedNumber = false;
+
+  return formatter
+    .formatToParts(negative ? -1 : 1)
+    .map((part) => {
+      if (['integer', 'group', 'decimal', 'fraction'].includes(part.type)) {
+        if (insertedNumber) return '';
+        insertedNumber = true;
+        return exactNumber;
+      }
+      return part.value;
+    })
+    .join('');
 }

@@ -6,8 +6,20 @@ import type { DashboardSnapshot } from '@/domain/model';
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  BarChart: ({ data, children }: { data: unknown; children: ReactNode }) => (
-    <div data-testid="annual-change-chart" data-series={JSON.stringify(data)}>
+  BarChart: ({
+    data,
+    children,
+    onClick,
+  }: {
+    data: unknown;
+    children: ReactNode;
+    onClick?: (state: { activeTooltipIndex: number }) => void;
+  }) => (
+    <div
+      data-testid="annual-change-chart"
+      data-series={JSON.stringify(data)}
+      onClick={() => onClick?.({ activeTooltipIndex: 1 })}
+    >
       {children}
     </div>
   ),
@@ -44,6 +56,17 @@ const snapshots: DashboardSnapshot[] = [
     assetSource: 'actual',
     liabilitySource: 'projected',
   },
+  {
+    asOfDate: '2026-12-31',
+    year: 2026,
+    assets: '125',
+    liabilities: '0',
+    netWorth: '125',
+    yearlyChange: '25',
+    completeness: 'complete',
+    assetSource: 'actual',
+    liabilitySource: 'projected',
+  },
 ];
 
 describe('AnnualChangeChart', () => {
@@ -52,14 +75,21 @@ describe('AnnualChangeChart', () => {
     render(<AnnualChangeChart snapshots={snapshots} currency="USD" locale="en-US" />);
 
     expect(JSON.parse(screen.getByTestId('annual-change-chart').dataset.series ?? '')).toEqual([
-      { year: 2025, change: 0, changeExact: '0' },
+      { year: 2025, change: 0, changeExact: '0', percentExact: '0.00' },
+      { year: 2026, change: 25, changeExact: '25' },
     ]);
+    await user.click(screen.getByTestId('annual-change-chart'));
+    expect(screen.getByTestId('chart-selected-detail')).toHaveTextContent('2026');
+    expect(screen.getByTestId('chart-selected-detail')).toHaveTextContent('$25.00');
+    expect(screen.getByTestId('chart-selected-detail')).toHaveTextContent('Not defined');
     await user.click(screen.getByText(/view annual net worth change data table/i));
     const rows = within(
       screen.getByRole('table', { name: /annual net worth change by calendar year/i }),
     ).getAllByRole('row');
     expect(rows[2]).toHaveTextContent('$0.00');
-    expect(rows[2]).toHaveTextContent('0.00%');
+    expect(rows[2]).toHaveTextContent('0%');
     expect(rows[2]).not.toHaveTextContent('Not defined');
+    expect(rows[3]).toHaveTextContent('$25.00');
+    expect(rows[3]).toHaveTextContent('Not defined');
   });
 });
