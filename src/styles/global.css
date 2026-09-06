@@ -318,6 +318,20 @@ h2 {
   gap: 0.4rem;
 }
 
+.methodology-link__icon {
+  display: inline-grid;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  font-weight: 850;
+  line-height: 1;
+  place-items: center;
+  text-decoration: none;
+}
+
 .definition-list {
   display: grid;
   gap: 1rem;
@@ -645,6 +659,32 @@ select {
   background: var(--primary-soft);
 }
 
+.dashboard-page {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+}
+
+.dashboard-page > .section-heading,
+.dashboard-page > .metric-grid,
+.dashboard-page > .insight-callout {
+  margin-bottom: 0;
+}
+
+.observation-sources {
+  padding: 0.75rem 1.25rem;
+}
+
+.observation-sources summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.observation-sources ul {
+  margin-bottom: 0;
+}
+
 .metric-grid {
   display: grid;
   margin-bottom: 1.25rem;
@@ -727,8 +767,10 @@ select {
 }
 
 .chart-card__visual {
+  max-width: 100%;
   min-height: 240px;
   outline: none;
+  overflow-x: clip;
 }
 
 .chart-card__visual:focus-visible {

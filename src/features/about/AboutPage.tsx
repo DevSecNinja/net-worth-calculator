@@ -80,10 +80,11 @@ export function AboutPage({ currency }: { currency?: string }) {
       <section>
         <h2>{t('about.buildTitle')}</h2>
         <p>
-          {t('about.buildText', { version: __APP_VERSION__, build: shortSha })}{' '}
+          {t('about.buildText', { version: __APP_VERSION__ })}{' '}
           <a href={sourceUrl} rel="noreferrer">
             {shortSha}
           </a>
+          .
         </p>
       </section>
       <section>

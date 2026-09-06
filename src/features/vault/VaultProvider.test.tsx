@@ -20,6 +20,7 @@ function Harness({ imported }: { imported?: ImportedVault }) {
       <output>
         {vault.status}:{vault.vault?.settings.baseCurrency ?? 'sealed'}
       </output>
+      <output aria-label="Capability issue">{vault.capabilityIssue ?? 'available'}</output>
       <button type="button" onClick={() => void vault.create(passphrase, 'USD', false)}>
         Create
       </button>
@@ -40,6 +41,9 @@ function Harness({ imported }: { imported?: ImportedVault }) {
       </button>
       <button type="button" onClick={vault.lock}>
         Lock
+      </button>
+      <button type="button" onClick={() => void vault.retryCapabilities()}>
+        Retry capabilities
       </button>
       <button
         type="button"
@@ -152,6 +156,29 @@ describe('VaultProvider operation generation', () => {
     release();
     await screen.findByText('unlocked:USD');
     expect(await readEnvelope()).toBeDefined();
+  });
+
+  it('clears a transient capability issue when the user retries', async () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new DOMException('Restricted for this context.', 'SecurityError');
+    });
+    const user = userEvent.setup();
+    render(
+      <VaultProvider>
+        <Harness />
+      </VaultProvider>,
+    );
+    await screen.findByText('absent:sealed');
+    expect(screen.getByRole('status', { name: 'Capability issue' })).toHaveTextContent(
+      'local-storage',
+    );
+
+    setItem.mockRestore();
+    await user.click(screen.getByRole('button', { name: 'Retry capabilities' }));
+    expect(screen.getByRole('status', { name: 'Capability issue' })).toHaveTextContent('available');
+
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    await screen.findByText('unlocked:USD');
   });
 
   it('locks and clears in-memory material synchronously when the page is hidden', async () => {
