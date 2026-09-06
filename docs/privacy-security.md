@@ -35,23 +35,23 @@ The following are outside the application's control:
 
 ## Threats and mitigations
 
-| Threat                                  | Mitigation                                                                         | Residual limitation                                                          |
-| --------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Browser storage inspection              | IndexedDB contains one AES-256-GCM cipher envelope only                            | Envelope format/KDF parameters and ciphertext length remain visible          |
-| Offline guessing of a stolen envelope   | PBKDF2-SHA-256 with random salt and 600,000 iterations                             | Weak or reused passphrases remain guessable                                  |
-| Ciphertext or metadata modification     | AES-GCM authentication covers ciphertext and canonical envelope parameters         | Authentication reports failure; it cannot repair corrupted bytes             |
-| AES-GCM nonce reuse                     | Fresh random 96-bit IV for every encryption                                        | Depends on browser cryptographic random generation                           |
-| Plaintext recovery from another record  | Whole-document encryption prevents plaintext per-item stores and metadata indexes  | Approximate vault size and write activity may be inferred externally         |
-| Stale or concurrent tab writes          | Single-writer lease plus encrypted revisions and atomic compare-and-swap writes    | A compromised same-origin tab can still act with its privileges              |
+| Threat                                  | Mitigation                                                                         | Residual limitation                                                              |
+| --------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Browser storage inspection              | IndexedDB contains one AES-256-GCM cipher envelope only                            | Envelope format/KDF parameters and ciphertext length remain visible              |
+| Offline guessing of a stolen envelope   | PBKDF2-SHA-256 with random salt and 600,000 iterations                             | Weak or reused passphrases remain guessable                                      |
+| Ciphertext or metadata modification     | AES-GCM authentication covers ciphertext and canonical envelope parameters         | Authentication reports failure; it cannot repair corrupted bytes                 |
+| AES-GCM nonce reuse                     | Fresh random 96-bit IV for every encryption                                        | Depends on browser cryptographic random generation                               |
+| Plaintext recovery from another record  | Whole-document encryption prevents plaintext per-item stores and metadata indexes  | Approximate vault size and write activity may be inferred externally             |
+| Stale or concurrent tab writes          | Single-writer lease plus encrypted revisions and atomic compare-and-swap writes    | A compromised same-origin tab can still act with its privileges                  |
 | Locked-vault destructive reset          | Typed warning, exclusive lease, and exact-envelope compare-and-delete              | Anyone with browser-profile access can erase local ciphertext but not decrypt it |
-| Accidental backup overwrite/import loss | Validate, authenticate, and confirm before the sole replacement transaction        | A confirmed restore intentionally replaces the one local vault               |
-| Backup content or filename disclosure   | Generic dated filename and encrypted authenticated payload                         | Plaintext wrapper exposes format version and export timestamp                |
-| Cache leakage                           | Revisioned app-shell precache only; no runtime cache rules or vault data responses | Static source and assets are intentionally public                            |
-| External data transmission              | No runtime third-party origins, analytics, telemetry, APIs, or remote assets       | The static host receives normal HTTPS asset requests                         |
-| XSS and injected script                 | React escaping, no unsafe HTML/eval, local dependencies, restrictive document CSP  | CSP cannot protect against every trusted same-origin or extension compromise |
-| Unsafe automatic updates                | Waiting worker, explicit activation, dirty-state confirmation, immutable build ID  | Accepted updates replace the running application code                        |
-| Cross-release data incompatibility      | Independent envelope/vault versions and strict validation                          | Unsupported or damaged backups cannot be restored                            |
-| Secret-bearing diagnostics              | Non-sensitive error messages and automated privacy/network checks                  | Browser/devtool extensions and user screenshots are outside the boundary     |
+| Accidental backup overwrite/import loss | Validate, authenticate, and confirm before the sole replacement transaction        | A confirmed restore intentionally replaces the one local vault                   |
+| Backup content or filename disclosure   | Generic dated filename and encrypted authenticated payload                         | Plaintext wrapper exposes format version and export timestamp                    |
+| Cache leakage                           | Revisioned app-shell precache only; no runtime cache rules or vault data responses | Static source and assets are intentionally public                                |
+| External data transmission              | No runtime third-party origins, analytics, telemetry, APIs, or remote assets       | The static host receives normal HTTPS asset requests                             |
+| XSS and injected script                 | React escaping, no unsafe HTML/eval, local dependencies, restrictive document CSP  | CSP cannot protect against every trusted same-origin or extension compromise     |
+| Unsafe automatic updates                | Waiting worker, explicit activation, dirty-state confirmation, immutable build ID  | Accepted updates replace the running application code                            |
+| Cross-release data incompatibility      | Independent envelope/vault versions and strict validation                          | Unsupported or damaged backups cannot be restored                                |
+| Secret-bearing diagnostics              | Non-sensitive error messages and automated privacy/network checks                  | Browser/devtool extensions and user screenshots are outside the boundary         |
 
 ## Cryptographic model
 

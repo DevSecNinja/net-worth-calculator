@@ -93,7 +93,7 @@ authentication and before current-schema validation.
 | Surface         | Permitted content                                                               |
 | --------------- | ------------------------------------------------------------------------------- |
 | IndexedDB       | One authenticated cipher envelope at a fixed key                                |
-| localStorage    | Theme, locale, short-lived random tab lease, and data-free deletion pulse        |
+| localStorage    | Theme, locale, short-lived random tab lease, and data-free deletion pulse       |
 | Cache Storage   | Generated HTML, JavaScript, CSS, manifest, and local image app-shell resources  |
 | JavaScript heap | Decrypted vault and derived key only while the writable session is unlocked     |
 | Backup file     | Versioned wrapper around the authenticated cipher envelope and export timestamp |

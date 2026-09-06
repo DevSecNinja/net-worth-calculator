@@ -46,13 +46,13 @@ existing short lease
 
 _GATE: PASS before research and PASS after design._
 
-| Principle | Gate | Design evidence |
-| --- | --- | --- |
-| Local-First Privacy | PASS | Reset reads and deletes only local ciphertext; contract forbids network and data-bearing events |
-| Encrypt Every Persisted Vault | PASS | No plaintext or key is created; exact opaque envelope is the compare-and-delete token |
-| Deterministic Financial Correctness | PASS | No financial model or calculation changes |
-| Accessible and Resilient | PASS | Existing modal focus behavior is reused; typed confirmation, keyboard, reflow, zoom, and localized warnings are tested |
-| Verification and Release Integrity | PASS | Storage, provider, component, E2E, privacy, PWA, coverage, build, and CI gates are explicit |
+| Principle                           | Gate | Design evidence                                                                                                        |
+| ----------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------- |
+| Local-First Privacy                 | PASS | Reset reads and deletes only local ciphertext; contract forbids network and data-bearing events                        |
+| Encrypt Every Persisted Vault       | PASS | No plaintext or key is created; exact opaque envelope is the compare-and-delete token                                  |
+| Deterministic Financial Correctness | PASS | No financial model or calculation changes                                                                              |
+| Accessible and Resilient            | PASS | Existing modal focus behavior is reused; typed confirmation, keyboard, reflow, zoom, and localized warnings are tested |
+| Verification and Release Integrity  | PASS | Storage, provider, component, E2E, privacy, PWA, coverage, build, and CI gates are explicit                            |
 
 No constitution violations require justification.
 

@@ -8,8 +8,8 @@
 
 **Purpose**: Establish traceable feature documentation and focused test surfaces.
 
-- [X] T001 Finalize specification and design artifacts in specs/002-reset-locked-vault/
-- [X] T002 [P] Identify existing destructive dialog, repository CAS, lease, locale, and privacy test patterns in src/ and tests/
+- [x] T001 Finalize specification and design artifacts in specs/002-reset-locked-vault/
+- [x] T002 [P] Identify existing destructive dialog, repository CAS, lease, locale, and privacy test patterns in src/ and tests/
 
 ---
 
@@ -17,10 +17,10 @@
 
 **Purpose**: Add the storage and cross-tab primitives needed by every user story.
 
-- [X] T003 [P] Add data-free vault deletion event publishing/subscription in src/storage/vaultEvents.ts
-- [X] T004 [P] Add event privacy and delivery tests in src/storage/vaultEvents.test.ts
-- [X] T005 Add typed exact-envelope locked deletion in src/storage/vaultRepository.ts
-- [X] T006 Add delete-without-decrypt, stale-envelope, absent-envelope, and second-delete tests in src/storage/vaultRepository.test.ts
+- [x] T003 [P] Add data-free vault deletion event publishing/subscription in src/storage/vaultEvents.ts
+- [x] T004 [P] Add event privacy and delivery tests in src/storage/vaultEvents.test.ts
+- [x] T005 Add typed exact-envelope locked deletion in src/storage/vaultRepository.ts
+- [x] T006 Add delete-without-decrypt, stale-envelope, absent-envelope, and second-delete tests in src/storage/vaultRepository.test.ts
 
 **Checkpoint**: Exact ciphertext deletion and local notification are independently testable.
 
@@ -33,11 +33,11 @@
 **Independent Test**: Create and lock a vault, confirm deletion without a passphrase, reach
 onboarding, and create a replacement vault in the same page session.
 
-- [X] T007 [US1] Add provider capture/cancel/delete methods and success state cleanup in src/features/vault/VaultProvider.tsx
-- [X] T008 [US1] Implement the typed-confirmation reset dialog in src/features/vault/LockedVaultResetDialog.tsx
-- [X] T009 [US1] Add the secondary forgotten-passphrase action on src/features/vault/UnlockPage.tsx
-- [X] T010 [US1] Add locked reset, cancellation, wrong confirmation, onboarding, and immediate recreation component tests in src/features/vault/VaultFlows.test.tsx
-- [X] T011 [US1] Add the complete browser restart journey in tests/e2e/core-workflows.spec.ts
+- [x] T007 [US1] Add provider capture/cancel/delete methods and success state cleanup in src/features/vault/VaultProvider.tsx
+- [x] T008 [US1] Implement the typed-confirmation reset dialog in src/features/vault/LockedVaultResetDialog.tsx
+- [x] T009 [US1] Add the secondary forgotten-passphrase action on src/features/vault/UnlockPage.tsx
+- [x] T010 [US1] Add locked reset, cancellation, wrong confirmation, onboarding, and immediate recreation component tests in src/features/vault/VaultFlows.test.tsx
+- [x] T011 [US1] Add the complete browser restart journey in tests/e2e/core-workflows.spec.ts
 
 **Checkpoint**: The primary lost-passphrase reset journey works without a passphrase or reload.
 
@@ -50,10 +50,10 @@ onboarding, and create a replacement vault in the same page session.
 **Independent Test**: Inspect and operate the dialog in en-US, en-GB, and nl-NL with keyboard,
 screen-reader assertions, mobile width, and 200% zoom.
 
-- [X] T012 [P] [US2] Add complete en-US, en-GB, and nl-NL reset catalog entries in src/features/locale/catalog.ts
-- [X] T013 [US2] Render the required recovery, backup, browser-profile, and other-device warnings in src/features/vault/LockedVaultResetDialog.tsx
-- [X] T014 [P] [US2] Add typed catalog completeness and Dutch no-fallback assertions in src/features/locale/catalog.test.ts
-- [X] T015 [US2] Add dialog focus, Escape, cancel, warning, touch target, mobile, and high-zoom assertions in src/features/vault/VaultFlows.test.tsx and tests/e2e/accessibility.spec.ts
+- [x] T012 [P] [US2] Add complete en-US, en-GB, and nl-NL reset catalog entries in src/features/locale/catalog.ts
+- [x] T013 [US2] Render the required recovery, backup, browser-profile, and other-device warnings in src/features/vault/LockedVaultResetDialog.tsx
+- [x] T014 [P] [US2] Add typed catalog completeness and Dutch no-fallback assertions in src/features/locale/catalog.test.ts
+- [x] T015 [US2] Add dialog focus, Escape, cancel, warning, touch target, mobile, and high-zoom assertions in src/features/vault/VaultFlows.test.tsx and tests/e2e/accessibility.spec.ts
 
 **Checkpoint**: Every user receives the complete warning in their selected supported language.
 
@@ -66,10 +66,10 @@ screen-reader assertions, mobile width, and 200% zoom.
 **Independent Test**: Hold a writable lease in another tab, replace an envelope after confirmation,
 and successfully delete while another locked tab observes onboarding.
 
-- [X] T016 [US3] Acquire and release the existing short-lived writable lease around locked deletion in src/features/vault/VaultProvider.tsx
-- [X] T017 [US3] Re-read IndexedDB on deletion events and transition only locked absent-vault tabs in src/features/vault/VaultProvider.tsx
-- [X] T018 [P] [US3] Add active-lease, lease cleanup, conflict, preference preservation, and event transition tests in src/features/vault/VaultProvider.test.tsx
-- [X] T019 [US3] Add active second-tab refusal and locked-tab notification coverage in tests/e2e/core-workflows.spec.ts
+- [x] T016 [US3] Acquire and release the existing short-lived writable lease around locked deletion in src/features/vault/VaultProvider.tsx
+- [x] T017 [US3] Re-read IndexedDB on deletion events and transition only locked absent-vault tabs in src/features/vault/VaultProvider.tsx
+- [x] T018 [P] [US3] Add active-lease, lease cleanup, conflict, preference preservation, and event transition tests in src/features/vault/VaultProvider.test.tsx
+- [x] T019 [US3] Add active second-tab refusal and locked-tab notification coverage in tests/e2e/core-workflows.spec.ts
 
 **Checkpoint**: Concurrent writers and stale confirmations cannot cause unintended data loss.
 
@@ -79,11 +79,11 @@ and successfully delete while another locked tab observes onboarding.
 
 **Purpose**: Complete security documentation, privacy evidence, and delivery.
 
-- [X] T020 [P] Document reset recovery limits and browser-profile erase threat in README.md, PRIVACY.md, SECURITY.md, and docs/privacy-security.md
-- [X] T021 [P] Document reset state, CAS, lease, and event flow in docs/architecture.md
-- [X] T022 Add no-network, no-marker-log, and app-shell-cache privacy assertions in tests/privacy/privacy.spec.ts
-- [X] T023 Run npm run check, npm run test:privacy, npm run test:pwa, and npm run test:e2e
-- [X] T024 Complete cross-artifact analysis in specs/002-reset-locked-vault/analysis.md and mark implemented tasks
+- [x] T020 [P] Document reset recovery limits and browser-profile erase threat in README.md, PRIVACY.md, SECURITY.md, and docs/privacy-security.md
+- [x] T021 [P] Document reset state, CAS, lease, and event flow in docs/architecture.md
+- [x] T022 Add no-network, no-marker-log, and app-shell-cache privacy assertions in tests/privacy/privacy.spec.ts
+- [x] T023 Run npm run check, npm run test:privacy, npm run test:pwa, and npm run test:e2e
+- [x] T024 Complete cross-artifact analysis in specs/002-reset-locked-vault/analysis.md and mark implemented tasks
 - [ ] T025 Commit with a signed Conventional Commit and required co-author trailer
 - [ ] T026 Open PR `feat: allow resetting a locked vault` with privacy, data-loss, concurrency, and validation evidence
 - [ ] T027 Monitor CI and review, resolve valid findings, enable auto-merge, and verify deployment and localized live flow
