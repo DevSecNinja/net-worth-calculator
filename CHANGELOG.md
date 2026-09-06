@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Release Please updates this file from
 Conventional Commits.
 
+## [0.4.0](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.3.0...v0.4.0) (2026-09-06)
+
+
+### Features
+
+* add detailed chart tooltips ([#19](https://github.com/DevSecNinja/net-worth-calculator/issues/19)) ([9fef288](https://github.com/DevSecNinja/net-worth-calculator/commit/9fef2884606ea412b3fef72353f669b10550d451))
+
+
+### Bug Fixes
+
+* calculate as-of yearly change ([#21](https://github.com/DevSecNinja/net-worth-calculator/issues/21)) ([fcd701d](https://github.com/DevSecNinja/net-worth-calculator/commit/fcd701d69fa1994c716ff6f322285377718bfe93))
+
 ## [0.3.0](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.2.0...v0.3.0) (2026-09-06)
 
 
