@@ -798,7 +798,7 @@ select {
 
 .chart-tooltip {
   width: max-content;
-  max-width: min(20rem, calc(100vw - 3rem));
+  max-width: min(20rem, calc(100vw - 3rem), var(--chart-tooltip-visible-width, 100vw));
   padding: 0.75rem;
   overflow-wrap: anywhere;
   color: var(--text);
@@ -1103,7 +1103,7 @@ td:first-child {
   }
 
   .chart-tooltip {
-    max-width: min(20rem, calc(100vw - 7rem));
+    max-width: min(20rem, calc(100vw - 7rem), var(--chart-tooltip-visible-width, 100vw));
   }
 
   .chart-tooltip--selected {

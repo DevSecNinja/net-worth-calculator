@@ -14,6 +14,14 @@ async function hoverChartPlot(card: Locator, xRatio = 0.55): Promise<void> {
   await plot.page().mouse.move(box.x + box.width * xRatio, box.y + box.height * 0.45);
 }
 
+async function hoverPieSector(sector: Locator): Promise<void> {
+  const box = await sector.boundingBox();
+  if (!box) throw new Error('Pie sector is not visible.');
+  const event = { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2 };
+  await sector.dispatchEvent('mouseover', event);
+  await sector.dispatchEvent('mousemove', event);
+}
+
 async function interactWithPie(
   card: Locator,
   interaction: 'hover' | 'tap' | 'click',
@@ -25,9 +33,24 @@ async function interactWithPie(
   } else if (interaction === 'click') {
     await sector.dispatchEvent('click');
   } else {
-    await sector.dispatchEvent('mouseover');
-    await sector.dispatchEvent('mousemove');
+    await hoverPieSector(sector);
   }
+}
+
+async function expectTooltipHorizontallyBounded(
+  tooltip: Locator,
+  card: Locator,
+  viewportWidth: number,
+): Promise<void> {
+  const [tooltipBounds, scrollportBounds] = await Promise.all([
+    tooltip.boundingBox(),
+    card.locator('.chart-card__visual').boundingBox(),
+  ]);
+  if (!tooltipBounds || !scrollportBounds) throw new Error('Tooltip or chart is not visible.');
+  expect(tooltipBounds.x).toBeGreaterThanOrEqual(Math.max(0, scrollportBounds.x));
+  expect(tooltipBounds.x + tooltipBounds.width).toBeLessThanOrEqual(
+    Math.min(viewportWidth, scrollportBounds.x + scrollportBounds.width),
+  );
 }
 
 test('shows meaningful hover details for every chart family', async ({
@@ -116,16 +139,40 @@ test('keeps Dutch details localized and bounded in a narrow dark viewport', asyn
   });
 
   const allocation = chartCard(page, /verdeling bezittingen/i);
-  await interactWithPie(allocation, 'hover');
   const tooltip = allocation.getByTestId('chart-tooltip');
-  await expect(tooltip).toContainText(/percentage van totaal/i);
-  await expect(tooltip).toContainText(/\d,\d+%/);
-  await expect(tooltip).toContainText(/€|\$/);
+  const sectors = allocation.locator('.recharts-pie-sector path');
+  const sectorCount = await sectors.count();
+  const representativeIndexes = [
+    ...new Set([0, Math.floor((sectorCount - 1) / 2), sectorCount - 1]),
+  ];
+  for (const index of representativeIndexes) {
+    await hoverPieSector(sectors.nth(index));
+    await expect(tooltip.locator('.chart-tooltip__title')).toHaveText(/\S/);
+    await expect(tooltip).toContainText(/percentage van totaal/i);
+    await expect(tooltip).toContainText(/\d,\d+%/);
+    await expect(tooltip).toContainText(/€|\$/);
+    await expectTooltipHorizontallyBounded(tooltip, allocation, 320);
+  }
 
-  const bounds = await tooltip.boundingBox();
-  if (!bounds) throw new Error('Tooltip is not visible.');
-  expect(bounds.x).toBeGreaterThanOrEqual(0);
-  expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
+  const chartVisual = allocation.locator('.chart-card__visual');
+  await chartVisual.evaluate((element) => {
+    const svg = element.querySelector('svg');
+    if (!svg) throw new Error('Expected the chart visual to contain an SVG.');
+    svg.style.minWidth = '40rem';
+    element.scrollLeft = element.scrollWidth;
+  });
+  await hoverPieSector(sectors.last());
+  await expectTooltipHorizontallyBounded(tooltip, allocation, 320);
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  await hoverPieSector(sectors.first());
+  await expect(tooltip.locator('.chart-tooltip__title')).toHaveText(/\S/);
+  await expect(tooltip).toContainText(/percentage van totaal/i);
+  await expectTooltipHorizontallyBounded(tooltip, allocation, 320);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth),
+  );
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
 
