@@ -11,7 +11,7 @@ test('shows exact-date yearly change for sample data and unavailable history hon
   const yearlyChange = page.locator('article').filter({ hasText: /^Yearly change/ });
 
   await expect(yearlyChange).not.toContainText('Not defined');
-  await expect(yearlyChange).toContainText(/\$-?[\d,]+\.\d{2}/);
+  await expect(yearlyChange).toContainText(/-?\$[\d,]+\.\d{2}/);
   await expect(yearlyChange).toContainText(/-?\d+(?:\.\d+)?%/);
 
   await page.getByLabel(/as of/i).fill(`${currentYear - 3}-12-31`);
