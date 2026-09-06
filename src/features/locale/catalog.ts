@@ -141,7 +141,8 @@ const enUS = {
   'dashboard.yearlyChangeDetail': 'Versus the same date last year.',
   'dashboard.summaryRegion': '{year} summary',
   'dashboard.notDefined': 'Not defined',
-  'dashboard.cagr': 'CAGR: {value}% across complete years.',
+  'dashboard.cagr':
+    'Compound annual growth rate (CAGR): {value}% per year across complete years. This is the constant yearly rate that would take net worth from the first complete year to the last.',
   'dashboard.range': 'Dashboard time range',
   'dashboard.from': 'From',
   'dashboard.to': 'To',
@@ -604,7 +605,8 @@ const nlNL: MessageCatalog = {
   'dashboard.yearlyChangeDetail': 'Ten opzichte van dezelfde datum vorig jaar.',
   'dashboard.summaryRegion': 'Overzicht {year}',
   'dashboard.notDefined': 'Niet gedefinieerd',
-  'dashboard.cagr': 'CAGR: {value}% over volledige jaren.',
+  'dashboard.cagr':
+    'Samengesteld jaarlijks groeipercentage (CAGR): {value}% per jaar over volledige jaren. Dit is het constante jaarlijkse percentage waarmee het nettovermogen van het eerste volledige jaar uitkomt op dat van het laatste.',
   'dashboard.range': 'Periode dashboard',
   'dashboard.from': 'Van',
   'dashboard.to': 'Tot',
