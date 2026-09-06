@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Release Please updates this file from
 Conventional Commits.
 
+## [0.5.0](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.4.0...v0.5.0) (2026-09-06)
+
+
+### Features
+
+* explain net worth methodology ([#23](https://github.com/DevSecNinja/net-worth-calculator/issues/23)) ([7748c66](https://github.com/DevSecNinja/net-worth-calculator/commit/7748c661a581fe072d4581c1ccff5a201bc3cf44))
+
 ## [0.4.0](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.3.0...v0.4.0) (2026-09-06)
 
 
