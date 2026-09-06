@@ -104,16 +104,16 @@ would create false precision.
 
 ## Platform Path Audit
 
-| Path | Finding | Action |
-| ---- | ------- | ------ |
-| PBKDF2 and AES-GCM | Completed in local and live WebKit; rejection is already surfaced before unlocked state | Preserve parameters and tests |
-| Random generation | `getRandomValues` is mandatory; `randomUUID` is convenience-only | Add RFC 4122 fallback backed by `getRandomValues` |
-| IndexedDB | Envelope is string/number-only and clone-safe; writes await transaction completion | Preserve strict atomic compare-and-swap |
-| BroadcastChannel | Optional and already conceptually paired with storage events; constructor can be restricted | Centralize narrow feature detection |
-| localStorage | Required for the exclusive lease; access errors already prevent creation | Keep fail-closed behavior |
-| pagehide | Releases the lease and clears plaintext; persisted envelope is already committed first | Preserve and exercise relaunch |
-| service-worker update/control | Prompted activation and versioned precaches are correct | Preserve; include iPhone update coverage |
-| focus and dialogs | Native dialog behavior is unrelated to create transition | Retain keyboard/touch checks |
-| hash navigation | Static-host-safe and unchanged between standalone/browser modes | Exercise root and protected routes |
-| locale and media queries | Supported paths produced no errors in WebKit | Retain locale, reduced-motion, and display-mode assertions |
-| storage persistence request | The app does not request durable storage and does not imply it | Document browser eviction boundary |
+| Path                          | Finding                                                                                     | Action                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| PBKDF2 and AES-GCM            | Completed in local and live WebKit; rejection is already surfaced before unlocked state     | Preserve parameters and tests                              |
+| Random generation             | `getRandomValues` is mandatory; `randomUUID` is convenience-only                            | Add RFC 4122 fallback backed by `getRandomValues`          |
+| IndexedDB                     | Envelope is string/number-only and clone-safe; writes await transaction completion          | Preserve strict atomic compare-and-swap                    |
+| BroadcastChannel              | Optional and already conceptually paired with storage events; constructor can be restricted | Centralize narrow feature detection                        |
+| localStorage                  | Required for the exclusive lease; access errors already prevent creation                    | Keep fail-closed behavior                                  |
+| pagehide                      | Releases the lease and clears plaintext; persisted envelope is already committed first      | Preserve and exercise relaunch                             |
+| service-worker update/control | Prompted activation and versioned precaches are correct                                     | Preserve; include iPhone update coverage                   |
+| focus and dialogs             | Native dialog behavior is unrelated to create transition                                    | Retain keyboard/touch checks                               |
+| hash navigation               | Static-host-safe and unchanged between standalone/browser modes                             | Exercise root and protected routes                         |
+| locale and media queries      | Supported paths produced no errors in WebKit                                                | Retain locale, reduced-motion, and display-mode assertions |
+| storage persistence request   | The app does not request durable storage and does not imply it                              | Document browser eviction boundary                         |

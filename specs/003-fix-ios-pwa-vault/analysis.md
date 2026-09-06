@@ -45,13 +45,13 @@ claiming literal home-screen installation coverage.
 
 ## Requirement Trace
 
-| Requirement group | Evidence |
-| ----------------- | -------- |
-| FR-001 to FR-006 | Installed-like iPhone empty/sample creation, post-startup cache-loss regression, atomic create unit test, lock/reload/unlock assertions |
-| FR-007 to FR-010 | Random UUID, optional BroadcastChannel, and required-capability unit/component tests; standalone signals, hash routes, pagehide, offline origin-outage, and update scenario |
-| FR-011 to FR-014 | Existing fail-closed boundary, new non-sensitive boundary test, same-origin request checks, marker scans of URLs/web storage/cache/IndexedDB |
-| FR-015 to FR-019 | Existing five browser projects plus scoped iPhone, iPad, and 4K projects; portrait/landscape, 430-to-480 range, large text, touch, keyboard, chart table, bounded width, and overflow checks |
-| FR-020 | README, architecture, privacy/security, contract, and quickstart explicitly distinguish standalone emulation from physical Add to Home Screen testing |
+| Requirement group | Evidence                                                                                                                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001 to FR-006  | Installed-like iPhone empty/sample creation, post-startup cache-loss regression, atomic create unit test, lock/reload/unlock assertions                                                      |
+| FR-007 to FR-010  | Random UUID, optional BroadcastChannel, and required-capability unit/component tests; standalone signals, hash routes, pagehide, offline origin-outage, and update scenario                  |
+| FR-011 to FR-014  | Existing fail-closed boundary, new non-sensitive boundary test, same-origin request checks, marker scans of URLs/web storage/cache/IndexedDB                                                 |
+| FR-015 to FR-019  | Existing five browser projects plus scoped iPhone, iPad, and 4K projects; portrait/landscape, 430-to-480 range, large text, touch, keyboard, chart table, bounded width, and overflow checks |
+| FR-020            | README, architecture, privacy/security, contract, and quickstart explicitly distinguish standalone emulation from physical Add to Home Screen testing                                        |
 
 ## Automated Evidence
 

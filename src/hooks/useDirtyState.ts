@@ -38,18 +38,32 @@ type PendingRequest = {
   timeout: number;
 };
 
+function tryCreateId(): string | undefined {
+  try {
+    return createId();
+  } catch {
+    return undefined;
+  }
+}
+
 export function DirtyStateProvider({ children }: { children: ReactNode }) {
   const [dirty, setDirtySet] = useState(() => new Set<string>());
   const { t } = useLocale();
-  const owner = useRef(createId());
+  const owner = useRef<string | undefined>(undefined);
   const localDirty = useRef(false);
   const remoteDirty = useRef(new Set<string>());
   const peers = useRef(new Set<string>());
   const pendingRequests = useRef(new Map<string, PendingRequest>());
   const publish = useRef<((message: DirtyMessage) => void) | undefined>(undefined);
   const coordinationAvailable = useRef(false);
+  const coordinationFailsClosed = useRef(false);
 
   useEffect(() => {
+    const ownerId = tryCreateId();
+    if (!ownerId) return;
+    const initialRequestId = tryCreateId();
+    if (!initialRequestId) return;
+    owner.current = ownerId;
     const current = openOptionalBroadcastChannel(DIRTY_CHANNEL);
     const requests = pendingRequests.current;
     const publishMessage = (message: DirtyMessage) => {
@@ -68,12 +82,13 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
         }
       }
       coordinationAvailable.current = delivered;
+      coordinationFailsClosed.current = !delivered;
     };
     publish.current = publishMessage;
     const publishState = (requestId?: string, target?: string) => {
       publishMessage({
         type: 'state',
-        owner: owner.current,
+        owner: ownerId,
         dirty: localDirty.current,
         ...(requestId && target ? { requestId, target } : {}),
       } satisfies DirtyMessage);
@@ -93,7 +108,7 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
         !('owner' in message) ||
         typeof message.type !== 'string' ||
         typeof message.owner !== 'string' ||
-        message.owner === owner.current
+        message.owner === ownerId
       ) {
         return;
       }
@@ -116,7 +131,7 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
           'requestId' in message &&
           typeof message.requestId === 'string' &&
           'target' in message &&
-          message.target === owner.current
+          message.target === ownerId
         ) {
           requests.get(message.requestId)?.responded.add(message.owner);
           completeRequestIfReady(message.requestId);
@@ -137,12 +152,12 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
     window.addEventListener('storage', handleStorage);
     publishMessage({
       type: 'request',
-      owner: owner.current,
-      requestId: createId(),
+      owner: ownerId,
+      requestId: initialRequestId,
     } satisfies DirtyMessage);
     publishState();
     const release = () => {
-      publishMessage({ type: 'release', owner: owner.current } satisfies DirtyMessage);
+      publishMessage({ type: 'release', owner: ownerId } satisfies DirtyMessage);
     };
     window.addEventListener('pagehide', release);
     return () => {
@@ -152,6 +167,8 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
       current?.close();
       publish.current = undefined;
       coordinationAvailable.current = false;
+      coordinationFailsClosed.current = false;
+      owner.current = undefined;
       for (const pending of requests.values()) {
         window.clearTimeout(pending.timeout);
         pending.resolve(new Set(pending.expected));
@@ -162,9 +179,11 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localDirty.current = dirty.size > 0;
+    const ownerId = owner.current;
+    if (!ownerId) return;
     publish.current?.({
       type: 'state',
-      owner: owner.current,
+      owner: ownerId,
       dirty: localDirty.current,
     } satisfies DirtyMessage);
   }, [dirty]);
@@ -179,13 +198,20 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
   }, []);
   const collectDirtyNames = useCallback(async () => {
     const publishMessage = publish.current;
-    if (!coordinationAvailable.current || !publishMessage) {
-      return [...[...dirty].sort(), t('dirty.remote')];
+    const ownerId = owner.current;
+    if (!coordinationAvailable.current || !publishMessage || !ownerId) {
+      return [
+        ...[...dirty].sort(),
+        ...(coordinationFailsClosed.current ? [t('dirty.remote')] : []),
+      ];
     }
     const expected = new Set(peers.current);
     let missing = new Set<string>();
     if (expected.size > 0) {
-      const requestId = createId();
+      const requestId = tryCreateId();
+      if (!requestId) {
+        return [...[...dirty].sort(), t('dirty.remote')];
+      }
       missing = await new Promise<Set<string>>((resolve) => {
         const timeout = window.setTimeout(() => {
           const pending = pendingRequests.current.get(requestId);
@@ -206,7 +232,7 @@ export function DirtyStateProvider({ children }: { children: ReactNode }) {
         });
         publishMessage({
           type: 'request',
-          owner: owner.current,
+          owner: ownerId,
           requestId,
         } satisfies DirtyMessage);
       });

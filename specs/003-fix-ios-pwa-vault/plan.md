@@ -49,11 +49,11 @@ critical workflows across five existing browser projects plus three scoped compa
 
 _GATE: PASS before research and PASS after design._
 
-| Principle                           | Gate | Design evidence                                                                                                  |
-| ----------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------- |
-| Local-First Privacy                 | PASS | All diagnostics are data-free; device tests reject external requests and sensitive persistence outside IndexedDB |
+| Principle                           | Gate | Design evidence                                                                                                   |
+| ----------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------- |
+| Local-First Privacy                 | PASS | All diagnostics are data-free; device tests reject external requests and sensitive persistence outside IndexedDB  |
 | Encrypt Every Persisted Vault       | PASS | Envelope format, PBKDF2, AES-GCM, randomness, key lifetime, and atomic IndexedDB write remain unchanged           |
-| Deterministic Financial Correctness | PASS | No financial calculation changes; sample/dashboard values remain covered                                         |
+| Deterministic Financial Correctness | PASS | No financial calculation changes; sample/dashboard values remain covered                                          |
 | Accessible and Resilient            | PASS | Critical UI code is startup-ready; touch, keyboard, safe area, orientation, chart table, and reflow checks expand |
 | Verification and Release Integrity  | PASS | Unit, build, privacy, PWA, device, browser, live deployment, and real-device manual evidence are explicit         |
 
@@ -79,6 +79,7 @@ specs/003-fix-ios-pwa-vault/
 ```
 
 ### Source Code (repository root)
+
 ```text
 src/
 ├── app/

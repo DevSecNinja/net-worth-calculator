@@ -184,4 +184,18 @@ describe('DirtyStateProvider', () => {
       await screen.findByText('Unsaved edits in another tab', { selector: 'output' }),
     ).toBeVisible();
   });
+
+  it('keeps local dirty-state checks available when secure randomness is unavailable', async () => {
+    vi.stubGlobal('crypto', {});
+    const user = userEvent.setup();
+    render(
+      <DirtyStateProvider>
+        <Probe name="local tab" />
+      </DirtyStateProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /mark local tab dirty/i }));
+    await user.click(screen.getByRole('button', { name: /check local tab/i }));
+    expect(await screen.findByText('Asset editor', { selector: 'output' })).toBeVisible();
+  });
 });

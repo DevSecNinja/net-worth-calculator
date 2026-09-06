@@ -1024,6 +1024,14 @@ td:first-child {
     flex-direction: column;
   }
 
+  .chart-tooltip {
+    max-width: min(20rem, calc(100vw - 7rem));
+  }
+
+  .chart-tooltip--selected {
+    max-width: none;
+  }
+
   .app-footer {
     align-items: center;
     flex-direction: column;
