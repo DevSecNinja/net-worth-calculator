@@ -7,7 +7,7 @@ test('shows exact-date yearly change for sample data and unavailable history hon
 }) => {
   test.setTimeout(90_000);
   await createVault(page, true);
-  const currentYear = new Date().getFullYear();
+  const currentYear = await page.evaluate(() => new Date().getFullYear());
   const yearlyChange = page.locator('article').filter({ hasText: /^Yearly change/ });
 
   await expect(yearlyChange).not.toContainText('Not defined');

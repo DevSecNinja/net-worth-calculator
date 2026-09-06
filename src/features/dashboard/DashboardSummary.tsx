@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import type { DashboardSnapshot } from '@/domain/model';
 import { formatMoney, formatPercent } from '@/domain/currency';
 import { useLocale } from '@/features/locale/LocaleProvider';
@@ -12,6 +14,7 @@ export function DashboardSummary({
   locale: string;
 }) {
   const { t } = useLocale();
+  const yearlyChangeDescriptionId = useId();
   const cards = [
     {
       label: t('dashboard.assets'),
@@ -31,6 +34,7 @@ export function DashboardSummary({
     {
       label: t('dashboard.yearlyChange'),
       description: t('dashboard.yearlyChangeDetail'),
+      descriptionId: yearlyChangeDescriptionId,
       value:
         snapshot.yearlyChange !== undefined
           ? formatMoney(snapshot.yearlyChange, currency, locale)
@@ -55,11 +59,16 @@ export function DashboardSummary({
         <article
           className={`metric-card metric-card--${card.tone}`}
           key={card.label}
-          aria-description={card.description}
+          aria-describedby={card.description ? card.descriptionId : undefined}
         >
           <p>{card.label}</p>
           <strong>{card.value}</strong>
           {card.detail ? <span>{card.detail}</span> : null}
+          {card.description ? (
+            <span className="visually-hidden" id={card.descriptionId}>
+              {card.description}
+            </span>
+          ) : null}
         </article>
       ))}
     </section>
