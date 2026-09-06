@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Release Please updates this file from
 Conventional Commits.
 
+## [0.3.0](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.2.0...v0.3.0) (2026-09-06)
+
+
+### Features
+
+* allow resetting a locked vault ([#18](https://github.com/DevSecNinja/net-worth-calculator/issues/18)) ([6087297](https://github.com/DevSecNinja/net-worth-calculator/commit/6087297c20ce0a98811c550d59f3eac6e61e511e))
+
+
+### Bug Fixes
+
+* automate Cloudflare DNS cutover ([#14](https://github.com/DevSecNinja/net-worth-calculator/issues/14)) ([7a76eca](https://github.com/DevSecNinja/net-worth-calculator/commit/7a76eca8c128babb10e172f005af7f21541786fa))
+* keep Cloudflare DNS cutover manual ([#16](https://github.com/DevSecNinja/net-worth-calculator/issues/16)) ([55ab0a1](https://github.com/DevSecNinja/net-worth-calculator/commit/55ab0a15cc5f11288f6568a7aa7eb883ecfec9e3))
+* prevent PWA status from overlapping footer ([#17](https://github.com/DevSecNinja/net-worth-calculator/issues/17)) ([492c1e9](https://github.com/DevSecNinja/net-worth-calculator/commit/492c1e9e127c1d41d53035828877cd43572c0b41))
+
 ## [0.2.0](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.1.1...v0.2.0) (2026-09-05)
 
 
