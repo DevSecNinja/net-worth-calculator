@@ -169,9 +169,9 @@ same-origin cache entries with no vault data, zero external requests, and an off
 
 ## Exact As-of Yearly Change Bugfix Analysis: 2026-09-06
 
-| ID | Category | Severity | Location(s)                 | Resolution                                                                                                                                                                       |
-| -- | -------- | -------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Y1 | Bugfix   | High     | FR-050, SC-020, T105-T109   | The summary now compares complete exact-date snapshots one year apart with leap-day clamping, carry-forward, liability projection/manual seeds, and no future leakage.            |
+| ID | Category | Severity | Location(s)                 | Resolution                                                                                                                                                                         |
+| -- | -------- | -------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Y1 | Bugfix   | High     | FR-050, SC-020, T105-T109   | The summary now compares complete exact-date snapshots one year apart with leap-day clamping, carry-forward, liability projection/manual seeds, and no future leakage.             |
 | Y2 | Safety   | None     | Annual chart/table behavior | December 31 annual change remains separately derived from consecutive annual snapshots; existing chart/table equivalence and tooltip behavior are unchanged and fully revalidated. |
 
 - **Functional requirements checked**: 50
