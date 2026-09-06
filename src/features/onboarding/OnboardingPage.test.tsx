@@ -1,13 +1,18 @@
 import { MemoryRouter } from 'react-router-dom';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import { LocaleProvider } from '@/features/locale/LocaleProvider';
+
+const { retryCapabilities } = vi.hoisted(() => ({
+  retryCapabilities: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock('@/features/vault/useVault', () => ({
   useVault: () => ({
     busy: false,
     capabilityIssue: 'web-crypto',
     create: vi.fn(),
+    retryCapabilities,
   }),
 }));
 vi.mock('@/hooks/useDirtyState', () => ({
@@ -33,5 +38,9 @@ describe('OnboardingPage browser capabilities', () => {
     expect(screen.getByLabelText(/confirm passphrase/i)).toBeDisabled();
     expect(screen.getByRole('button', { name: /create empty vault/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /create with sample data/i })).toBeDisabled();
+    const retry = screen.getByRole('button', { name: /check again/i });
+    expect(retry).toBeEnabled();
+    fireEvent.click(retry);
+    expect(retryCapabilities).toHaveBeenCalledOnce();
   });
 });

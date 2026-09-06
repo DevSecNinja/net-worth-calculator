@@ -10,9 +10,14 @@ const iphone14ProMax = {
   trace: 'off' as const,
 };
 const ipadPro12 = {
-  ...devices['iPad Pro 11'],
+  userAgent:
+    'Mozilla/5.0 (iPad; CPU OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0 Mobile/15E148 Safari/604.1',
   viewport: { width: 1024, height: 1366 },
   screen: { width: 1024, height: 1366 },
+  deviceScaleFactor: 2,
+  isMobile: true,
+  hasTouch: true,
+  defaultBrowserType: 'webkit' as const,
   trace: 'off' as const,
 };
 const desktop4k = {
@@ -28,7 +33,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
-  workers: 2,
+  ...(process.env.CI ? { workers: 2 } : {}),
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   timeout: 45_000,
   expect: { timeout: 10_000 },

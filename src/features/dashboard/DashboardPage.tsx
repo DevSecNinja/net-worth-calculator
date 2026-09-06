@@ -30,7 +30,7 @@ export function DashboardPage() {
   if (!vault) return null;
   if (vault.assets.length === 0 && vault.liabilities.length === 0) {
     return (
-      <main id="main-content" className="page">
+      <main id="main-content" className="page dashboard-page">
         <section className="hero hero--compact">
           <p className="eyebrow">{t('dashboard.eyebrow')}</p>
           <h1>{t('dashboard.emptyTitle')}</h1>
@@ -62,7 +62,7 @@ export function DashboardPage() {
   if (!latest) return null;
 
   return (
-    <main id="main-content" className="page">
+    <main id="main-content" className="page dashboard-page">
       <div className="section-heading">
         <div>
           <p className="eyebrow">{t('dashboard.eyebrow')}</p>
@@ -73,7 +73,10 @@ export function DashboardPage() {
               : t('dashboard.incomplete', { date: asOfDate })}
           </p>
           <Link className="methodology-link" to="/about#methodology">
-            <span aria-hidden="true">(i)</span> {t('dashboard.methodologyLink')}
+            <span className="methodology-link__icon" aria-hidden="true">
+              i
+            </span>
+            {t('dashboard.methodologyLink')}
           </Link>
         </div>
         <div className="form-stack">
@@ -110,7 +113,7 @@ export function DashboardPage() {
         currency={vault.settings.baseCurrency}
         locale={locale}
       />
-      <details className="panel">
+      <details className="panel observation-sources">
         <summary>{t('dashboard.observationSources')}</summary>
         <ul>
           {data.asOfSnapshot.assetSources.map((source) => {

@@ -45,7 +45,7 @@ critical workflows across five existing browser projects plus three scoped compa
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 _GATE: PASS before research and PASS after design._
 
