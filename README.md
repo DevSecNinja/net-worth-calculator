@@ -9,8 +9,9 @@ server API, analytics, telemetry, advertising, remote fonts, or runtime CDN depe
 **Cloudflare Pages origin:** <https://net-worth-calculator-xn8.pages.dev/>
 
 > [!IMPORTANT]
-> The app cannot reset or recover a forgotten passphrase. Clearing site data or losing the device
-> destroys the local vault unless you have a usable encrypted backup.
+> The app cannot recover a forgotten passphrase. From the locked screen, you can permanently delete
+> only this browser profile's encrypted local vault and start over. Recovery still requires a usable
+> encrypted backup and its passphrase.
 
 ## Privacy model
 
@@ -25,7 +26,8 @@ server API, analytics, telemetry, advertising, remote fonts, or runtime CDN depe
   locking, closing the page, or losing the single-writer lease requires another unlock.
 - Cache Storage contains only the generated application shell. It does not contain vault records,
   backups, user input, or application data responses.
-- Theme preference and short-lived tab-lease metadata are non-sensitive and may use localStorage.
+- Theme, language, short-lived tab-lease metadata, and a data-free vault-deletion pulse are
+  non-sensitive and may use localStorage.
 - The application makes no runtime request to an external origin and sends no financial data.
 
 Encryption protects stored vault bytes and backup contents, not an already unlocked session. A
@@ -38,7 +40,7 @@ exposes ordinary web request metadata to the hosting provider. See
 ## Features
 
 - One encrypted vault per browser profile with create, unlock, lock, passphrase change, and permanent
-  deletion flows
+  deletion flows, including an exact-vault guarded reset when the passphrase is lost
 - Asset and liability tracking with ordering, notes, multiple exact-date observations per year, and
   deterministic monthly liability projections
 - Exact As of snapshots, dated timeline, December 31 annual totals, yearly change, CAGR, allocation,
@@ -132,6 +134,11 @@ imports do not replace the current vault.
 Treat backup files as sensitive ciphertext: keep multiple copies in locations you control, remember
 the matching passphrase, and test restores. Export does not create a recovery service. Deleting the
 browser vault does not delete downloaded, synced, emailed, or copied backup files.
+
+If the passphrase is lost, the locked screen can delete the exact encrypted local vault after typed
+confirmation. This does not recover or expose its contents, does not affect backups or other browser
+profiles/devices, and preserves non-sensitive theme and language preferences. Another tab with an
+active unlocked session blocks deletion.
 
 ## Offline, installation, and updates
 

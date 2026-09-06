@@ -106,3 +106,49 @@ test('deletes the encrypted vault only after typed confirmation', async ({ page 
   await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: /create your encrypted vault/i })).toBeVisible();
 });
+
+test('resets a locked vault safely across tabs and starts over without reload', async ({
+  context,
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await createVault(page);
+  await page.getByRole('button', { name: /lock vault/i }).click();
+  await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
+
+  const writer = await context.newPage();
+  await writer.goto(page.url().replace(/#.*/, ''));
+  await writer.getByLabel(/^passphrase$/i).fill(PASSPHRASE);
+  await writer.getByRole('button', { name: /unlock vault/i }).click();
+  await expect(
+    writer.getByRole('heading', { name: /build your first net worth snapshot/i }),
+  ).toBeVisible();
+
+  await page.getByRole('button', { name: /delete local vault and start over/i }).click();
+  const dialog = page.getByRole('dialog', { name: /delete local vault and start over/i });
+  await expect(dialog.getByLabel(/^passphrase$/i)).toHaveCount(0);
+  const confirmation = dialog.getByLabel(/type DELETE/i);
+  const deleteButton = dialog.getByRole('button', { name: /delete local vault forever/i });
+  await confirmation.fill('wrong');
+  await expect(deleteButton).toBeDisabled();
+  await confirmation.fill('DELETE');
+  await deleteButton.click();
+  await expect(dialog.getByRole('alert')).toContainText(/lock or close that tab/i);
+
+  await writer.getByRole('button', { name: /lock vault/i }).click();
+  await deleteButton.click();
+  await expect(page.getByRole('heading', { name: /create your encrypted vault/i })).toBeVisible();
+  await expect(writer.getByRole('heading', { name: /create your encrypted vault/i })).toBeVisible();
+
+  const replacementPassphrase = 'replacement horse battery staple';
+  await page.getByLabel(/^passphrase$/i).fill(replacementPassphrase);
+  await page.getByLabel(/confirm passphrase/i).fill(replacementPassphrase);
+  await page.getByRole('button', { name: /create empty vault/i }).click();
+  await expect(
+    page.getByRole('heading', { name: /build your first net worth snapshot/i }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: /lock vault/i }).click();
+  await page.getByLabel(/^passphrase$/i).fill(PASSPHRASE);
+  await page.getByRole('button', { name: /unlock vault/i }).click();
+  await expect(page.getByRole('alert')).toContainText(/passphrase is incorrect/i);
+});

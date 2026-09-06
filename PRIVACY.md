@@ -14,10 +14,11 @@ language controls only parsing and display. The complete vault is encrypted and 
 written to IndexedDB. The passphrase-derived key and decrypted vault remain in the unlocked page
 session and are not intentionally transmitted.
 
-The browser may store non-sensitive theme and explicit language preferences plus short-lived
-tab-lease metadata in localStorage. The initial language is derived locally from browser preferences.
-Cache Storage contains only static application-shell resources. An exported backup is an encrypted
-`.nwvault` file that includes non-sensitive format metadata and an export timestamp.
+The browser may store non-sensitive theme and explicit language preferences, short-lived tab-lease
+metadata, and a data-free vault-deletion pulse in localStorage. The initial language is derived
+locally from browser preferences. Cache Storage contains only static application-shell resources. An
+exported backup is an encrypted `.nwvault` file that includes non-sensitive format metadata and an
+export timestamp.
 
 ## Collection and sharing
 
@@ -32,12 +33,18 @@ their own policies. That infrastructure handling is separate from the applicatio
 ## Retention and control
 
 Vault retention is controlled by your browser profile and device storage. You can delete the vault in
-the app or clear site data. Browser deletion is not guaranteed forensic secure erasure, and copies may
-remain in device backups or storage snapshots.
+the app while unlocked or permanently reset the exact encrypted vault from the locked screen without
+entering a passphrase. Reset removes only that browser profile's local encrypted vault; it preserves
+theme and language preferences, app-shell caches, downloaded files, other browser profiles, and other
+devices. Browser deletion is not guaranteed forensic secure erasure, and copies may remain in device
+backups or storage snapshots.
 
 Exported files are retained wherever you save, copy, synchronize, email, or back them up. Deleting the
 browser vault does not delete those files. Losing the vault without a valid backup and matching
 passphrase is irreversible.
+
+Anyone who can use the browser profile can intentionally erase its local encrypted vault, even
+without the passphrase. This availability tradeoff does not let them decrypt the vault.
 
 ## Security limitations
 

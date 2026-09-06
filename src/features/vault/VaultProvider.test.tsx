@@ -4,8 +4,9 @@ import userEvent from '@testing-library/user-event';
 
 import { createEmptyVault } from '@/domain/fixtures';
 import { createEncryptedVault } from '@/storage/crypto';
-import { deleteEnvelope } from '@/storage/database';
-import { unlockVault } from '@/storage/vaultRepository';
+import { deleteEnvelope, readEnvelope, writeEnvelope } from '@/storage/database';
+import { vaultEventsContract } from '@/storage/vaultEvents';
+import { createVault, unlockVault } from '@/storage/vaultRepository';
 
 import { type ImportedVault, VaultProvider, useVault } from './VaultProvider';
 
@@ -40,6 +41,26 @@ function Harness({ imported }: { imported?: ImportedVault }) {
       <button type="button" onClick={vault.lock}>
         Lock
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          void vault.prepareLockedVaultReset().catch((error: unknown) => {
+            setOperationError(error instanceof Error ? error.message : 'Prepare failed');
+          })
+        }
+      >
+        Prepare reset
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          void vault.resetLockedVault().catch((error: unknown) => {
+            setOperationError(error instanceof Error ? error.message : 'Reset failed');
+          })
+        }
+      >
+        Reset locked
+      </button>
       {imported ? (
         <button
           type="button"
@@ -59,6 +80,7 @@ function Harness({ imported }: { imported?: ImportedVault }) {
 
 describe('VaultProvider operation generation', () => {
   beforeEach(async () => {
+    localStorage.clear();
     await deleteEnvelope();
   });
 
@@ -168,5 +190,75 @@ describe('VaultProvider operation generation', () => {
     await user.click(screen.getByRole('button', { name: 'Restore' }));
     await screen.findByText('unlocked:EUR');
     expect((await unlockVault(passphrase)).vault.settings.baseCurrency).toBe('EUR');
+  });
+
+  it('moves a locked tab to absent after a confirmed deletion event', async () => {
+    await createVault(createEmptyVault('USD'), passphrase);
+    render(
+      <VaultProvider>
+        <Harness />
+      </VaultProvider>,
+    );
+    await screen.findByText('locked:sealed');
+    await deleteEnvelope();
+
+    await act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: vaultEventsContract.storageKey,
+          newValue: vaultEventsContract.deletedEvent,
+        }),
+      );
+    });
+
+    await screen.findByText('absent:sealed');
+  });
+
+  it('keeps a replacement vault locked after a delayed deletion event', async () => {
+    await createVault(createEmptyVault('USD'), passphrase);
+    render(
+      <VaultProvider>
+        <Harness />
+      </VaultProvider>,
+    );
+    await screen.findByText('locked:sealed');
+    const replacement = await createEncryptedVault(createEmptyVault('EUR'), passphrase);
+    await writeEnvelope(replacement.envelope);
+
+    await act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: vaultEventsContract.storageKey,
+          newValue: vaultEventsContract.deletedEvent,
+        }),
+      );
+    });
+
+    await waitFor(() => expect(screen.getByText('locked:sealed')).toBeVisible());
+    expect(await readEnvelope()).toEqual(replacement.envelope);
+  });
+
+  it('does not invalidate an active operation for a stale deletion event', async () => {
+    const user = userEvent.setup();
+    render(
+      <VaultProvider>
+        <Harness />
+      </VaultProvider>,
+    );
+    await screen.findByText('absent:sealed');
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    await screen.findByText('unlocked:USD');
+
+    await act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: vaultEventsContract.storageKey,
+          newValue: vaultEventsContract.deletedEvent,
+        }),
+      );
+    });
+    await user.click(screen.getByRole('button', { name: 'Mutate' }));
+
+    await screen.findByText('unlocked:EUR');
   });
 });

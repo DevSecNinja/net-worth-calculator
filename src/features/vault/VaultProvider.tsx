@@ -13,10 +13,15 @@ import type { CipherEnvelopeV1, Vault } from '@/domain/model';
 import { addSampleData, createEmptyVault, type SampleDataLocale } from '@/domain/fixtures';
 import type { VaultKeyMaterial } from '@/storage/crypto';
 import { VaultSessionLease } from '@/storage/sessionLease';
+import { notifyVaultDeleted, subscribeToVaultDeleted } from '@/storage/vaultEvents';
 import {
+  captureLockedVault,
   changeVaultPassphrase,
   createVault as createPersistedVault,
   hasVault,
+  LockedVaultChangedError,
+  LockedVaultLeaseLostError,
+  removeLockedVault,
   removeVault,
   replaceVaultEnvelope,
   saveVault,
@@ -47,11 +52,21 @@ type VaultContextValue = {
   mutate: (updater: (vault: Vault) => Vault) => Promise<void>;
   changePassphrase: (currentPassphrase: string, newPassphrase: string) => Promise<void>;
   deleteVault: () => Promise<void>;
+  prepareLockedVaultReset: () => Promise<boolean>;
+  cancelLockedVaultReset: () => void;
+  resetLockedVault: () => Promise<void>;
   replaceImportedVault: (imported: ImportedVault) => Promise<void>;
   clearError: () => void;
 };
 
 const VaultContext = createContext<VaultContextValue | undefined>(undefined);
+
+export class VaultLeaseUnavailableError extends Error {
+  constructor() {
+    super('This vault is already unlocked in another tab.');
+    this.name = 'VaultLeaseUnavailableError';
+  }
+}
 
 function messageFrom(error: unknown): string {
   return error instanceof Error ? error.message : 'The vault operation failed.';
@@ -64,8 +79,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const lease = useRef<VaultSessionLease | undefined>(undefined);
+  const lockedResetTarget = useRef<CipherEnvelopeV1 | undefined>(undefined);
+  const statusRef = useRef<VaultStatus>('loading');
   const generation = useRef(0);
   const mutationInFlight = useRef(false);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   const lock = useCallback(() => {
     generation.current += 1;
@@ -73,9 +94,32 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     lease.current = undefined;
     setVault(undefined);
     setMaterial(undefined);
+    lockedResetTarget.current = undefined;
     setBusy(false);
     setStatus('locked');
   }, []);
+
+  useEffect(
+    () =>
+      subscribeToVaultDeleted(() => {
+        if (statusRef.current !== 'locked') return;
+        void hasVault()
+          .then((exists) => {
+            if (exists || statusRef.current !== 'locked') return;
+            generation.current += 1;
+            lockedResetTarget.current = undefined;
+            setVault(undefined);
+            setMaterial(undefined);
+            setError(undefined);
+            setBusy(false);
+            setStatus('absent');
+          })
+          .catch((caught: unknown) => {
+            setError(messageFrom(caught));
+          });
+      }),
+    [],
+  );
 
   useEffect(() => {
     let active = true;
@@ -104,7 +148,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const acquireLease = useCallback((): VaultSessionLease => {
     const candidate = new VaultSessionLease();
     if (!candidate.acquire()) {
-      throw new Error('This vault is already unlocked in another tab.');
+      throw new VaultLeaseUnavailableError();
     }
     candidate.onLost(lock);
     lease.current = candidate;
@@ -241,11 +285,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setError(undefined);
     try {
       await removeVault(vault, material);
+      notifyVaultDeleted();
       if (!isCurrentOperation(token, operationLease)) return;
       operationLease.release();
       lease.current = undefined;
+      lockedResetTarget.current = undefined;
       setVault(undefined);
       setMaterial(undefined);
+      setError(undefined);
       setStatus('absent');
     } catch (caught) {
       if (generation.current === token) setError(messageFrom(caught));
@@ -254,6 +301,63 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       if (generation.current === token) setBusy(false);
     }
   }, [isCurrentOperation, material, vault]);
+
+  const prepareLockedVaultReset = useCallback(async (): Promise<boolean> => {
+    setError(undefined);
+    try {
+      const target = await captureLockedVault();
+      if (statusRef.current !== 'locked') return false;
+      if (!target) {
+        lockedResetTarget.current = undefined;
+        setStatus('absent');
+        return false;
+      }
+      lockedResetTarget.current = target;
+      return true;
+    } catch (caught) {
+      setError('The locked vault could not be prepared for deletion.');
+      throw caught;
+    }
+  }, []);
+
+  const cancelLockedVaultReset = useCallback(() => {
+    lockedResetTarget.current = undefined;
+  }, []);
+
+  const resetLockedVault = useCallback(async () => {
+    const target = lockedResetTarget.current;
+    if (statusRef.current !== 'locked' || !target) throw new LockedVaultChangedError();
+
+    const token = ++generation.current;
+    setBusy(true);
+    setError(undefined);
+    const deletionLease = new VaultSessionLease(false);
+
+    try {
+      if (!deletionLease.acquire()) throw new VaultLeaseUnavailableError();
+      await removeLockedVault(target, () => deletionLease.ownsLease());
+      notifyVaultDeleted();
+      lockedResetTarget.current = undefined;
+      if (
+        generation.current !== token ||
+        statusRef.current !== 'locked' ||
+        !deletionLease.ownsLease()
+      ) {
+        return;
+      }
+      setVault(undefined);
+      setMaterial(undefined);
+      setError(undefined);
+      setStatus('absent');
+    } catch (caught) {
+      if (caught instanceof LockedVaultChangedError) lockedResetTarget.current = undefined;
+      if (caught instanceof LockedVaultLeaseLostError) lockedResetTarget.current = undefined;
+      throw caught;
+    } finally {
+      deletionLease.release();
+      if (generation.current === token) setBusy(false);
+    }
+  }, []);
 
   const replaceImportedVault = useCallback(
     async (imported: ImportedVault) => {
@@ -299,19 +403,25 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       mutate,
       changePassphrase,
       deleteVault,
+      prepareLockedVaultReset,
+      cancelLockedVaultReset,
+      resetLockedVault,
       replaceImportedVault,
       clearError,
     }),
     [
       busy,
       changePassphrase,
+      cancelLockedVaultReset,
       clearError,
       create,
       deleteVault,
       error,
       lock,
       mutate,
+      prepareLockedVaultReset,
       replaceImportedVault,
+      resetLockedVault,
       status,
       unlock,
       vault,

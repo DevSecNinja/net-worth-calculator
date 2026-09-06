@@ -30,8 +30,41 @@ export class VaultConflictError extends Error {
   }
 }
 
+export class LockedVaultChangedError extends Error {
+  constructor() {
+    super('The locked vault changed before deletion could commit.');
+    this.name = 'LockedVaultChangedError';
+  }
+}
+
+export class LockedVaultLeaseLostError extends Error {
+  constructor() {
+    super('The deletion lease was lost before the locked vault could be removed.');
+    this.name = 'LockedVaultLeaseLostError';
+  }
+}
+
 export async function hasVault(): Promise<boolean> {
   return (await readEnvelope()) !== undefined;
+}
+
+export async function captureLockedVault(): Promise<CipherEnvelopeV1 | undefined> {
+  return readEnvelope();
+}
+
+export async function removeLockedVault(
+  expected: CipherEnvelopeV1,
+  ownsLease: () => boolean,
+): Promise<void> {
+  try {
+    await compareAndDeleteEnvelope(expected, ownsLease);
+  } catch (error) {
+    if (error instanceof EnvelopeConflictError) {
+      if (!ownsLease()) throw new LockedVaultLeaseLostError();
+      throw new LockedVaultChangedError();
+    }
+    throw error;
+  }
 }
 
 export async function createVault(

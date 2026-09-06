@@ -6,13 +6,15 @@ import { Field } from '@/components/forms/Field';
 import { Button } from '@/components/ui/Button';
 
 import { useVault } from './useVault';
+import { LockedVaultResetDialog } from './LockedVaultResetDialog';
 import { validatePassphrase } from './passphrase';
 import { useLocale } from '@/features/locale/LocaleProvider';
 
 export function UnlockPage() {
-  const { unlock, busy, error, clearError } = useVault();
+  const { unlock, busy, error, clearError, prepareLockedVaultReset } = useVault();
   const [passphrase, setPassphrase] = useState('');
   const [validationError, setValidationError] = useState<string>();
+  const [resetOpen, setResetOpen] = useState(false);
   const { t } = useLocale();
 
   async function submit(event: FormEvent) {
@@ -22,9 +24,15 @@ export function UnlockPage() {
       setValidationError(validation.message);
       return;
     }
+
     setValidationError(undefined);
     clearError();
     await unlock(passphrase).catch(() => undefined);
+  }
+
+  async function openReset() {
+    clearError();
+    if (await prepareLockedVaultReset().catch(() => false)) setResetOpen(true);
   }
 
   return (
@@ -55,10 +63,29 @@ export function UnlockPage() {
         <Button type="submit" disabled={busy}>
           {busy ? t('vault.unlocking') : t('vault.unlock')}
         </Button>
-        <p className="fine-print">
-          {t('vault.noReset')} <Link to="/backup">{t('onboarding.restoreLink')}</Link>.
-        </p>
+        <div className="locked-reset">
+          <p className="fine-print">
+            {t('vault.noReset')} <Link to="/backup">{t('onboarding.restoreLink')}</Link>.
+          </p>
+          <p>
+            <strong>{t('vault.forgotPassphrase')}</strong>
+          </p>
+          <Button
+            type="button"
+            variant="ghost"
+            className="locked-reset__action"
+            onClick={openReset}
+          >
+            {t('vault.resetAction')}
+          </Button>
+        </div>
       </form>
+      <LockedVaultResetDialog
+        open={resetOpen}
+        onClose={() => {
+          setResetOpen(false);
+        }}
+      />
     </main>
   );
 }

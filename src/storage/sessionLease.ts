@@ -30,9 +30,14 @@ function parseLease(value: string | null): LeaseRecord | undefined {
 
 export class VaultSessionLease {
   readonly owner = crypto.randomUUID();
+  private readonly releaseOnPageHide: boolean;
   private heartbeat: number | undefined;
   private channel: BroadcastChannel | undefined;
   private listeners = new Set<() => void>();
+
+  constructor(releaseOnPageHide = true) {
+    this.releaseOnPageHide = releaseOnPageHide;
+  }
 
   acquire(): boolean {
     const current = parseLease(localStorage.getItem(LEASE_KEY));
@@ -48,7 +53,7 @@ export class VaultSessionLease {
         this.channel.onmessage = () => this.checkOwnership();
       }
       window.addEventListener('storage', this.handleStorage);
-      window.addEventListener('pagehide', this.handlePageHide);
+      if (this.releaseOnPageHide) window.addEventListener('pagehide', this.handlePageHide);
     }
     return acquired;
   }
@@ -57,7 +62,7 @@ export class VaultSessionLease {
     if (this.heartbeat !== undefined) window.clearInterval(this.heartbeat);
     this.heartbeat = undefined;
     window.removeEventListener('storage', this.handleStorage);
-    window.removeEventListener('pagehide', this.handlePageHide);
+    if (this.releaseOnPageHide) window.removeEventListener('pagehide', this.handlePageHide);
     if (parseLease(localStorage.getItem(LEASE_KEY))?.owner === this.owner) {
       localStorage.removeItem(LEASE_KEY);
       this.notifyPeers();

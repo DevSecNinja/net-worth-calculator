@@ -33,6 +33,7 @@ test('keeps unique financial markers inside encrypted payload boundaries only', 
     }
     await route.continue();
   });
+
   page.on('request', (request) => {
     const serialized = JSON.stringify({
       url: request.url(),
@@ -283,4 +284,75 @@ test('keeps unique financial markers inside encrypted payload boundaries only', 
   expect(Object.keys(backup.payload as Record<string, unknown>).sort()).toEqual(
     ['cipher', 'ciphertext', 'format', 'formatVersion', 'kdf', 'vaultSchemaVersion'].sort(),
   );
+});
+
+test('locked reset performs no network mutation and leaves no confirmation marker', async ({
+  page,
+}) => {
+  const confirmationMarker = `PRIVATE-RESET-${crypto.randomUUID()}`;
+  const requests: string[] = [];
+  const consoleMessages: string[] = [];
+  page.on('request', (request) => {
+    requests.push(
+      JSON.stringify({
+        url: request.url(),
+        method: request.method(),
+        body: request.postData(),
+      }),
+    );
+  });
+  page.on('console', (message) => consoleMessages.push(message.text()));
+
+  await page.goto('./');
+  const passphrase = `PRIVATE-PASSPHRASE-${crypto.randomUUID()}`;
+  await page.getByLabel(/^passphrase$/i).fill(passphrase);
+  await page.getByLabel(/confirm passphrase/i).fill(passphrase);
+  await page.getByRole('button', { name: /create empty vault/i }).click();
+  await page.getByRole('button', { name: /lock vault/i }).click();
+  await page.getByRole('button', { name: /delete local vault and start over/i }).click();
+  const dialog = page.getByRole('dialog', { name: /delete local vault and start over/i });
+  const confirmation = dialog.getByLabel(/type DELETE/i);
+  await confirmation.fill(confirmationMarker);
+  await expect(dialog.getByRole('button', { name: /delete local vault forever/i })).toBeDisabled();
+  await confirmation.fill('DELETE');
+  await dialog.getByRole('button', { name: /delete local vault forever/i }).click();
+  await expect(page.getByRole('heading', { name: /create your encrypted vault/i })).toBeVisible();
+
+  const persistence = await page.evaluate(async () => {
+    const cacheContents: string[] = [];
+    for (const cacheName of await caches.keys()) {
+      const cache = await caches.open(cacheName);
+      for (const request of await cache.keys()) {
+        const response = await cache.match(request);
+        cacheContents.push(`${request.url}:${response ? await response.clone().text() : ''}`);
+      }
+    }
+    const request = indexedDB.open('net-worth-calculator');
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const rows = await new Promise<unknown[]>((resolve, reject) => {
+      const getAll = database.transaction('vault', 'readonly').objectStore('vault').getAll();
+      getAll.onsuccess = () => resolve(getAll.result as unknown[]);
+      getAll.onerror = () => reject(getAll.error);
+    });
+    database.close();
+    return { cacheContents, localStorage: { ...localStorage }, rows, url: location.href };
+  });
+
+  expect(
+    requests.every((request) => (JSON.parse(request) as { method: string }).method === 'GET'),
+  ).toBe(true);
+  expect(persistence.rows).toEqual([]);
+  for (const surface of [
+    JSON.stringify(requests),
+    JSON.stringify(consoleMessages),
+    JSON.stringify(persistence.cacheContents),
+    JSON.stringify(persistence.localStorage),
+    persistence.url,
+  ]) {
+    expect(surface).not.toContain(confirmationMarker);
+    expect(surface).not.toContain(passphrase);
+  }
 });

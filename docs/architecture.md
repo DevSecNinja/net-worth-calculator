@@ -36,7 +36,7 @@ harness used by CI.
 | `src/domain`          | Pure types, validation, localized/canonical money, observations, amortization, and exact/annual aggregation |
 | `src/features/locale` | Typed en-US/en-GB/nl-NL catalogs, browser negotiation, override, and document language                      |
 | `src/features`        | Vault, inventory, dashboard, backup, settings, onboarding, and About workflows                              |
-| `src/storage`         | Cryptography, IndexedDB, encrypted repository, file capability, and tab lease                               |
+| `src/storage`         | Cryptography, IndexedDB, encrypted repository, file capability, tab lease, and data-free vault events       |
 | `src/pwa`             | Install capability, offline status, update checks, and opt-in activation                                    |
 | `tests`               | Built-output E2E, privacy-network, browser fallback, and PWA lifecycle validation                           |
 | `scripts`             | Deterministic icon generation, local preview, and production artifact verification                          |
@@ -53,6 +53,7 @@ The browser profile contains at most one active vault:
 absent -> creating -> unlocked -> locked -> unlocked
 unlocked -> changing passphrase -> unlocked
 locked/unlocked -> deleting -> absent
+locked -> confirming exact-envelope reset -> deleting under lease -> absent
 locked -> validating import -> overwrite confirmation -> unlocked
 failure during a transition -> previous stable state
 ```
@@ -61,6 +62,13 @@ An unlocked session owns the plaintext document and a non-extractable `CryptoKey
 memory. Every committed mutation increments an encrypted revision and replaces the single IndexedDB
 envelope atomically. A short-lived localStorage lease, `BroadcastChannel` or storage events, and
 compare-and-swap envelope checks prevent silent last-writer-wins behavior across tabs.
+
+Locked reset does not derive a key or decrypt the vault. Opening its confirmation captures the exact
+opaque envelope. Submission acquires the same writable lease used by unlocked sessions, then performs
+a strict IndexedDB compare-and-delete transaction. A foreign active lease refuses deletion; an absent
+or replaced envelope aborts as a conflict. After commit, a constant data-free local event makes other
+locked tabs re-read IndexedDB before moving to onboarding. Theme, locale, app-shell caches, and backup
+files are outside this transaction.
 
 ## Cryptographic envelope
 
@@ -85,7 +93,7 @@ authentication and before current-schema validation.
 | Surface         | Permitted content                                                               |
 | --------------- | ------------------------------------------------------------------------------- |
 | IndexedDB       | One authenticated cipher envelope at a fixed key                                |
-| localStorage    | Theme preference and short-lived, random tab-lease metadata only                |
+| localStorage    | Theme, locale, short-lived random tab lease, and data-free deletion pulse        |
 | Cache Storage   | Generated HTML, JavaScript, CSS, manifest, and local image app-shell resources  |
 | JavaScript heap | Decrypted vault and derived key only while the writable session is unlocked     |
 | Backup file     | Versioned wrapper around the authenticated cipher envelope and export timestamp |

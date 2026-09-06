@@ -436,6 +436,28 @@ select {
   width: min(30rem, 100%);
 }
 
+.locked-reset {
+  display: grid;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  gap: 0.4rem;
+}
+
+.locked-reset p {
+  margin: 0;
+}
+
+.locked-reset__action {
+  justify-self: start;
+  padding-inline: 0;
+  color: var(--danger);
+}
+
+.locked-reset__action:hover {
+  background: transparent;
+  text-decoration: underline;
+}
+
 .section-heading {
   display: flex;
   align-items: flex-end;
