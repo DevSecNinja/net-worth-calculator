@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Release Please updates this file from
 Conventional Commits.
 
+## [0.5.2](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.5.1...v0.5.2) (2026-09-06)
+
+
+### Bug Fixes
+
+* harden iOS capability fallbacks ([#31](https://github.com/DevSecNinja/net-worth-calculator/issues/31)) ([54145a4](https://github.com/DevSecNinja/net-worth-calculator/commit/54145a49134bf31a0e86b43a612fd3b6a027c294))
+
 ## [0.5.1](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.5.0...v0.5.1) (2026-09-06)
 
 
