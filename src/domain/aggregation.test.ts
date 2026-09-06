@@ -81,6 +81,165 @@ describe('buildDashboardData', () => {
     });
   });
 
+  it('calculates the exact As of change against the same date one year earlier', () => {
+    const holding = asset({
+      values: [
+        { date: '2024-06-15', amount: '100', updatedAt },
+        { date: '2025-06-15', amount: '150', updatedAt },
+      ],
+    });
+
+    const data = buildDashboardData(vault({ assets: [holding] }), 2024, 2025, '2025-06-15');
+
+    expect(data.asOfSnapshot).toMatchObject({
+      asOfDate: '2025-06-15',
+      netWorth: '150',
+      yearlyChange: '50',
+      yearlyChangePercent: '50.00',
+    });
+    expect(data.snapshots[1]?.yearlyChange).toBe('50');
+  });
+
+  it('keeps annual December 31 change separate from the exact As of comparison', () => {
+    const holding = asset({
+      values: [
+        { date: '2024-01-01', amount: '100', updatedAt },
+        { date: '2024-12-31', amount: '120', updatedAt },
+        { date: '2025-06-15', amount: '150', updatedAt },
+      ],
+    });
+
+    const data = buildDashboardData(vault({ assets: [holding] }), 2024, 2025, '2025-06-15');
+
+    expect(data.asOfSnapshot.yearlyChange).toBe('50');
+    expect(data.snapshots[1]?.yearlyChange).toBe('30');
+  });
+
+  it('compares leap day with the prior year last-valid calendar day', () => {
+    const holding = asset({
+      values: [
+        { date: '2023-02-28', amount: '80', updatedAt },
+        { date: '2024-02-29', amount: '100', updatedAt },
+      ],
+    });
+
+    const data = buildDashboardData(vault({ assets: [holding] }), 2023, 2024, '2024-02-29');
+
+    expect(data.asOfSnapshot).toMatchObject({
+      yearlyChange: '20',
+      yearlyChangePercent: '25.00',
+    });
+  });
+
+  it('retains a legitimate zero exact As of change and percentage', () => {
+    const holding = asset({
+      values: [
+        { date: '2024-04-10', amount: '100', updatedAt },
+        { date: '2025-04-10', amount: '100', updatedAt },
+      ],
+    });
+
+    expect(
+      buildDashboardData(vault({ assets: [holding] }), 2024, 2025, '2025-04-10').asOfSnapshot,
+    ).toMatchObject({
+      yearlyChange: '0',
+      yearlyChangePercent: '0.00',
+    });
+  });
+
+  it('defines the amount but not the percentage when prior net worth is zero', () => {
+    const holding = asset({
+      values: [
+        { date: '2024-04-10', amount: '0', updatedAt },
+        { date: '2025-04-10', amount: '25', updatedAt },
+      ],
+    });
+
+    const snapshot = buildDashboardData(
+      vault({ assets: [holding] }),
+      2024,
+      2025,
+      '2025-04-10',
+    ).asOfSnapshot;
+
+    expect(snapshot.yearlyChange).toBe('25');
+    expect(snapshot.yearlyChangePercent).toBeUndefined();
+  });
+
+  it('leaves exact As of change undefined when the prior snapshot is incomplete', () => {
+    const established = asset({
+      values: [{ date: '2024-04-10', amount: '100', updatedAt }],
+    });
+    const newHolding = asset({
+      order: 1,
+      values: [{ date: '2024-12-31', amount: '50', updatedAt }],
+    });
+
+    const snapshot = buildDashboardData(
+      vault({ assets: [established, newHolding] }),
+      2024,
+      2025,
+      '2025-04-10',
+    ).asOfSnapshot;
+
+    expect(snapshot.completeness).toBe('complete');
+    expect(snapshot.yearlyChange).toBeUndefined();
+    expect(snapshot.yearlyChangePercent).toBeUndefined();
+  });
+
+  it('carries assets forward without leaking later observations into the prior date', () => {
+    const holding = asset({
+      values: [
+        { date: '2024-01-01', amount: '100', updatedAt },
+        { date: '2024-07-01', amount: '900', updatedAt },
+        { date: '2025-06-15', amount: '200', updatedAt },
+      ],
+    });
+
+    const data = buildDashboardData(vault({ assets: [holding] }), 2024, 2025, '2025-06-15');
+
+    expect(data.asOfSnapshot).toMatchObject({
+      assetSource: 'actual',
+      yearlyChange: '100',
+      yearlyChangePercent: '100.00',
+    });
+  });
+
+  it('projects the prior liability from its eligible manual seed without future leakage', () => {
+    const holding = asset({
+      values: [
+        { date: '2024-01-01', amount: '2000', updatedAt },
+        { date: '2025-09-15', amount: '2000', updatedAt },
+      ],
+    });
+    const debt = liability({
+      principal: '1200',
+      monthlyPayment: '100',
+      startDate: '2024-01-01',
+      manualBalances: [
+        { date: '2024-07-15', amount: '1000', updatedAt },
+        { date: '2024-10-01', amount: '9000', updatedAt },
+        { date: '2025-09-15', amount: '500', updatedAt },
+      ],
+    });
+    const testVault = vault({ assets: [holding], liabilities: [debt] });
+
+    expect(buildSnapshotAtDate(testVault, '2024-07-15')).toMatchObject({
+      liabilities: '1000',
+      liabilitySource: 'actual',
+    });
+    expect(buildSnapshotAtDate(testVault, '2024-09-15')).toMatchObject({
+      liabilities: '800',
+      liabilitySource: 'projected',
+    });
+    expect(buildDashboardData(testVault, 2024, 2025, '2025-09-15').asOfSnapshot).toMatchObject({
+      liabilities: '500',
+      netWorth: '1500',
+      yearlyChange: '300',
+      yearlyChangePercent: '25.00',
+    });
+  });
+
   it('keeps CAGR undefined for non-positive endpoints', () => {
     const holding = asset({
       values: [

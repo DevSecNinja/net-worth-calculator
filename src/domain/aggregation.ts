@@ -9,7 +9,12 @@ import {
   projectionHorizon,
 } from './amortization';
 import { canonicalMoney, canonicalSignedMoney, toDecimal } from './currency';
-import { observationAtDate, observationsAtDates, type ObservationValue } from './observations';
+import {
+  observationAtDate,
+  observationsAtDates,
+  previousYearComparisonDate,
+  type ObservationValue,
+} from './observations';
 
 export type AllocationSlice = {
   name: string;
@@ -57,6 +62,25 @@ export function availableYears(
 function cagr(first: Decimal, last: Decimal, years: number): string | undefined {
   if (years <= 0 || first.lte(0) || last.lte(0)) return undefined;
   return last.div(first).pow(new Decimal(1).div(years)).minus(1).mul(100).toFixed(2);
+}
+
+function applyYearlyChange(
+  current: DashboardSnapshot,
+  previous: DashboardSnapshot | undefined,
+): void {
+  if (
+    previous === undefined ||
+    current.completeness !== 'complete' ||
+    previous.completeness !== 'complete'
+  ) {
+    return;
+  }
+  const previousNetWorth = toDecimal(previous.netWorth);
+  const change = toDecimal(current.netWorth).minus(previousNetWorth);
+  current.yearlyChange = canonicalSignedMoney(change);
+  if (!previousNetWorth.eq(0)) {
+    current.yearlyChangePercent = change.div(previousNetWorth.abs()).mul(100).toFixed(2);
+  }
 }
 
 function buildSnapshot(
@@ -187,7 +211,16 @@ export function buildDashboardData(
     (_, index) => `${String(firstYear + index).padStart(4, '0')}-12-31`,
   );
   const exactDates = timelineDates(vault, asOfDate, firstYear, lastYear);
-  const snapshotDates = [...new Set([...annualDates, ...exactDates, asOfDate])].sort();
+  const comparisonDate = previousYearComparisonDate(asOfDate);
+  const comparisonDateIsSupported = Number(comparisonDate.slice(0, 4)) >= MIN_YEAR;
+  const snapshotDates = [
+    ...new Set([
+      ...annualDates,
+      ...exactDates,
+      asOfDate,
+      ...(comparisonDateIsSupported ? [comparisonDate] : []),
+    ]),
+  ].sort();
   const liabilitySnapshots = new Map(
     vault.liabilities.map((liability) => [
       liability.id,
@@ -216,17 +249,13 @@ export function buildDashboardData(
     const current = snapshots[index];
     const previous = snapshots[index - 1];
     if (!current || !previous) continue;
-    if (current.completeness === 'complete' && previous.completeness === 'complete') {
-      const change = toDecimal(current.netWorth).minus(previous.netWorth);
-      current.yearlyChange = canonicalSignedMoney(change);
-      if (!toDecimal(previous.netWorth).eq(0)) {
-        current.yearlyChangePercent = change
-          .div(toDecimal(previous.netWorth).abs())
-          .mul(100)
-          .toFixed(2);
-      }
-    }
+    applyYearlyChange(current, previous);
   }
+  const asOfSnapshot = snapshotAt(asOfDate);
+  applyYearlyChange(
+    asOfSnapshot,
+    comparisonDateIsSupported ? snapshotAt(comparisonDate) : undefined,
+  );
   const completeSnapshots = snapshots.filter(({ completeness }) => completeness === 'complete');
   const firstComplete = completeSnapshots[0];
   const lastComplete = completeSnapshots.at(-1);
@@ -272,7 +301,7 @@ export function buildDashboardData(
   return {
     snapshots,
     timeline: exactDates.map(snapshotAt),
-    asOfSnapshot: snapshotAt(asOfDate),
+    asOfSnapshot,
     allocation: [...allocationMap.values()]
       .map(({ name, type, value }) => ({ name, type, value: canonicalMoney(value) }))
       .sort((left, right) => toDecimal(right.value).cmp(left.value)),

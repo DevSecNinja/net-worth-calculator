@@ -90,6 +90,9 @@ describe('sample household fixture', () => {
       completeness: 'complete',
       assetSource: 'mixed',
       liabilitySource: 'mixed',
+      netWorth: '268400',
+      yearlyChange: '64850',
+      yearlyChangePercent: '31.86',
     });
     expect(dashboard.allocation).toHaveLength(5);
     expect(dashboard.projections.size).toBe(3);

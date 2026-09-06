@@ -47,6 +47,15 @@ insights, and provides encrypted portable backups.
   The dated vault and backup schemas are the initial public formats, and canonical amounts such as
   one hundred thousand are stored as locale-neutral `"100000"`.
 
+### Bugfix Amendment 2026-09-06
+
+- Q: What does the dashboard summary's yearly change represent? -> A: The exact selected As of net
+  worth minus net worth on the same calendar date one year earlier, using only observations and
+  manual liability balances available on or before each target date. February 29 compares with
+  February 28 in a non-leap prior year. The percentage divides the change by the absolute prior net
+  worth when that value is non-zero. Both snapshots must be complete; legitimate zero values remain
+  defined. This exact-date comparison is separate from December 31-to-December 31 annual bars.
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Create and Unlock a Private Vault (Priority: P1)
@@ -127,6 +136,9 @@ chart series, filter result, and accessible table cell with independently calcul
    **Then** completeness and actual/projected status are clear and no value is silently invented.
 4. **Given** no data for a view, **When** the dashboard renders, **Then** it shows a useful empty
    state with a direct next action instead of misleading zero-filled charts.
+5. **Given** a complete selected As of snapshot and complete same-date prior-year snapshot, **When**
+   the summary renders, **Then** yearly change shows their exact net-worth difference and percentage
+   without allowing later observations or manual balances into the prior comparison.
 
 ---
 
@@ -427,6 +439,11 @@ December 31 annual snapshots and the exact timeline.
 - **FR-049**: The initial public vault schema and portable backup format MUST store locale-neutral
   canonical decimal strings and exact dates, reject unsupported pre-release formats safely, and
   round-trip without changing values across reload/export/import.
+- **FR-050**: The summary yearly change MUST compare the selected exact As of snapshot with a complete
+  snapshot on the same prior-year calendar date (clamping to that month's last valid day), derive
+  both with normal asset carry-forward and liability projection/manual-seed rules without future
+  leakage, preserve defined zero changes, omit percentage only for a zero prior net worth, and remain
+  independent from December 31 annual-change semantics.
 
 ### Key Entities
 
@@ -496,6 +513,9 @@ December 31 annual snapshots and the exact timeline.
   three declining liabilities, four prior year-end dates, one prior mid-year date, and today's date;
   its localized names remain unchanged after a later language switch and its dashboard exposes
   non-empty annual, timeline, allocation, and payoff views.
+- **SC-020**: The default current-date sample dashboard shows a defined localized exact-date yearly
+  change amount and percentage, while dates without a complete prior-year snapshot show the
+  localized undefined state.
 
 ## Assumptions
 

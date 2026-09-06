@@ -52,6 +52,10 @@ export function addMonths(date: Date, months: number): Date {
   return target;
 }
 
+export function previousYearComparisonDate(date: string): string {
+  return toIsoDate(addMonths(parseIsoDate(date), -12));
+}
+
 export function daysBetween(start: string, end: string): number {
   return Math.max(
     0,
