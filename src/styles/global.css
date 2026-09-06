@@ -680,8 +680,104 @@ select {
   color: var(--muted);
 }
 
+.chart-card__instructions {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .chart-card__visual {
   min-height: 240px;
+  outline: none;
+}
+
+.chart-card__visual:focus-visible {
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 34%, transparent);
+}
+
+.chart-card__selected {
+  margin-top: 0.5rem;
+}
+
+.chart-card__selected-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chart-tooltip {
+  width: max-content;
+  max-width: min(20rem, calc(100vw - 3rem));
+  padding: 0.75rem;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  pointer-events: none;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.chart-tooltip--selected {
+  width: 100%;
+  max-width: none;
+  background: var(--surface-muted);
+  box-shadow: none;
+}
+
+.chart-tooltip__title {
+  margin: 0 0 0.5rem;
+  font-weight: 850;
+}
+
+.chart-tooltip__grid {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.chart-tooltip__row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) minmax(0, auto);
+  gap: 0.3rem 0.75rem;
+  align-items: start;
+}
+
+.chart-tooltip__row dt {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  min-width: 0;
+  color: var(--muted);
+}
+
+.chart-tooltip__row dd {
+  display: grid;
+  justify-items: end;
+  min-width: 0;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  text-align: right;
+}
+
+.chart-tooltip__row small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.chart-tooltip__marker {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
 }
 
 .chart-card__table {

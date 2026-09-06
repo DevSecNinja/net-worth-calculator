@@ -51,8 +51,8 @@ describe('buildDashboardData', () => {
       liabilitySource: 'actual',
     });
     expect(data.allocation).toEqual([
-      { name: 'savings', value: '150' },
-      { name: 'stocks', value: '50' },
+      { name: 'savings', type: 'savings', value: '150' },
+      { name: 'stocks', type: 'stocks', value: '50' },
     ]);
   });
 

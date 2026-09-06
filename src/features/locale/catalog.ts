@@ -23,6 +23,8 @@ const enUS = {
   'common.invalid': 'Invalid',
   'common.mixed': 'Mixed',
   'common.incomplete': 'Incomplete',
+  'common.complete': 'Complete',
+  'common.notApplicable': 'Not applicable',
   'common.currencyContext': 'Amount in {currency}',
   'nav.home': 'Net Worth Calculator home',
   'nav.product': 'Net Worth',
@@ -164,6 +166,11 @@ const enUS = {
   'chart.liabilitySource': 'Liability source',
   'chart.change': 'Change',
   'chart.percent': 'Percent',
+  'chart.percentage': 'Percentage of total',
+  'chart.staleness': 'Staleness',
+  'chart.interactionHint':
+    'Hover or tap the chart for details. Keyboard users can open the data table below.',
+  'chart.selectedDetails': 'Selected chart details',
   'inventory.assetsEyebrow': 'What you own',
   'inventory.assetsHelp':
     'Record exact dated observations. Later snapshots show their source and staleness.',
@@ -395,6 +402,8 @@ const nlNL: MessageCatalog = {
   'common.invalid': 'Ongeldig',
   'common.mixed': 'Gemengd',
   'common.incomplete': 'Onvolledig',
+  'common.complete': 'Volledig',
+  'common.notApplicable': 'Niet van toepassing',
   'common.currencyContext': 'Bedrag in {currency}',
   'nav.home': 'Nettovermogencalculator start',
   'nav.product': 'Nettovermogen',
@@ -541,6 +550,11 @@ const nlNL: MessageCatalog = {
   'chart.liabilitySource': 'Bron schuld',
   'chart.change': 'Wijziging',
   'chart.percent': 'Percentage',
+  'chart.percentage': 'Percentage van totaal',
+  'chart.staleness': 'Ouderdom',
+  'chart.interactionHint':
+    'Beweeg over of tik op de grafiek voor details. Toetsenbordgebruikers kunnen de gegevenstabel hieronder openen.',
+  'chart.selectedDetails': 'Geselecteerde grafiekdetails',
   'inventory.assetsEyebrow': 'Wat je bezit',
   'inventory.assetsHelp':
     'Leg exact gedateerde observaties vast. Latere momentopnamen tonen bron en ouderdom.',
