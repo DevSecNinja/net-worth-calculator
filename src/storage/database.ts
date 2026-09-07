@@ -50,11 +50,12 @@ function sameEnvelope(
 export async function compareAndSwapEnvelope(
   expected: CipherEnvelopeV1 | undefined,
   replacement: CipherEnvelopeV1,
+  canCommit: () => boolean = () => true,
 ): Promise<void> {
   const db = await database();
   const transaction = db.transaction(STORE_NAME, 'readwrite', { durability: 'strict' });
   const current = await transaction.store.get(ACTIVE_KEY);
-  if (!sameEnvelope(current, expected)) {
+  if (!sameEnvelope(current, expected) || !canCommit()) {
     transaction.abort();
     await transaction.done.catch((error: unknown) => {
       if (!(error instanceof DOMException) || error.name !== 'AbortError') throw error;
@@ -62,6 +63,14 @@ export async function compareAndSwapEnvelope(
     throw new EnvelopeConflictError();
   }
   await transaction.store.put(replacement, ACTIVE_KEY);
+  if (!canCommit()) {
+    transaction.abort();
+    await transaction.done.catch((error: unknown) => {
+      if (!(error instanceof DOMException) || error.name !== 'AbortError') throw error;
+    });
+    throw new EnvelopeConflictError();
+  }
+  transaction.commit();
   await transaction.done;
 }
 

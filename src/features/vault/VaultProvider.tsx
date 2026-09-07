@@ -13,8 +13,14 @@ import type { CipherEnvelopeV1, Vault } from '@/domain/model';
 import { addSampleData, createEmptyVault, type SampleDataLocale } from '@/domain/fixtures';
 import { detectVaultCapabilityIssue, type VaultCapabilityIssue } from '@/storage/capabilities';
 import type { VaultKeyMaterial } from '@/storage/crypto';
+import { decryptVault } from '@/storage/crypto';
+import { readEnvelope } from '@/storage/database';
 import { VaultSessionLease } from '@/storage/sessionLease';
-import { notifyVaultDeleted, subscribeToVaultDeleted } from '@/storage/vaultEvents';
+import {
+  notifyVaultChanged,
+  notifyVaultDeleted,
+  subscribeToVaultDeleted,
+} from '@/storage/vaultEvents';
 import {
   captureLockedVault,
   changeVaultPassphrase,
@@ -25,8 +31,10 @@ import {
   removeLockedVault,
   removeVault,
   replaceVaultEnvelope,
+  replaceVaultEnvelopeIfUnchanged,
   saveVault,
   unlockVault,
+  VaultConflictError,
 } from '@/storage/vaultRepository';
 
 type VaultStatus = 'loading' | 'absent' | 'locked' | 'unlocked';
@@ -58,7 +66,16 @@ type VaultContextValue = {
   prepareLockedVaultReset: () => Promise<boolean>;
   cancelLockedVaultReset: () => void;
   resetLockedVault: () => Promise<void>;
-  replaceImportedVault: (imported: ImportedVault) => Promise<void>;
+  replaceImportedVault: (
+    imported: ImportedVault,
+    expectedEnvelope?: CipherEnvelopeV1 | null,
+    canCommit?: () => boolean,
+  ) => Promise<void>;
+  applySyncedEnvelope: (
+    envelope: CipherEnvelopeV1,
+    expected: CipherEnvelopeV1 | undefined,
+    canCommit?: () => boolean,
+  ) => Promise<void>;
   clearError: () => void;
 };
 
@@ -213,6 +230,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         setVault(created.vault);
         setMaterial(created.material);
         setStatus('unlocked');
+        notifyVaultChanged();
       } catch (caught) {
         operationLease?.release();
         if (lease.current === operationLease) lease.current = undefined;
@@ -270,6 +288,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         const saved = await saveVault(updater(vault), material);
         if (!isCurrentOperation(token, operationLease)) return;
         setVault(saved);
+        notifyVaultChanged();
       } catch (caught) {
         if (generation.current === token) setError(messageFrom(caught));
         throw caught;
@@ -298,6 +317,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         if (!isCurrentOperation(token, operationLease)) return;
         setVault(changed.vault);
         setMaterial(changed.material);
+        notifyVaultChanged();
       } catch (caught) {
         if (generation.current === token) setError(messageFrom(caught));
         throw caught;
@@ -392,7 +412,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const replaceImportedVault = useCallback(
-    async (imported: ImportedVault) => {
+    async (
+      imported: ImportedVault,
+      expectedEnvelope?: CipherEnvelopeV1 | null,
+      canCommit: () => boolean = () => true,
+    ) => {
       const token = ++generation.current;
       setBusy(true);
       setError(undefined);
@@ -403,11 +427,20 @@ export function VaultProvider({ children }: { children: ReactNode }) {
           operationLease = acquireLease();
           acquiredForRestore = true;
         }
-        await replaceVaultEnvelope(imported.envelope);
+        if (expectedEnvelope === undefined) {
+          await replaceVaultEnvelope(imported.envelope);
+        } else {
+          await replaceVaultEnvelopeIfUnchanged(
+            imported.envelope,
+            expectedEnvelope === null ? undefined : expectedEnvelope,
+            canCommit,
+          );
+        }
         if (!isCurrentOperation(token, operationLease)) return;
         setVault(imported.vault);
         setMaterial(imported.material);
         setStatus('unlocked');
+        notifyVaultChanged();
       } catch (caught) {
         if (acquiredForRestore) {
           operationLease?.release();
@@ -420,6 +453,58 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       }
     },
     [acquireLease, isCurrentOperation],
+  );
+
+  const applySyncedEnvelope = useCallback(
+    async (
+      envelope: CipherEnvelopeV1,
+      expected: CipherEnvelopeV1 | undefined,
+      canCommit: () => boolean = () => true,
+    ) => {
+      const token = ++generation.current;
+      setBusy(true);
+      setError(undefined);
+      let operationLease = lease.current;
+      let temporaryLease = false;
+      try {
+        if (!operationLease?.ownsLease()) {
+          operationLease = acquireLease();
+          temporaryLease = true;
+        }
+        const nextVault = material ? await decryptVault(envelope, material) : undefined;
+        if (
+          material &&
+          vault &&
+          (nextVault?.id !== vault.id || nextVault.revision <= vault.revision)
+        ) {
+          throw new VaultConflictError();
+        }
+        if (JSON.stringify(await readEnvelope()) !== JSON.stringify(expected) || !canCommit()) {
+          throw new VaultConflictError();
+        }
+        await replaceVaultEnvelopeIfUnchanged(envelope, expected, canCommit);
+        if (!isCurrentOperation(token, operationLease)) return;
+        if (nextVault) {
+          setVault(nextVault);
+          setStatus('unlocked');
+        } else {
+          setVault(undefined);
+          setMaterial(undefined);
+          setStatus('locked');
+        }
+        notifyVaultChanged();
+      } catch (caught) {
+        if (generation.current === token) setError(messageFrom(caught));
+        throw caught;
+      } finally {
+        if (temporaryLease) {
+          operationLease?.release();
+          if (lease.current === operationLease) lease.current = undefined;
+        }
+        if (generation.current === token) setBusy(false);
+      }
+    },
+    [acquireLease, isCurrentOperation, material, vault],
   );
 
   const retryCapabilities = useCallback(async () => {
@@ -459,6 +544,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       cancelLockedVaultReset,
       resetLockedVault,
       replaceImportedVault,
+      applySyncedEnvelope,
       clearError,
     }),
     [
@@ -475,6 +561,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       prepareLockedVaultReset,
       retryCapabilities,
       replaceImportedVault,
+      applySyncedEnvelope,
       resetLockedVault,
       status,
       unlock,

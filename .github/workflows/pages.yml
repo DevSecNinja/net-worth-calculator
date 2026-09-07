@@ -31,6 +31,9 @@ jobs:
     env:
       EXPECTED_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       VITE_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      VITE_CLOUDKIT_CONTAINER_IDENTIFIER: ${{ vars.CLOUDKIT_CONTAINER_IDENTIFIER }}
+      VITE_CLOUDKIT_API_TOKEN: ${{ vars.CLOUDKIT_API_TOKEN }}
+      VITE_CLOUDKIT_ENVIRONMENT: production
     steps:
       - name: Harden runner
         uses: DevSecNinja/.github/actions/harden-runner@24acc67adf1be33089e73b2fdbdb4be8c12d145b # v3.2.0

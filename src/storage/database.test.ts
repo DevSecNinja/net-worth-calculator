@@ -37,4 +37,15 @@ describe('encrypted envelope transactions', () => {
     );
     expect(await readEnvelope()).toEqual(first.envelope);
   });
+
+  it('aborts a replacement when its external authorization is invalidated', async () => {
+    const first = await createEncryptedVault(createEmptyVault('USD'), passphrase);
+    const other = await createEncryptedVault(createEmptyVault('EUR'), passphrase);
+    await compareAndSwapEnvelope(undefined, first.envelope);
+
+    await expect(
+      compareAndSwapEnvelope(first.envelope, other.envelope, () => false),
+    ).rejects.toThrow(EnvelopeConflictError);
+    expect(await readEnvelope()).toEqual(first.envelope);
+  });
 });

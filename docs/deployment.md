@@ -13,6 +13,37 @@ Same-repository pull requests receive isolated Cloudflare preview deployments. C
 deletes its preview deployments. Fork pull requests do not receive repository secrets and therefore
 skip preview deployment while the required `CI` workflow still runs normally.
 
+## CloudKit sync configuration
+
+CloudKit sync is optional and remains unavailable when either public browser setting is absent. To
+enable it:
+
+1. Create an iCloud container in the Apple Developer portal and enable CloudKit.
+2. In the development schema, create record type `EncryptedVault` with one String field
+   named `encryptedEnvelope`, then deploy the schema to production.
+3. Create a CloudKit web-services API token and allow every exact production or preview origin that
+   should offer sync. The token is a public browser credential and is embedded in the static bundle;
+   never use a server-to-server key or private key.
+4. Configure repository variables `CLOUDKIT_CONTAINER_IDENTIFIER` and `CLOUDKIT_API_TOKEN`. The Pages
+   workflow maps them to `VITE_CLOUDKIT_CONTAINER_IDENTIFIER` and `VITE_CLOUDKIT_API_TOKEN` and builds
+   against the production CloudKit environment.
+
+For local development, use ignored `.env.local` values:
+
+```text
+VITE_CLOUDKIT_CONTAINER_IDENTIFIER=iCloud.com.example.net-worth-calculator
+VITE_CLOUDKIT_API_TOKEN=<public-web-services-api-token>
+VITE_CLOUDKIT_ENVIRONMENT=development
+```
+
+CloudKit JS is loaded from `https://cdn.apple-cloudkit.com` only after opt-in and communicates with
+`https://api.apple-cloudkit.com`. Keep both hosts narrowly listed in the document and response CSP.
+Test sign-in, sign-out, origin restrictions, record conflicts, and deletion with a dedicated
+development container before promoting its schema and token configuration.
+
+The complete serialized CloudKit payload is limited to 900 KiB, below CloudKit's 1 MiB per-record
+limit. This is intentionally lower than the local vault and backup limits.
+
 The Cloudflare project is a Direct Upload project named `net-worth-calculator`, with `main` as its
 production branch and `dist` as the uploaded artifact. It contains static assets only: there are no
 Pages Functions, Workers, bindings, databases, analytics, or Web Analytics.

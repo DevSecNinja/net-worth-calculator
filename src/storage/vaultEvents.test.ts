@@ -1,4 +1,10 @@
-import { notifyVaultDeleted, subscribeToVaultDeleted, vaultEventsContract } from './vaultEvents';
+import {
+  notifyVaultChanged,
+  notifyVaultDeleted,
+  subscribeToVaultChanged,
+  subscribeToVaultDeleted,
+  vaultEventsContract,
+} from './vaultEvents';
 
 describe('vault deletion events', () => {
   it('publishes only a constant data-free event and removes the storage pulse', () => {
@@ -19,7 +25,12 @@ describe('vault deletion events', () => {
 
     notifyVaultDeleted();
 
-    expect(posted).toEqual([vaultEventsContract.deletedEvent]);
+    expect(posted).toEqual([
+      {
+        event: vaultEventsContract.deletedEvent,
+        source: vaultEventsContract.eventSource,
+      },
+    ]);
     expect(close).toHaveBeenCalledOnce();
     expect(localStorage.getItem(vaultEventsContract.storageKey)).toBeNull();
   });
@@ -41,11 +52,18 @@ describe('vault deletion events', () => {
     const unsubscribe = subscribeToVaultDeleted(listener);
     const channel = channels[0];
 
-    channel?.onmessage?.(new MessageEvent('message', { data: vaultEventsContract.deletedEvent }));
+    channel?.onmessage?.(
+      new MessageEvent('message', {
+        data: { event: vaultEventsContract.deletedEvent, source: 'other-tab' },
+      }),
+    );
     window.dispatchEvent(
       new StorageEvent('storage', {
         key: vaultEventsContract.storageKey,
-        newValue: vaultEventsContract.deletedEvent,
+        newValue: JSON.stringify({
+          event: vaultEventsContract.deletedEvent,
+          source: 'other-tab',
+        }),
       }),
     );
     expect(listener).toHaveBeenCalledTimes(2);
@@ -55,7 +73,10 @@ describe('vault deletion events', () => {
     window.dispatchEvent(
       new StorageEvent('storage', {
         key: vaultEventsContract.storageKey,
-        newValue: vaultEventsContract.deletedEvent,
+        newValue: JSON.stringify({
+          event: vaultEventsContract.deletedEvent,
+          source: 'other-tab',
+        }),
       }),
     );
     expect(listener).toHaveBeenCalledTimes(2);
@@ -77,7 +98,30 @@ describe('vault deletion events', () => {
     window.dispatchEvent(
       new StorageEvent('storage', {
         key: vaultEventsContract.storageKey,
-        newValue: vaultEventsContract.deletedEvent,
+        newValue: JSON.stringify({
+          event: vaultEventsContract.deletedEvent,
+          source: 'other-tab',
+        }),
+      }),
+    );
+    expect(listener).toHaveBeenCalledOnce();
+    unsubscribe();
+  });
+
+  it('uses a separate data-free change signal', () => {
+    vi.stubGlobal('BroadcastChannel', undefined);
+    const listener = vi.fn();
+    const unsubscribe = subscribeToVaultChanged(listener);
+
+    notifyVaultChanged();
+    expect(localStorage.getItem(vaultEventsContract.storageKey)).toBeNull();
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: vaultEventsContract.storageKey,
+        newValue: JSON.stringify({
+          event: vaultEventsContract.changedEvent,
+          source: 'other-tab',
+        }),
       }),
     );
     expect(listener).toHaveBeenCalledOnce();

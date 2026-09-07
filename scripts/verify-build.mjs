@@ -106,14 +106,14 @@ const directives = new Map(
 const requiredDirectives = new Map([
   ['default-src', ["'self'"]],
   ['base-uri', ["'self'"]],
-  ['connect-src', ["'self'"]],
+  ['connect-src', ["'self'", 'https://api.apple-cloudkit.com']],
   ['font-src', ["'self'"]],
   ['form-action', ["'self'"]],
   ['frame-src', ["'none'"]],
   ['img-src', ["'self'", 'data:', 'blob:']],
   ['manifest-src', ["'self'"]],
   ['object-src', ["'none'"]],
-  ['script-src', ["'self'"]],
+  ['script-src', ["'self'", 'https://cdn.apple-cloudkit.com']],
   ['style-src', ["'self'"]],
   ['worker-src', ["'self'"]],
 ]);
@@ -122,8 +122,8 @@ for (const [name, expectedValues] of requiredDirectives) {
     throw new Error(`CSP ${name} must be exactly: ${expectedValues.join(' ')}.`);
   }
 }
-if (/unsafe-(?:inline|eval)|https?:/i.test(csp)) {
-  throw new Error('CSP must not permit unsafe execution or external network origins.');
+if (/unsafe-(?:inline|eval)|http:|\*/i.test(csp)) {
+  throw new Error('CSP must not permit unsafe execution, insecure origins, or wildcard sources.');
 }
 if (!html.includes(`href="${base}manifest.webmanifest"`)) {
   throw new Error(`Built HTML is missing the manifest reference for base ${base}.`);
@@ -224,7 +224,7 @@ const globalHeaders = cloudflareHeaderBlocks.get('/*');
 const expectedCloudflareCsp = [
   "default-src 'self'",
   "base-uri 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' https://api.apple-cloudkit.com",
   "font-src 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
@@ -232,7 +232,7 @@ const expectedCloudflareCsp = [
   "img-src 'self' data: blob:",
   "manifest-src 'self'",
   "object-src 'none'",
-  "script-src 'self'",
+  "script-src 'self' https://cdn.apple-cloudkit.com",
   "style-src 'self'",
   "worker-src 'self'",
 ].join('; ');

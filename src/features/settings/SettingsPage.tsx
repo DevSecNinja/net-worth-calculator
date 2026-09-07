@@ -7,6 +7,7 @@ import { moneyPrecisionError } from '@/domain/validation';
 import { ChangePassphraseDialog, DeleteVaultDialog } from '@/features/vault/VaultSecurityDialogs';
 import { useVault } from '@/features/vault/useVault';
 import { useDirtyState } from '@/hooks/useDirtyState';
+import { CloudSyncSettings } from '@/features/sync/CloudSyncSettings';
 import { supportedLocales } from '@/features/locale/catalog';
 import { useLocale } from '@/features/locale/LocaleProvider';
 
@@ -182,6 +183,7 @@ export function SettingsPage() {
             <p>{t('settings.lockedHelp')}</p>
           </section>
         )}
+        <CloudSyncSettings />
       </div>
       <ChangePassphraseDialog open={changeOpen} onClose={() => setChangeOpen(false)} />
       <DeleteVaultDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} />

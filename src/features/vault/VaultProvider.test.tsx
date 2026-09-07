@@ -268,7 +268,10 @@ describe('VaultProvider operation generation', () => {
       window.dispatchEvent(
         new StorageEvent('storage', {
           key: vaultEventsContract.storageKey,
-          newValue: vaultEventsContract.deletedEvent,
+          newValue: JSON.stringify({
+            event: vaultEventsContract.deletedEvent,
+            source: 'other-tab',
+          }),
         }),
       );
     });
@@ -291,7 +294,10 @@ describe('VaultProvider operation generation', () => {
       window.dispatchEvent(
         new StorageEvent('storage', {
           key: vaultEventsContract.storageKey,
-          newValue: vaultEventsContract.deletedEvent,
+          newValue: JSON.stringify({
+            event: vaultEventsContract.deletedEvent,
+            source: 'other-tab',
+          }),
         }),
       );
     });
@@ -315,7 +321,10 @@ describe('VaultProvider operation generation', () => {
       window.dispatchEvent(
         new StorageEvent('storage', {
           key: vaultEventsContract.storageKey,
-          newValue: vaultEventsContract.deletedEvent,
+          newValue: JSON.stringify({
+            event: vaultEventsContract.deletedEvent,
+            source: 'other-tab',
+          }),
         }),
       );
     });

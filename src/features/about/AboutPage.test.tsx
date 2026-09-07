@@ -14,7 +14,7 @@ describe('AboutPage', () => {
     localStorage.clear();
   });
 
-  it('states the local-only privacy boundaries and exact package/build identity', () => {
+  it('states the encrypted sync boundaries and exact package/build identity', () => {
     render(
       <LocaleProvider>
         <MemoryRouter initialEntries={['/about']}>
@@ -24,8 +24,8 @@ describe('AboutPage', () => {
       </LocaleProvider>,
     );
 
-    expect(screen.getByText(/no account system, database server/i)).toHaveTextContent(
-      /analytics, advertising, telemetry, remote fonts, or runtime third-party requests/i,
+    expect(screen.getByText(/no application account, database server/i)).toHaveTextContent(
+      /analytics, advertising, telemetry, or remote fonts.*optional sync uses Apple CloudKit/i,
     );
     expect(screen.getByText(/complete vault is authenticated and encrypted/i)).toHaveTextContent(
       /Cache Storage contains the app shell, never vault data/i,

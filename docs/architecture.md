@@ -7,7 +7,8 @@ verified, content-hashed root `dist` artifact. Cloudflare Pages exposes the stab
 <https://net-worth-calculator-xn8.pages.dev/> directly and serves
 <https://net-worth.ravensberg.org/> through user-managed DNS. GitHub Pages receives the same bytes and
 remains a warm rollback target. There is no application server, hosted database, account system,
-analytics service, runtime API, Pages Function, or Worker.
+analytics service, application API, Pages Function, or Worker. Optional user-initiated synchronization
+uses CloudKit JS directly from the static client to the user's private CloudKit database.
 
 ```text
 React features and accessible components
@@ -19,6 +20,8 @@ money, projections    Web Crypto, IndexedDB,
 and aggregation       files, single-tab lease
                 |
        encrypted vault envelope
+         /             \
+   local IndexedDB    optional CloudKit
 
 Generated service worker -> Cache Storage (app-shell resources only)
 ```
@@ -37,8 +40,8 @@ through the same local preview harness used by CI.
 | `src/components`      | Reusable accessible UI, forms, dialogs, and chart/table presentation                                        |
 | `src/domain`          | Pure types, validation, localized/canonical money, observations, amortization, and exact/annual aggregation |
 | `src/features/locale` | Typed en-US/en-GB/nl-NL catalogs, browser negotiation, override, and document language                      |
-| `src/features`        | Vault, inventory, dashboard, backup, settings, onboarding, and About workflows                              |
-| `src/storage`         | Cryptography, IndexedDB, encrypted repository, file capability, tab lease, and data-free vault events       |
+| `src/features`        | Vault, inventory, dashboard, backup, settings, opt-in sync, onboarding, and About workflows                 |
+| `src/storage`         | Cryptography, IndexedDB, encrypted repository, files, CloudKit adapter, tab lease, and vault events         |
 | `src/pwa`             | Install capability, offline status, update checks, and opt-in activation                                    |
 | `tests`               | Built-output E2E, privacy-network, browser fallback, and PWA lifecycle validation                           |
 | `scripts`             | Deterministic icon generation, local preview, and production artifact verification                          |
@@ -125,7 +128,7 @@ authentication and before current-schema validation.
 | Surface         | Permitted content                                                               |
 | --------------- | ------------------------------------------------------------------------------- |
 | IndexedDB       | One authenticated cipher envelope at a fixed key                                |
-| localStorage    | Theme, locale, short-lived random tab lease, and data-free coordination pulses  |
+| localStorage    | Theme, locale, tab lease, coordination pulses, and opaque CloudKit sync baseline |
 | Cache Storage   | Generated HTML, JavaScript, CSS, manifest, and local image app-shell resources  |
 | JavaScript heap | Decrypted vault and derived key only while the writable session is unlocked     |
 | Backup file     | Versioned wrapper around the authenticated cipher envelope and export timestamp |
@@ -141,8 +144,37 @@ Import enforces the 10 MiB limit, exact outer structure, supported versions, aut
 current vault schema before asking for overwrite confirmation. The only IndexedDB
 write occurs after all validation and confirmation succeeds.
 
-There is no escrow, passphrase reset, recovery key, synchronization service, or remote copy. Recovery
-depends entirely on a retained backup and its passphrase.
+There is no escrow, passphrase reset, recovery key, or server-held secret. Recovery requires the
+passphrase plus either a retained backup or an optional encrypted CloudKit copy.
+
+## Optional CloudKit synchronization
+
+Sync is disabled by default. Opt-in dynamically loads Apple's CloudKit JS SDK, authenticates the user
+with Apple, and accesses one deterministic `EncryptedVault` record in the private database. The
+record contains a protocol-versioned serialization of the existing AES-GCM envelope. It contains no
+vault identifier, decrypted revision, timestamp, currency, item name, financial amount, passphrase,
+or key. IndexedDB remains the local source used by the application and all domain calculations remain
+offline. Serialized CloudKit records are capped at 900 KiB to remain below CloudKit's 1 MiB record
+limit; larger local vaults remain usable and exportable but surface an explicit sync error.
+
+CloudKit authentication uses a session-only web token (`persist: false`); the app does not persist the
+credential in cookies or web storage. A SHA-256 digest of the opaque CloudKit user record name binds
+the local sync baseline to the current account without retaining the identifier itself.
+
+The client stores only opt-in state, the CloudKit record change tag, a SHA-256 digest of the last
+synchronized ciphertext, and the last successful sync time in localStorage. Comparing that baseline
+with current local ciphertext and the current CloudKit change tag distinguishes local-only,
+remote-only, and divergent changes. First sync uploads when only a local vault exists, downloads when
+only a remote vault exists, and requires an explicit choice when both differ. After an established
+baseline, local or remote deletion is also treated as a conflict so neither deletion is silently
+undone.
+
+CloudKit optimistic concurrency uses `recordChangeTag`. A stale write becomes a conflict rather than
+last-write-wins. Remote replacement requires successful local passphrase authentication first.
+Automatic remote application to an unlocked vault additionally requires the same vault identifier
+and a strictly newer encrypted revision. Sign-out and authentication expiry stop synchronization
+without changing the local vault. Disabling can either retain the encrypted CloudKit record or delete
+its exact current change-tag revision.
 
 ## PWA and update model
 

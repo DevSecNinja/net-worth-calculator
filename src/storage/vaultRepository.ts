@@ -164,6 +164,19 @@ export async function replaceVaultEnvelope(
   }
 }
 
+export async function replaceVaultEnvelopeIfUnchanged(
+  envelope: CipherEnvelopeV1,
+  expected: CipherEnvelopeV1 | undefined,
+  canCommit: () => boolean = () => true,
+): Promise<void> {
+  try {
+    await compareAndSwapEnvelope(expected, envelope, canCommit);
+  } catch (error) {
+    if (error instanceof EnvelopeConflictError) throw new VaultConflictError();
+    throw error;
+  }
+}
+
 export async function removeVault(vaultInput: Vault, material: VaultKeyMaterial): Promise<void> {
   const vault = vaultSchema.parse(vaultInput);
   const currentEnvelope = await readEnvelope();

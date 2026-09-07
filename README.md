@@ -1,8 +1,9 @@
 # Net Worth Calculator
 
 A private, local-first progressive web app for tracking assets, liabilities, yearly net worth, and
-payoff projections. Financial data stays in an encrypted browser vault; the app has no account,
-server API, analytics, telemetry, advertising, remote fonts, or runtime CDN dependency.
+payoff projections. Financial data stays in an encrypted browser vault. Optional iCloud sync sends
+only authenticated ciphertext to the user's private CloudKit database; the app has no application
+account, server API, analytics, telemetry, advertising, or remote fonts.
 
 **Live app:** <https://net-worth.ravensberg.org/>
 
@@ -26,9 +27,10 @@ server API, analytics, telemetry, advertising, remote fonts, or runtime CDN depe
   locking, closing the page, or losing the single-writer lease requires another unlock.
 - Cache Storage contains only the generated application shell. It does not contain vault records,
   backups, user input, or application data responses.
-- Theme, language, short-lived tab-lease metadata, and data-free vault-deletion/update-coordination
-  pulses are non-sensitive and may use localStorage.
-- The application makes no runtime request to an external origin and sends no financial data.
+- Theme, language, short-lived tab-lease metadata, data-free coordination pulses, and optional opaque
+  sync baselines are non-sensitive and may use localStorage.
+- Before explicit sync opt-in, the application makes no runtime request to Apple. CloudKit sync loads
+  Apple's SDK and sends only the encrypted envelope and opaque synchronization metadata.
 
 Encryption protects stored vault bytes and backup contents, not an already unlocked session. A
 compromised device, browser, extension, same-origin script, weak passphrase, screen capture, or
@@ -55,6 +57,7 @@ exposes ordinary web request metadata to the hosting provider. See
   declining debts, and multi-year exact-date history that can be edited or deleted normally
 - Light, dark, and live system theme preferences
 - Encrypted, authenticated, versioned `.nwvault` backup export and restore
+- Optional encrypted iCloud synchronization with explicit conflict resolution and remote deletion
 - Native file pickers where supported and download/file-input fallbacks elsewhere
 - Installable app shell, offline use after the first successful load, and explicit update activation
 - Keyboard, touch, reduced-motion, high-zoom, responsive, and screen-reader-oriented workflows
@@ -112,8 +115,10 @@ npm ci
 npx playwright install --with-deps chromium firefox webkit
 ```
 
-`mise` is optional when a compatible Node/npm toolchain is already installed. No runtime environment
-variables, accounts, remote services, or secrets are required.
+`mise` is optional when a compatible Node/npm toolchain is already installed. Core local and backup
+features require no runtime environment variables, accounts, or remote services. CloudKit sync is
+hidden unless its public browser configuration is provided; see
+[deployment configuration](docs/deployment.md#cloudkit-sync-configuration).
 
 ## Commands
 

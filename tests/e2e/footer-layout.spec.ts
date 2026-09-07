@@ -78,7 +78,7 @@ test('keeps desktop and short-viewport PWA states clear of the footer', async ({
   await exposeInstallAndRegistrationError(page);
   await expectFooterContract(
     page,
-    /your financial data stays in this browser/i,
+    /your financial data stays encrypted and under your control/i,
     /offline setup failed/i,
   );
 
@@ -90,7 +90,7 @@ test('reflows long Dutch status content without overlap or overflow', async ({ p
   await exposeInstallAndRegistrationError(page, 'nl-NL');
   await expectFooterContract(
     page,
-    /je financiële gegevens blijven in deze browser/i,
+    /je financiële gegevens blijven versleuteld en onder jouw controle/i,
     /offline instellen is mislukt/i,
   );
 
@@ -110,7 +110,7 @@ test('preserves the footer clearance contract at 200% reflow', async ({ page }) 
   await exposeInstallAndRegistrationError(page);
   await expectFooterContract(
     page,
-    /your financial data stays in this browser/i,
+    /your financial data stays encrypted and under your control/i,
     /offline setup failed/i,
   );
 });

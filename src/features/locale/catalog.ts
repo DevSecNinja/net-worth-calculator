@@ -38,19 +38,19 @@ const enUS = {
   'nav.about': 'About',
   'nav.lock': 'Lock vault',
   'nav.skip': 'Skip to main content',
-  'footer.privacy': 'Your financial data stays in this browser.',
+  'footer.privacy': 'Your financial data stays encrypted and under your control.',
   'app.checkingVault': 'Checking for an encrypted vault...',
   'app.preparingInsights': 'Preparing private insights...',
   'app.errorTitle': 'The app could not continue safely.',
   'app.errorText':
     'Reload to return to the locked vault. Your last committed encrypted data is unchanged.',
   'onboarding.eyebrow': 'Private by design',
-  'onboarding.title': 'See your whole financial picture without sending it anywhere.',
+  'onboarding.title': 'See your whole financial picture with privacy by default.',
   'onboarding.lede':
-    'Your vault is encrypted in this browser. There are no accounts, trackers, servers, or password resets.',
+    'Your vault is encrypted in this browser. There are no app accounts, trackers, servers, or password resets.',
   'onboarding.before': 'Before you start',
   'onboarding.localTitle': 'Local only.',
-  'onboarding.localText': 'Financial data never leaves this browser.',
+  'onboarding.localText': 'Plaintext financial data never leaves this browser.',
   'onboarding.encryptedTitle': 'Encrypted at rest.',
   'onboarding.encryptedText': 'Your passphrase unlocks the vault in memory.',
   'onboarding.recoveryTitle': 'You own recovery.',
@@ -311,6 +311,47 @@ const enUS = {
   'settings.locked': 'Vault settings are locked',
   'settings.lockedHelp':
     'Unlock the vault to change currency, passphrase, or delete local financial data.',
+  'sync.title': 'iCloud sync',
+  'sync.help': 'Synchronize the encrypted vault through your private iCloud database.',
+  'sync.notConfigured':
+    'CloudKit sync is unavailable in this deployment because its public browser configuration is missing.',
+  'sync.optIn':
+    'Enabling sync loads CloudKit JS from Apple and sends only the encrypted vault envelope to your private iCloud database.',
+  'sync.enable': 'Enable iCloud sync',
+  'sync.statusLabel': 'Sync status:',
+  'sync.statusReady': 'Ready.',
+  'sync.statusSignedOut': 'Sign in with Apple to continue.',
+  'sync.statusSyncing': 'Synchronizing encrypted vault...',
+  'sync.statusSynced': 'Encrypted vault synchronized.',
+  'sync.statusOffline': 'Offline. Local changes remain saved and will sync when online.',
+  'sync.statusConflict': 'Local and iCloud vaults both changed.',
+  'sync.lastSynced': 'Last synchronized {date}.',
+  'sync.syncNow': 'Sync now',
+  'sync.syncing': 'Syncing...',
+  'sync.signOut': 'Sign out of iCloud',
+  'sync.disable': 'Disable sync',
+  'sync.encryptionHelp':
+    'Your passphrase and decrypted financial data stay on this device. CloudKit stores only authenticated ciphertext and opaque synchronization metadata.',
+  'sync.conflictTitle': 'Choose which encrypted vault to keep',
+  'sync.conflictHelp':
+    'The local vault and the iCloud vault modified {date} both changed since the last sync. Nothing has been overwritten.',
+  'sync.localDeleted':
+    'The local vault was deleted after the last sync. Restore the iCloud vault or disable sync and delete its cloud copy.',
+  'sync.remoteDeleted':
+    'The iCloud vault was deleted after the last sync. Recreate it from the local vault or disable sync to preserve the deletion.',
+  'sync.remoteUnknown': 'at an unknown time',
+  'sync.keepLocal': 'Keep local vault',
+  'sync.useRemote': 'Use iCloud vault',
+  'sync.useRemoteTitle': 'Replace local vault from iCloud',
+  'sync.useRemoteHelp':
+    'Enter the passphrase for the iCloud vault. It must authenticate successfully before the local vault is replaced.',
+  'sync.replaceLocal': 'Replace local vault',
+  'sync.disableTitle': 'Disable iCloud sync',
+  'sync.disableHelp':
+    'The local encrypted vault stays on this device. Choose whether the encrypted CloudKit copy should remain or be deleted.',
+  'sync.keepCloudCopy': 'Disable and keep cloud copy',
+  'sync.deleteCloudCopy': 'Delete cloud copy and disable',
+  'sync.operationFailed': 'The CloudKit operation could not be completed.',
   'about.eyebrow': 'Open source and private',
   'about.title': 'About this calculator',
   'about.privacyTitle': 'Privacy model',
@@ -346,9 +387,9 @@ const enUS = {
   'about.cashFlowHeuristic':
     "Rich Dad's 'puts money in your pocket' wording is a cash-flow heuristic. It answers a different question and does not reclassify a home in this balance-sheet calculator.",
   'about.lede':
-    'Net Worth Calculator is a local-first PWA. It has no account system, database server, analytics, advertising, telemetry, remote fonts, or runtime third-party requests.',
+    'Net Worth Calculator is a local-first PWA. It has no application account, database server, analytics, advertising, telemetry, or remote fonts. Optional sync uses Apple CloudKit.',
   'about.privacyText':
-    'The complete vault is authenticated and encrypted before IndexedDB stores it. Your passphrase-derived key and decrypted document stay in memory only while this tab is unlocked. Cache Storage contains the app shell, never vault data.',
+    'The complete vault is authenticated and encrypted before IndexedDB stores it or optional CloudKit sync transmits it. Your passphrase-derived key and decrypted document stay in memory only while this tab is unlocked. Cache Storage contains the app shell, never vault data.',
   'about.noReset': 'There is no passphrase reset, recovery service, or administrator override.',
   'about.clearData': 'Clearing browser site data deletes the local vault unless you have a backup.',
   'about.compromised':
@@ -496,19 +537,19 @@ const nlNL: MessageCatalog = {
   'nav.about': 'Over',
   'nav.lock': 'Kluis vergrendelen',
   'nav.skip': 'Ga naar hoofdinhoud',
-  'footer.privacy': 'Je financiële gegevens blijven in deze browser.',
+  'footer.privacy': 'Je financiële gegevens blijven versleuteld en onder jouw controle.',
   'app.checkingVault': 'Controleren op een versleutelde kluis...',
   'app.preparingInsights': 'Privé-inzichten voorbereiden...',
   'app.errorTitle': 'De app kon niet veilig doorgaan.',
   'app.errorText':
     'Herlaad om terug te keren naar de vergrendelde kluis. Je laatst opgeslagen versleutelde gegevens zijn ongewijzigd.',
   'onboarding.eyebrow': 'Privé door ontwerp',
-  'onboarding.title': 'Bekijk je volledige financiële situatie zonder iets te versturen.',
+  'onboarding.title': 'Bekijk je volledige financiële situatie met privacy als standaard.',
   'onboarding.lede':
-    'Je kluis is versleuteld in deze browser. Er zijn geen accounts, trackers, servers of wachtwoordherstel.',
+    'Je kluis is versleuteld in deze browser. Er zijn geen appaccounts, trackers, servers of wachtwoordherstel.',
   'onboarding.before': 'Voordat je begint',
   'onboarding.localTitle': 'Alleen lokaal.',
-  'onboarding.localText': 'Financiële gegevens verlaten deze browser nooit.',
+  'onboarding.localText': 'Onversleutelde financiële gegevens verlaten deze browser nooit.',
   'onboarding.encryptedTitle': 'Versleuteld opgeslagen.',
   'onboarding.encryptedText': 'Je wachtzin ontgrendelt de kluis alleen in het geheugen.',
   'onboarding.recoveryTitle': 'Jij beheert herstel.',
@@ -773,6 +814,48 @@ const nlNL: MessageCatalog = {
   'settings.locked': 'Kluisinstellingen zijn vergrendeld',
   'settings.lockedHelp':
     'Ontgrendel de kluis om valuta of wachtzin te wijzigen of lokale gegevens te verwijderen.',
+  'sync.title': 'iCloud-synchronisatie',
+  'sync.help': 'Synchroniseer de versleutelde kluis via je privé-iCloud-database.',
+  'sync.notConfigured':
+    'CloudKit-synchronisatie is niet beschikbaar omdat de openbare browserconfiguratie ontbreekt.',
+  'sync.optIn':
+    'Als je synchronisatie inschakelt, wordt CloudKit JS van Apple geladen en wordt alleen de versleutelde kluis naar je privé-iCloud-database verzonden.',
+  'sync.enable': 'iCloud-synchronisatie inschakelen',
+  'sync.statusLabel': 'Synchronisatiestatus:',
+  'sync.statusReady': 'Gereed.',
+  'sync.statusSignedOut': 'Log in met Apple om door te gaan.',
+  'sync.statusSyncing': 'Versleutelde kluis synchroniseren...',
+  'sync.statusSynced': 'Versleutelde kluis gesynchroniseerd.',
+  'sync.statusOffline':
+    'Offline. Lokale wijzigingen blijven opgeslagen en worden later gesynchroniseerd.',
+  'sync.statusConflict': 'De lokale en iCloud-kluis zijn beide gewijzigd.',
+  'sync.lastSynced': 'Laatst gesynchroniseerd op {date}.',
+  'sync.syncNow': 'Nu synchroniseren',
+  'sync.syncing': 'Synchroniseren...',
+  'sync.signOut': 'Uitloggen bij iCloud',
+  'sync.disable': 'Synchronisatie uitschakelen',
+  'sync.encryptionHelp':
+    'Je wachtzin en ontsleutelde financiële gegevens blijven op dit apparaat. CloudKit bewaart alleen geauthenticeerde cijfertekst en ondoorzichtige synchronisatiemetadata.',
+  'sync.conflictTitle': 'Kies welke versleutelde kluis je wilt behouden',
+  'sync.conflictHelp':
+    'De lokale kluis en de iCloud-kluis die {date} is gewijzigd, zijn beide aangepast sinds de laatste synchronisatie. Niets is overschreven.',
+  'sync.localDeleted':
+    'De lokale kluis is na de laatste synchronisatie verwijderd. Herstel de iCloud-kluis of schakel synchronisatie uit en verwijder de cloudkopie.',
+  'sync.remoteDeleted':
+    'De iCloud-kluis is na de laatste synchronisatie verwijderd. Maak deze opnieuw vanuit de lokale kluis of schakel synchronisatie uit om de verwijdering te behouden.',
+  'sync.remoteUnknown': 'op een onbekend tijdstip',
+  'sync.keepLocal': 'Lokale kluis behouden',
+  'sync.useRemote': 'iCloud-kluis gebruiken',
+  'sync.useRemoteTitle': 'Lokale kluis vervangen vanuit iCloud',
+  'sync.useRemoteHelp':
+    'Voer de wachtzin van de iCloud-kluis in. Deze moet geldig zijn voordat de lokale kluis wordt vervangen.',
+  'sync.replaceLocal': 'Lokale kluis vervangen',
+  'sync.disableTitle': 'iCloud-synchronisatie uitschakelen',
+  'sync.disableHelp':
+    'De lokale versleutelde kluis blijft op dit apparaat. Kies of de versleutelde CloudKit-kopie moet blijven bestaan of worden verwijderd.',
+  'sync.keepCloudCopy': 'Uitschakelen en cloudkopie behouden',
+  'sync.deleteCloudCopy': 'Cloudkopie verwijderen en uitschakelen',
+  'sync.operationFailed': 'De CloudKit-bewerking kon niet worden voltooid.',
   'about.eyebrow': 'Open source en privé',
   'about.title': 'Over deze calculator',
   'about.privacyTitle': 'Privacymodel',
@@ -808,9 +891,9 @@ const nlNL: MessageCatalog = {
   'about.cashFlowHeuristic':
     "De Rich Dad-omschrijving 'geld in je zak' is een kasstroomheuristiek. Die beantwoordt een andere vraag en herclassificeert een woning niet in deze balanscalculator.",
   'about.lede':
-    'Nettovermogencalculator is een lokale PWA zonder accounts, databaseserver, analytics, reclame, telemetrie, externe lettertypen of externe runtimeverzoeken.',
+    'Nettovermogencalculator is een lokale PWA zonder appaccount, databaseserver, analytics, reclame, telemetrie of externe lettertypen. Optionele synchronisatie gebruikt Apple CloudKit.',
   'about.privacyText':
-    'De volledige kluis wordt geauthenticeerd en versleuteld voordat IndexedDB deze opslaat. De afgeleide sleutel en ontsleutelde gegevens blijven alleen in het geheugen zolang dit tabblad ontgrendeld is.',
+    'De volledige kluis wordt geauthenticeerd en versleuteld voordat IndexedDB deze opslaat of optionele CloudKit-synchronisatie deze verstuurt. De afgeleide sleutel en ontsleutelde gegevens blijven alleen in het geheugen zolang dit tabblad ontgrendeld is.',
   'about.noReset': 'Er is geen herstelservice, beheerder of reset voor de wachtzin.',
   'about.clearData': 'Het wissen van browsergegevens verwijdert de lokale kluis zonder back-up.',
   'about.compromised':

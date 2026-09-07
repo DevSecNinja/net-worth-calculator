@@ -14,6 +14,8 @@ const packageMetadata = JSON.parse(
   readFileSync(new URL('./package.json', import.meta.url), 'utf8'),
 ) as PackageMetadata;
 const base = process.env.VITE_BASE_PATH ?? '/net-worth-calculator/';
+const cloudKitEnvironment =
+  process.env.VITE_CLOUDKIT_ENVIRONMENT === 'development' ? 'development' : 'production';
 
 function commitSha(): string {
   const configuredSha = process.env.VITE_COMMIT_SHA ?? process.env.GITHUB_SHA;
@@ -40,6 +42,11 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(packageMetadata.version),
     __COMMIT_SHA__: JSON.stringify(commitSha()),
     __REPOSITORY_URL__: JSON.stringify('https://github.com/DevSecNinja/net-worth-calculator'),
+    __CLOUDKIT_CONTAINER_IDENTIFIER__: JSON.stringify(
+      process.env.VITE_CLOUDKIT_CONTAINER_IDENTIFIER ?? '',
+    ),
+    __CLOUDKIT_API_TOKEN__: JSON.stringify(process.env.VITE_CLOUDKIT_API_TOKEN ?? ''),
+    __CLOUDKIT_ENVIRONMENT__: JSON.stringify(cloudKitEnvironment),
   },
   plugins: [
     react(),

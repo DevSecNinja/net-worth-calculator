@@ -4,7 +4,7 @@
 
 The application is designed to:
 
-1. keep financial content on the user's device;
+1. keep financial plaintext and cryptographic keys on the user's device;
 2. keep persisted vault and portable backup contents confidential and authenticated;
 3. make wrong-passphrase, tamper, import, update, and storage failures non-destructive;
 4. exclude secrets and financial values from network traffic, URLs, logs, caches, filenames, and
@@ -48,7 +48,8 @@ The following are outside the application's control:
 | Accidental backup overwrite/import loss | Validate, authenticate, and confirm before the sole replacement transaction        | A confirmed restore intentionally replaces the one local vault                   |
 | Backup content or filename disclosure   | Generic dated filename and encrypted authenticated payload                         | Plaintext wrapper exposes format version and export timestamp                    |
 | Cache leakage                           | Revisioned app-shell precache only; no runtime cache rules or vault data responses | Static source and assets are intentionally public                                |
-| External data transmission              | No runtime third-party origins, analytics, telemetry, APIs, or remote assets       | The static host receives normal HTTPS asset requests                             |
+| External data transmission              | CloudKit is disabled by default and receives only encrypted envelopes after opt-in | Apple sees account, network, timing, record-size, and ciphertext metadata         |
+| Sync rollback or concurrent overwrite   | Ciphertext baselines, record change tags, encrypted revisions, explicit conflicts  | A compromised account can delete or replay data; retained backups remain prudent |
 | XSS and injected script                 | React escaping, no unsafe HTML/eval, local dependencies, restrictive document CSP  | CSP cannot protect against every trusted same-origin or extension compromise     |
 | Unsafe automatic updates                | Waiting worker, explicit activation, dirty-state confirmation, immutable build ID  | Accepted updates replace the running application code                            |
 | Cross-release data incompatibility      | Independent envelope/vault versions and strict validation                          | Unsupported or damaged backups cannot be restored                                |
@@ -79,14 +80,18 @@ numbers.
 
 IndexedDB database `net-worth-calculator` contains a fixed `vault` store and `active` key. Its value is
 the cipher envelope; domain entities and derived dashboard data are not separate records.
-localStorage may reveal the selected theme, explicit locale, a random tab owner/expiry lease, and
-transient data-free vault-deletion or dirty-state coordination pulses; none contains vault content or
-dirty field names.
+localStorage may reveal the selected theme, explicit locale, a random tab owner/expiry lease,
+transient data-free coordination pulses, and optional opaque CloudKit sync state; none contains vault
+content or dirty field names.
 
 The Workbox service worker precaches only generated app-shell resources. There are no runtime caching
-routes. Backup extensions are denied as navigation fallbacks, and the build verifier rejects
-service-worker references to vault storage or backup data. Cache cleanup targets obsolete generated
-precache entries rather than all origin caches.
+routes, including for CloudKit. Backup extensions are denied as navigation fallbacks, and the build
+verifier rejects service-worker references to vault storage or backup data. Cache cleanup targets
+obsolete generated precache entries rather than all origin caches.
+
+Optional sync state in localStorage contains only a consent flag, CloudKit change tag, SHA-256 digest
+of ciphertext, and last successful sync time. It contains no CloudKit account identifier, vault
+plaintext, key, passphrase, or decrypted revision.
 
 The dashboard required immediately after vault creation is loaded as part of application startup.
 This prevents a successful encrypted write from being followed by a deferred module request that a
@@ -109,11 +114,36 @@ drive, email client, removable disk, backup agent, or shared folder selected by 
 own security and retention policy. The app cannot revoke previously exported files or determine
 whether they were copied.
 
+## CloudKit synchronization
+
+CloudKit sync is an explicit exception to the default no-network data path. No Apple SDK or API
+request occurs before opt-in. The application then loads CloudKit JS from Apple's CDN and stores one
+opaque encrypted-envelope record in the authenticated user's private CloudKit database. Apple
+authentication is not an application account and does not provide the app with an email address or
+passphrase.
+
+CloudKit cannot decrypt, merge, or recover a vault. The local passphrase remains required on every
+new device. The protocol compares the last synchronized ciphertext digest and CloudKit change tag;
+concurrent changes and local/remote deletions stop with an explicit conflict. Remote replacement is
+authenticated locally before commit. Disabling sync never deletes local data and offers a separate,
+authenticated remote-deletion action.
+
+CloudKit web authentication is session-scoped. The SDK is configured not to persist its web
+authentication token, and the application stores only a SHA-256 digest of the opaque account record
+name to prevent a baseline from being reused after an account switch.
+
+CloudKit necessarily observes the Apple account, IP address, device/browser metadata, request timing,
+record size, and encrypted write activity. Apple controls its authentication, availability, quotas,
+and retention. Account compromise or malicious record replacement can cause denial of service or
+offline guessing against ciphertext, but not direct decryption without the vault passphrase.
+
 ## CSP and static-host limitations
 
 The built document supplies a restrictive meta Content Security Policy compatible with local scripts,
-styles, images, workers, manifests, and Web Crypto operation. It excludes remote fonts, runtime CDNs,
-unexpected network destinations, unsafe evaluation, and injected application HTML patterns.
+styles, images, workers, manifests, Web Crypto, and the two exact CloudKit origins. It excludes remote
+fonts, other runtime CDNs and network destinations, unsafe evaluation, and injected application HTML
+patterns. CloudKit JS itself is remotely maintained by Apple and does not publish an immutable SRI
+artifact, so opting into sync expands the trusted code boundary to that SDK.
 
 GitHub Pages does not provide repository-controlled response security headers. The root artifact
 therefore retains its restrictive in-document policy. Cloudflare Pages applies the committed

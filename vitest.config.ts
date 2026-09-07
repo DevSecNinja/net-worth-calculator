@@ -13,6 +13,9 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(packageMetadata.version),
     __COMMIT_SHA__: JSON.stringify('0123456789abcdef0123456789abcdef01234567'),
     __REPOSITORY_URL__: JSON.stringify('https://github.com/DevSecNinja/net-worth-calculator'),
+    __CLOUDKIT_CONTAINER_IDENTIFIER__: JSON.stringify('iCloud.test.net-worth-calculator'),
+    __CLOUDKIT_API_TOKEN__: JSON.stringify('test-public-browser-token'),
+    __CLOUDKIT_ENVIRONMENT__: JSON.stringify('development'),
   },
   plugins: [react()],
   resolve: {
