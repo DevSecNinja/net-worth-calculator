@@ -1,3 +1,5 @@
 # Spec Kit scaffolding is generated upstream and must retain its official formatting.
 dprint.json
 .yamlfmt.yaml
+# Strict branch protection needs Renovate to rebase PRs that fall behind main.
+renovate.json5

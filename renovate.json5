@@ -14,4 +14,7 @@
     "github>DevSecNinja/.github//.renovate/packageRules.json5",
     "github>DevSecNinja/.github//.renovate/semanticCommits.json5",
   ],
+  // Branch protection requires up-to-date branches, so keep Renovate PRs current for automerge.
+  // This repo-local override is protected from config-sync by .github/.config-sync-ignore.
+  rebaseWhen: "behind-base-branch",
 }
