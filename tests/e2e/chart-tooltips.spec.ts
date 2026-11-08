@@ -178,6 +178,8 @@ test('keeps Dutch details localized and bounded in a narrow dark viewport', asyn
 
 test('uses UK date and currency conventions in selected details', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Focused UK locale coverage');
+  // Sample data dates its latest snapshot "today"; pin September to exercise en-GB's "Sept".
+  await page.clock.setFixedTime(new Date('2026-09-15T12:00:00Z'));
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'languages', {
       configurable: true,
@@ -189,5 +191,5 @@ test('uses UK date and currency conventions in selected details', async ({ page 
   const allocation = chartCard(page, /asset allocation/i);
   await interactWithPie(allocation, 'click');
   await expect(allocation.getByTestId('chart-selected-detail')).toContainText(/£|US\$/);
-  await expect(allocation.getByTestId('chart-selected-detail')).toContainText(/\d{1,2} Sept \d{4}/);
+  await expect(allocation.getByTestId('chart-selected-detail')).toContainText('15 Sept 2026');
 });
