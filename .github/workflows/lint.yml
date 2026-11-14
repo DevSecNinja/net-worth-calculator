@@ -18,7 +18,7 @@ jobs:
       security-events: write # Upload shared linter SARIF to code scanning.
     with:
       # renovate: datasource=github-releases depName=jdx/mise
-      mise-version: "2026.8.0"
+      mise-version: "2026.10.24"
       lint-fail-on-error: true
       lint-go: false
       lint-config-drift: false
