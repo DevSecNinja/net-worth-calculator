@@ -210,20 +210,25 @@ retirement decision.
 
 ### Release automation credentials
 
-Release Please authenticates as an installed GitHub App. Configure these repository-level Actions
-credentials under **Settings > Secrets and variables > Actions**:
+Release Please and Config Sync authenticate as the DevSecNinja Automation GitHub App. Install the
+App for this repository with **Contents: write** and **Pull requests: write** repository
+permissions, and store its credentials in the `production` Actions environment, which is restricted
+to the `main` branch (**Settings > Environments > production**):
 
-- Variable `RELEASE_PLEASE_APP_ID`: the GitHub App ID.
-- Secret `RELEASE_PLEASE_APP_PRIVATE_KEY`: the GitHub App private key.
+- Variable `AUTOMATION_APP_ID`: the GitHub App ID.
+- Secret `AUTOMATION_APP_PRIVATE_KEY`: the GitHub App private key.
 
-Install the app for this repository with **Contents: write** and **Pull requests: write** repository
-permissions, and enable **Allow GitHub Actions to create and approve pull requests** under
-**Settings > Actions > General > Workflow permissions**. Store the complete private key, including
-its PEM header, footer, and newlines, with:
+The callers pass the secret by name and the central reusable workflows run in that environment; see
+[automation-app.md](https://github.com/DevSecNinja/.github/blob/main/docs/automation-app.md). The
+dotfiles `GitHubRepoConfig` module provisions both. To set the key by hand, store the complete
+private key, including its PEM header, footer, and newlines, with:
 
 ```sh
-gh secret set RELEASE_PLEASE_APP_PRIVATE_KEY --repo DevSecNinja/net-worth-calculator < app-private-key.pem
+gh secret set AUTOMATION_APP_PRIVATE_KEY --env production --repo DevSecNinja/net-worth-calculator < app-private-key.pem
 ```
+
+Leave **Allow GitHub Actions to create and approve pull requests** off: App tokens open pull
+requests without it.
 
 The central reusable workflow requires both credentials, rejects empty or whitespace-only values,
 and always authenticates with a short-lived App token; it fails closed without a `GITHUB_TOKEN`
