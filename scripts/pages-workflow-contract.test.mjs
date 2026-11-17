@@ -49,9 +49,7 @@ describe('Pages deployment workflow contract', () => {
     expect(buildJob).toMatch(
       /uses: DevSecNinja\/\.github\/actions\/harden-runner@[0-9a-f]{40} # v\d+\.\d+\.\d+/,
     );
-    expect(buildJob).toMatch(
-      /uses: actions\/upload-artifact@[0-9a-f]{40} # v\d+\.\d+\.\d+/,
-    );
+    expect(buildJob).toMatch(/uses: actions\/upload-artifact@[0-9a-f]{40} # v\d+\.\d+\.\d+/);
     expect(buildJob).toMatch(/^ {10}VITE_BASE_PATH: \/$/m);
     expect(buildJob).toMatch(/^ {10}EXPECTED_BASE_PATH: \/$/m);
     expect(buildJob).toMatch(/^ {10}name: root-dist$/m);
