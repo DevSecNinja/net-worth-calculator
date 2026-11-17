@@ -42,9 +42,9 @@ const releaseInputs = yamlBlock(releaseJob, 'with', 4);
 const releaseSecrets = yamlBlock(releaseJob, 'secrets', 4);
 
 describe('Release Please consumer contract', () => {
-  it('pins central v3 and passes mandatory App credentials', () => {
+  it('pins central v4 and passes mandatory App credentials', () => {
     expect(releaseJob).toMatch(
-      /^ {4}uses:\s*DevSecNinja\/\.github\/\.github\/workflows\/release-please\.yml@e28a49a14d4530962b165e0d35a8a331b2b42f23 # v3\.7\.1\s*$/m,
+      /^ {4}uses:\s*DevSecNinja\/\.github\/\.github\/workflows\/release-please\.yml@5eceec313066eefaa0fe9e3dbf4f9a5a49b55ebd # v4\.2\.0\s*$/m,
     );
     expect(releaseInputs).not.toMatch(/^ {6}app-id:/m);
     expect(releaseSecrets).toMatch(
