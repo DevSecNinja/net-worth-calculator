@@ -44,8 +44,10 @@ describe('Pages deployment workflow contract', () => {
 
   it('builds, verifies, and uploads one root artifact without Cloudflare credentials', () => {
     expect(buildJob).toContain("github.event.action != 'closed'");
+    // Assert the shape of the central .github pins, not a specific release, so
+    // Renovate's version bumps don't need a test edit.
     expect(buildJob).toMatch(
-      /uses: DevSecNinja\/\.github\/actions\/harden-runner@24acc67adf1be33089e73b2fdbdb4be8c12d145b # v3\.2\.0/,
+      /uses: DevSecNinja\/\.github\/actions\/harden-runner@[0-9a-f]{40} # v\d+\.\d+\.\d+/,
     );
     expect(buildJob).toMatch(
       /uses: actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7\.0\.1/,
@@ -60,7 +62,7 @@ describe('Pages deployment workflow contract', () => {
 
   it('deploys the exact artifact to both production hosts and Cloudflare previews', () => {
     expect(pagesJob).toMatch(
-      /uses: DevSecNinja\/\.github\/\.github\/workflows\/pages\.yml@24acc67adf1be33089e73b2fdbdb4be8c12d145b # v3\.2\.0/,
+      /uses: DevSecNinja\/\.github\/\.github\/workflows\/pages\.yml@[0-9a-f]{40} # v\d+\.\d+\.\d+/,
     );
     expect(pagesInputs).toMatch(/^ {6}wrangler-version: "4\.123\.0"$/m);
     expect(pagesInputs).toMatch(/^ {6}artifact-name: root-dist$/m);
