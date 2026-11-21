@@ -88,7 +88,7 @@ jobs:
       pull-requests: write # Create or update the Cloudflare preview link comment.
     with:
       # renovate: datasource=node-version depName=node
-      node-version: "24"
+      node-version: "26"
       # renovate: datasource=npm depName=wrangler
       wrangler-version: "4.123.0"
       artifact-name: root-dist
