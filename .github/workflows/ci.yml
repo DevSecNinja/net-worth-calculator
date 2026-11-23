@@ -39,7 +39,13 @@ jobs:
       - name: Check types
         run: npm run typecheck
       - name: Run coverage
-        run: npm run test:coverage
+        run: npm run test:coverage -- --reporter=default --reporter=junit --outputFile.junit=test-results.xml
+      - name: Publish test results
+        if: always()
+        uses: DevSecNinja/.github/actions/test-report@5452dbd33d61b4fc58b1780f57e0b60ff131be75 # v4.10.0
+        with:
+          paths: test-results.xml
+          title: vitest
       - name: Verify project-path and custom-domain builds
         run: npm run test:build:bases
 
