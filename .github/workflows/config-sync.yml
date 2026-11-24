@@ -11,10 +11,11 @@ permissions:
 
 jobs:
   sync:
-    uses: DevSecNinja/.github/.github/workflows/config-sync.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
+    uses: DevSecNinja/.github/.github/workflows/config-sync.yml@5eceec313066eefaa0fe9e3dbf4f9a5a49b55ebd # v4.2.0
     permissions:
       contents: write # Commit the synchronized configuration branch.
-      issues: write # Ensure the config-sync label exists.
       pull-requests: write # Open or update the synchronization PR.
     with:
       sync-templates: false
+    secrets:
+      AUTOMATION_APP_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}

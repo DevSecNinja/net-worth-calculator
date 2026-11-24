@@ -42,15 +42,15 @@ const releaseInputs = yamlBlock(releaseJob, 'with', 4);
 const releaseSecrets = yamlBlock(releaseJob, 'secrets', 4);
 
 describe('Release Please consumer contract', () => {
-  it('pins central v3 and passes mandatory App credentials', () => {
+  it('calls the central release-please workflow pinned to a commit SHA and passes the App credentials', () => {
+    // Assert the shape of the pin, not a specific release, so Renovate's
+    // version bumps don't need a test edit.
     expect(releaseJob).toMatch(
-      /^ {4}uses:\s*DevSecNinja\/\.github\/\.github\/workflows\/release-please\.yml@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3\.0\.0\s*$/m,
+      /^ {4}uses:\s*DevSecNinja\/\.github\/\.github\/workflows\/release-please\.yml@[0-9a-f]{40} # v\d+\.\d+\.\d+\s*$/m,
     );
-    expect(releaseInputs).toMatch(
-      /^ {6}app-id:\s*\$\{\{\s*vars\.RELEASE_PLEASE_APP_ID\s*\}\}\s*$/m,
-    );
+    expect(releaseInputs).not.toMatch(/^ {6}app-id:/m);
     expect(releaseSecrets).toMatch(
-      /^ {6}app-private-key:\s*\$\{\{\s*secrets\.RELEASE_PLEASE_APP_PRIVATE_KEY\s*\}\}\s*$/m,
+      /^ {6}AUTOMATION_APP_PRIVATE_KEY:\s*\$\{\{\s*secrets\.AUTOMATION_APP_PRIVATE_KEY\s*\}\}\s*$/m,
     );
   });
 

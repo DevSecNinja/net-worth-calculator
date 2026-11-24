@@ -176,18 +176,25 @@ test('keeps Dutch details localized and bounded in a narrow dark viewport', asyn
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
 
-test('uses UK date and currency conventions in selected details', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium', 'Focused UK locale coverage');
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'languages', {
-      configurable: true,
-      value: ['en-GB', 'en-US'],
-    });
-  });
-  await createVault(page, true);
+test.describe(() => {
+  // Sample data dates its latest snapshot with the browser's local "today"; pin both the zone and
+  // a September instant so en-GB's "Sept" is exercised deterministically.
+  test.use({ timezoneId: 'Europe/London' });
 
-  const allocation = chartCard(page, /asset allocation/i);
-  await interactWithPie(allocation, 'click');
-  await expect(allocation.getByTestId('chart-selected-detail')).toContainText(/£|US\$/);
-  await expect(allocation.getByTestId('chart-selected-detail')).toContainText(/\d{1,2} Sept \d{4}/);
+  test('uses UK date and currency conventions in selected details', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Focused UK locale coverage');
+    await page.clock.setFixedTime(new Date('2026-09-15T12:00:00Z'));
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'languages', {
+        configurable: true,
+        value: ['en-GB', 'en-US'],
+      });
+    });
+    await createVault(page, true);
+
+    const allocation = chartCard(page, /asset allocation/i);
+    await interactWithPie(allocation, 'click');
+    await expect(allocation.getByTestId('chart-selected-detail')).toContainText(/£|US\$/);
+    await expect(allocation.getByTestId('chart-selected-detail')).toContainText('15 Sept 2026');
+  });
 });
