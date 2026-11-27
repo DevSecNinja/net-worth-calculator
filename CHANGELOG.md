@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Release Please updates this file from
 Conventional Commits.
 
+## [0.5.3](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.5.2...v0.5.3) (2026-11-27)
+
+
+### Bug Fixes
+
+* **deps:** keep playwright-core aligned with @playwright/test ([#74](https://github.com/DevSecNinja/net-worth-calculator/issues/74)) ([439b7de](https://github.com/DevSecNinja/net-worth-calculator/commit/439b7de70109d8c15af1a184ccac8e06a45bfdde))
+* **deps:** update dependency zod to v4.6.6 [security] ([#49](https://github.com/DevSecNinja/net-worth-calculator/issues/49)) ([9b94bd3](https://github.com/DevSecNinja/net-worth-calculator/commit/9b94bd39758b6725d9a8fe7fcda7061654188798))
+* improve iOS PWA resilience and dashboard clarity ([#33](https://github.com/DevSecNinja/net-worth-calculator/issues/33)) ([6852a4d](https://github.com/DevSecNinja/net-worth-calculator/commit/6852a4dc1168decb4c09c4188c5972ceb34870dd))
+
 ## [0.5.2](https://github.com/DevSecNinja/net-worth-calculator/compare/v0.5.1...v0.5.2) (2026-09-06)
 
 
