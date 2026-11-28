@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   labeler:
-    uses: DevSecNinja/.github/.github/workflows/labeler.yml@0d0f448de257f354c89dc3a128871235d6ba8c11 # v2.5.0
+    uses: DevSecNinja/.github/.github/workflows/labeler.yml@eadb4f166f27d0864147189741c7596560be39dd # v3.6.0
     permissions:
       contents: read
       issues: write # Apply labels to newly opened or edited issues.
